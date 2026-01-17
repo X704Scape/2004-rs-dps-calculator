@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2004 RuneScape theme */
+:root {
+  --rs-dark: #2d2319;
+  --rs-panel: #3d3427;
+  --rs-border: #5c4d3d;
+  --rs-accent: #8b7355;
+  --rs-text: #d4c4a8;
+  --rs-input: #4a3f32;
+  --rs-gold: #daa520;
+  --rs-danger: #dc2626;
+}
+
+* {
+  @apply transition-colors duration-200;
+}
+
+body {
+  @apply bg-gray-950 text-amber-100;
+  background-image: linear-gradient(to bottom, #1f1810, #0a0603);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-amber-900 rounded hover:bg-amber-800;
+}
