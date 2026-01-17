@@ -1,0 +1,111 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
+const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
+
+const WEARPOS_MAP = {
+  head: 'head',
+  neck: 'neck',
+  back: 'cape',
+  'right hand': 'weapon',
+  torso: 'body',
+  'left hand': 'shield',
+  legs: 'legs',
+  feet: 'feet',
+  hands: 'hands',
+  ring: 'ring',
+  ammunition: 'ammo'
+};
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const url = new URL(req.url);
+    const dataType = url.searchParams.get('type');
+
+    if (dataType === 'items') {
+      const itemResponse = await fetch(ITEM_URL);
+      const itemData = await itemResponse.json();
+      
+      const wearableItems = itemData
+        .map((item, index) => {
+          const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
+          if (!hasWieldOp || !item.wearpos) return null;
+
+          const slot = WEARPOS_MAP[item.wearpos.toLowerCase()];
+          if (!slot) return null;
+
+          return {
+            id: index,
+            name: item.name || 'Unknown',
+            slot,
+            wearpos: item.wearpos,
+            // Melee bonuses
+            stab: item.stabplus || 0,
+            slash: item.slashplus || 0,
+            crush: item.crushplus || 0,
+            strBonus: item.strengthplus || 0,
+            // Ranged bonuses
+            ranged: item.rangedplus || 0,
+            rangedStrBonus: item.rangeddamageplus || 0,
+            // Magic bonuses
+            magic: item.magicplus || 0,
+            magicStrBonus: item.magicdamageplus || 0,
+            // Defensive bonuses
+            defenceStab: item.stabdefence || 0,
+            defenceSlash: item.slashdefence || 0,
+            defenceCrush: item.crushdefence || 0,
+            defenceRanged: item.rangeddefence || 0,
+            defenceMagic: item.magicdefence || 0,
+            // Prayer bonus
+            prayer: item.prayerplus || 0,
+            // Requirement
+            requirement: item.req || 0
+          };
+        })
+        .filter(item => item !== null);
+
+      return Response.json({ items: wearableItems });
+    }
+
+    if (dataType === 'monsters') {
+      const npcResponse = await fetch(NPC_URL);
+      const npcData = await npcResponse.json();
+      
+      const attackMonsters = npcData
+        .map((npc, index) => {
+          const hasAttackOp = npc.op && Object.values(npc.op).some(op => op === 'Attack');
+          if (!hasAttackOp) return null;
+
+          return {
+            id: index,
+            name: npc.name || 'Unknown',
+            // Combat stats
+            hitpoints: npc.hitpoints || 10,
+            attack: npc.attack || 1,
+            strength: npc.strength || 1,
+            defence: npc.defence || 1,
+            ranged: npc.ranged || 1,
+            magic: npc.magic || 1,
+            // Defensive bonuses
+            defenceStab: npc.stabdefence || 0,
+            defenceSlash: npc.slashdefence || 0,
+            defenceCrush: npc.crushdefence || 0,
+            defenceRanged: npc.rangeddefence || 0,
+            defenceMagic: npc.magicdefence || 0,
+            // Other
+            size: npc.size || 1,
+            aggressive: npc.aggressive || false
+          };
+        })
+        .filter(npc => npc !== null);
+
+      return Response.json({ monsters: attackMonsters });
+    }
+
+    return Response.json({ error: 'Invalid request' }, { status: 400 });
+  } catch (error) {
+    console.error('Error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
