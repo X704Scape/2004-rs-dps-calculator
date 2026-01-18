@@ -77,74 +77,49 @@ Deno.serve(async (req) => {
     }
 
     if (dataType === 'monsters') {
-      try {
-        console.log('Fetching from:', NPC_URL);
-        const npcResponse = await fetch(NPC_URL);
-        console.log('NPC Response status:', npcResponse.status);
-        console.log('NPC Response headers:', Object.fromEntries(npcResponse.headers.entries()));
-        
-        const rawText = await npcResponse.text();
-        console.log('Raw response length:', rawText.length);
-        console.log('First 500 chars:', rawText.substring(0, 500));
-        
-        let npcData;
-        try {
-          npcData = JSON.parse(rawText);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          return Response.json({ 
-            error: 'Failed to parse NPC data', 
-            details: parseError.message,
-            sample: rawText.substring(0, 200)
-          }, { status: 500 });
-        }
-        
-        console.log('Parsed data type:', typeof npcData);
-        console.log('Is array?', Array.isArray(npcData));
-        
-        if (!Array.isArray(npcData)) {
-          console.log('NPC data keys:', Object.keys(npcData).slice(0, 10));
-          return Response.json({ 
-            error: 'NPC data is not an array',
-            dataType: typeof npcData,
-            keys: Object.keys(npcData).slice(0, 10)
-          }, { status: 500 });
-        }
-        
-        const allMonsters = npcData
-          .map((npc, index) => {
-            if (!npc || !npc.name) return null;
+      const npcResponse = await fetch(NPC_URL);
+      const npcData = await npcResponse.json();
+      console.log('Fetched NPCs from API (object with keys):', Object.keys(npcData).length);
+      
+      // NPC data is an object, not an array - extract values and filter
+      const allMonsters = Object.entries(npcData)
+        .map(([key, npc], index) => {
+          if (!npc || !npc.name) return null;
+          
+          // Extract defense bonuses from params array
+          let defenceStab = 0, defenceSlash = 0, defenceCrush = 0, defenceRanged = 0, defenceMagic = 0;
+          if (npc.params) {
+            npc.params.forEach(param => {
+              if (param.stabdefence) defenceStab = parseInt(param.stabdefence);
+              if (param.slashdefence) defenceSlash = parseInt(param.slashdefence);
+              if (param.crushdefence) defenceCrush = parseInt(param.crushdefence);
+              if (param.rangedefence) defenceRanged = parseInt(param.rangedefence);
+              if (param.magicdefence) defenceMagic = parseInt(param.magicdefence);
+            });
+          }
 
-            return {
-              id: index,
-              name: npc.name,
-              hitpoints: npc.hitpoints || 10,
-              attack: npc.attack || 1,
-              strength: npc.strength || 1,
-              defence: npc.defence || 1,
-              ranged: npc.ranged || 1,
-              magic: npc.magic || 1,
-              defenceStab: npc.stabdefence || 0,
-              defenceSlash: npc.slashdefence || 0,
-              defenceCrush: npc.crushdefence || 0,
-              defenceRanged: npc.rangeddefence || 0,
-              defenceMagic: npc.magicdefence || 0,
-              size: npc.size || 1,
-              aggressive: npc.aggressive || false
-            };
-          })
-          .filter(npc => npc !== null);
+          return {
+            id: npc.id || index,
+            name: npc.name,
+            hitpoints: parseInt(npc.hitpoints) || 10,
+            attack: parseInt(npc.attack) || 1,
+            strength: parseInt(npc.strength) || 1,
+            defence: parseInt(npc.defence) || 1,
+            ranged: parseInt(npc.ranged) || 1,
+            magic: parseInt(npc.magic) || 1,
+            defenceStab,
+            defenceSlash,
+            defenceCrush,
+            defenceRanged,
+            defenceMagic,
+            size: parseInt(npc.size) || 1,
+            aggressive: npc.huntmode ? true : false
+          };
+        })
+        .filter(npc => npc !== null);
 
-        console.log('Total monsters processed:', allMonsters.length);
-        return Response.json({ monsters: allMonsters });
-      } catch (monsterError) {
-        console.error('Monster fetch error:', monsterError);
-        console.error('Error stack:', monsterError.stack);
-        return Response.json({ 
-          error: monsterError.message,
-          stack: monsterError.stack 
-        }, { status: 500 });
-      }
+      console.log('Returning monsters:', allMonsters.length);
+      return Response.json({ monsters: allMonsters });
     }
 
     return Response.json({ error: 'Invalid request' }, { status: 400 });
