@@ -2,6 +2,11 @@ import React from 'react';
 
 // Weapon-based combat styles
 const WEAPON_STYLES = {
+  fists: [
+    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
+    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
+    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
+  ],
   default: [
     { id: 'accurate', name: 'Accurate', type: 'stab', bonus: '+3 Attack' },
     { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
@@ -28,9 +33,13 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
   const weapon = equipment?.weapon;
   const weaponName = weapon?.name?.toLowerCase() || '';
   
-  let styles = WEAPON_STYLES.default;
-  if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
-    styles = WEAPON_STYLES.ranged;
+  let styles = WEAPON_STYLES.fists;
+  if (weapon) {
+    if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
+      styles = WEAPON_STYLES.ranged;
+    } else {
+      styles = WEAPON_STYLES.default;
+    }
   }
 
   const handleStyleChange = (styleId) => {
@@ -40,32 +49,30 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
 
   return (
     <div>
-      <h3 className="text-amber-600 font-bold text-sm mb-3">Combat Style</h3>
-      {weapon ? (
-        <div className="space-y-2">
-          {styles.map((style) => (
-            <button
-              key={style.id}
-              onClick={() => handleStyleChange(style.id)}
-              className={`w-full text-left p-3 rounded border-2 transition ${
-                selectedStyle === style.id
-                  ? 'bg-amber-900 border-amber-700'
-                  : 'bg-gray-900 border-gray-700 hover:border-amber-900'
-              }`}
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-amber-100 font-semibold text-sm">{style.name}</p>
-                  <p className="text-amber-700 text-xs">{style.type}</p>
-                </div>
-                <p className="text-amber-500 text-xs">{style.bonus}</p>
+      <h3 className="text-amber-600 font-bold text-sm mb-3">
+        Combat Style {!weapon && <span className="text-amber-700 text-xs">(Fists)</span>}
+      </h3>
+      <div className="space-y-2">
+        {styles.map((style) => (
+          <button
+            key={style.id}
+            onClick={() => handleStyleChange(style.id)}
+            className={`w-full text-left p-3 rounded border-2 transition ${
+              selectedStyle === style.id
+                ? 'bg-amber-900 border-amber-700'
+                : 'bg-gray-900 border-gray-700 hover:border-amber-900'
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-amber-100 font-semibold text-sm">{style.name}</p>
+                <p className="text-amber-700 text-xs">{style.type}</p>
               </div>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p className="text-amber-700 text-xs text-center py-4">Equip a weapon to select combat style</p>
-      )}
+              <p className="text-amber-500 text-xs">{style.bonus}</p>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
