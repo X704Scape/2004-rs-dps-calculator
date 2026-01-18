@@ -12,10 +12,14 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
     const loadMonsters = async () => {
       try {
         const response = await base44.functions.invoke('fetchGameData', { type: 'monsters' });
-        console.log('Monsters response:', response.data);
-        setMonsters(response.data.monsters || []);
+        console.log('Full response:', response);
+        console.log('Response data:', response.data);
+        console.log('Monsters array:', response.data?.monsters);
+        console.log('Monsters count:', response.data?.monsters?.length);
+        setMonsters(response.data?.monsters || []);
       } catch (error) {
         console.error('Failed to load monsters:', error);
+        console.error('Error details:', error);
       } finally {
         setLoading(false);
       }
