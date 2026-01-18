@@ -49,15 +49,15 @@ function getEffectiveAttack(attackLevel, prayerMult, styleName, potionBoost = 0)
   return Math.floor(attackLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-function getAccuracy(effectiveAttack, equipmentBonus, monsterDefence) {
+function getAccuracy(effectiveAttack, equipmentBonus, monsterDefence, monsterDefenceBonus) {
   const attackRoll = effectiveAttack * (equipmentBonus + 64);
-  const defenceRoll = Math.floor(monsterDefence * 1.5 + 40);
+  const defenceRoll = monsterDefence * (monsterDefenceBonus + 64);
   
   let accuracy;
   if (attackRoll > defenceRoll) {
-    accuracy = Math.min(1.0, (2 * attackRoll - defenceRoll) / (2 * attackRoll));
+    accuracy = 1 - (defenceRoll + 2) / (2 * (attackRoll + 1));
   } else {
-    accuracy = Math.max(0.0, (attackRoll - defenceRoll) / (2 * defenceRoll));
+    accuracy = attackRoll / (2 * (defenceRoll + 1));
   }
   
   return { accuracy, attackRoll, defenceRoll };
@@ -88,6 +88,11 @@ Deno.serve(async (req) => {
       monsterDefence = 1,
       monsterRanged = 1,
       monsterMagic = 1,
+      monsterDefenceStab = 0,
+      monsterDefenceSlash = 0,
+      monsterDefenceCrush = 0,
+      monsterDefenceRanged = 0,
+      monsterDefenceMagic = 0,
       spellMaxHit = 0,
       hasChaosGauntlets = false,
       isBoltSpell = false
@@ -113,21 +118,30 @@ Deno.serve(async (req) => {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
-      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterDefence);
+      
+      // Determine which monster defense bonus to use based on player's attack style
+      let monsterDefBonus = body.monsterDefenceStab || 0;
+      if (styleName === 'aggressive') {
+        monsterDefBonus = body.monsterDefenceSlash || 0;
+      } else if (styleName === 'accurate') {
+        monsterDefBonus = body.monsterDefenceStab || 0;
+      } else if (styleName === 'controlled') {
+        monsterDefBonus = body.monsterDefenceStab || 0;
+      }
+      
+      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterDefence, monsterDefBonus);
       accuracy = accuracyResult.accuracy;
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'ranged') {
       const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
       console.log('Effective Ranged:', effectiveRanged);
-      console.log('Calculating max hit with:', effectiveRanged, rangedStrBonus);
-      console.log('Formula: 0.5 + (' + effectiveRanged + ' * (' + rangedStrBonus + ' + 64)) / 640');
-      console.log('= 0.5 + (' + effectiveRanged + ' * ' + (rangedStrBonus + 64) + ') / 640');
-      console.log('= 0.5 + ' + (effectiveRanged * (rangedStrBonus + 64)) + ' / 640');
-      console.log('= 0.5 + ' + ((effectiveRanged * (rangedStrBonus + 64)) / 640));
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
       console.log('Max Hit Result:', maxHit);
-      const accuracyResult = getAccuracy(effectiveRanged, equipmentBonus, monsterRanged);
+      
+      // Use monster's ranged defence bonus
+      const monsterDefBonus = body.monsterDefenceRanged || 0;
+      const accuracyResult = getAccuracy(effectiveRanged, equipmentBonus, monsterRanged, monsterDefBonus);
       accuracy = accuracyResult.accuracy;
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;

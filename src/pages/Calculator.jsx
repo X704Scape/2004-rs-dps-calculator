@@ -95,6 +95,11 @@ export default function Calculator() {
         monsterDefence: selectedMonster.defence,
         monsterRanged: selectedMonster.ranged,
         monsterMagic: selectedMonster.magic,
+        monsterDefenceStab: selectedMonster.defenceStab,
+        monsterDefenceSlash: selectedMonster.defenceSlash,
+        monsterDefenceCrush: selectedMonster.defenceCrush,
+        monsterDefenceRanged: selectedMonster.defenceRanged,
+        monsterDefenceMagic: selectedMonster.defenceMagic,
         spellMaxHit: 0,
         hasChaosGauntlets: false,
         isBoltSpell: false
