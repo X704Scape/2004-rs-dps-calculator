@@ -42,6 +42,24 @@ export default function Calculator() {
         ultimate_strength: 'ultimate_strength'
       };
 
+      // Determine which attack bonus to use based on combat type and style
+      let attackBonus = 0;
+      if (playerStats.combatType === 'melee') {
+        // Use the appropriate melee bonus based on attack style
+        const weapon = equipment.weapon;
+        if (weapon?.attackType === 'stab' || playerStats.style === 'stab') {
+          attackBonus = getTotalBonus('stab');
+        } else if (weapon?.attackType === 'slash' || playerStats.style === 'slash') {
+          attackBonus = getTotalBonus('slash');
+        } else {
+          attackBonus = getTotalBonus('crush');
+        }
+      } else if (playerStats.combatType === 'ranged') {
+        attackBonus = getTotalBonus('ranged');
+      } else if (playerStats.combatType === 'magic') {
+        attackBonus = getTotalBonus('magic');
+      }
+
       const dpsResponse = await base44.functions.invoke('calculateDPS', {
         combatType: playerStats.combatType,
         attackLevel: playerStats.attack,
@@ -49,7 +67,7 @@ export default function Calculator() {
         rangedLevel: playerStats.ranged,
         magicLevel: playerStats.magic,
         defenceLevel: playerStats.defence,
-        equipmentBonus: getTotalBonus('stab'), // Using stab as the equipment bonus
+        equipmentBonus: attackBonus,
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getTotalBonus('rangedStrBonus'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
