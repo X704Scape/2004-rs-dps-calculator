@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import EquipmentPanel from '../components/Equipment/EquipmentPanel';
-import PlayerStats from '../components/Player/PlayerStats';
+import LoadoutPanel from '../components/Loadout/LoadoutPanel';
 import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
 
@@ -16,7 +15,8 @@ export default function Calculator() {
     magic: 1,
     combatType: 'melee',
     prayer: 'none',
-    style: 'aggressive'
+    style: 'aggressive',
+    combatLevel: 3
   });
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [results, setResults] = useState(null);
@@ -74,6 +74,14 @@ export default function Calculator() {
     }
   };
 
+  const handleCombatStyleChange = (style) => {
+    setPlayerStats({ ...playerStats, style });
+  };
+
+  const handlePrayerChange = (prayer) => {
+    setPlayerStats({ ...playerStats, prayer });
+  };
+
   React.useEffect(() => {
     calculateDPS();
   }, [equipment, playerStats, selectedMonster]);
@@ -88,20 +96,26 @@ export default function Calculator() {
 
       {/* Main Layout */}
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Equipment */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Loadout */}
           <div className="lg:col-span-1">
-            <EquipmentPanel onEquipmentChange={setEquipment} />
+            <LoadoutPanel 
+              equipment={equipment}
+              onEquipmentChange={setEquipment}
+              playerStats={playerStats}
+              onStatsChange={setPlayerStats}
+              onCombatStyleChange={handleCombatStyleChange}
+              onPrayerChange={handlePrayerChange}
+            />
           </div>
 
-          {/* Middle Column - Player & Monster */}
-          <div className="lg:col-span-1 space-y-6">
-            <PlayerStats stats={playerStats} onStatsChange={setPlayerStats} />
+          {/* Middle Column - Monster */}
+          <div className="lg:col-span-1">
             <MonsterSelect selectedMonster={selectedMonster} onMonsterChange={setSelectedMonster} />
           </div>
 
           {/* Right Column - Results */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <ResultsPanel results={results} />
           </div>
         </div>
