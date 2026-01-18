@@ -16,6 +16,16 @@ export default function ResultsPanel({ results }) {
       
       <div className="space-y-3">
         <div className="bg-gray-900 rounded p-3 border border-amber-900">
+          <p className="text-amber-700 text-xs font-bold">Attack roll</p>
+          <p className="text-amber-100 text-2xl font-bold">{results.attackRoll}</p>
+        </div>
+
+        <div className="bg-gray-900 rounded p-3 border border-amber-900">
+          <p className="text-amber-700 text-xs font-bold">NPC def roll</p>
+          <p className="text-amber-100 text-2xl font-bold">{results.npcDefRoll}</p>
+        </div>
+
+        <div className="bg-gray-900 rounded p-3 border border-amber-900">
           <p className="text-amber-700 text-xs font-bold">Max Hit</p>
           <p className="text-amber-100 text-2xl font-bold">{results.maxHit}</p>
         </div>
