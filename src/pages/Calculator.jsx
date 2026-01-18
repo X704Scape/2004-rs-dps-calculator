@@ -69,11 +69,19 @@ export default function Calculator() {
         attackBonus = getTotalBonus('magic');
       }
 
+      // Get attack speed in ticks
+      let attackSpeedTicks = weapon?.attackRate || 4;
+      // Apply rapid style bonus for ranged
+      if (detectedCombatType === 'ranged' && playerStats.style === 'rapid' && weapon) {
+        attackSpeedTicks = Math.max(1, attackSpeedTicks - 1);
+      }
+
       console.log('=== Sending to calculateDPS ===');
       console.log('Combat Type:', detectedCombatType);
       console.log('Ranged Level:', playerStats.ranged);
       console.log('Ranged Str Bonus from equipment:', getTotalBonus('rangedStrBonus'));
       console.log('Attack Bonus:', attackBonus);
+      console.log('Attack Speed Ticks:', attackSpeedTicks);
 
       const dpsResponse = await base44.functions.invoke('calculateDPS', {
         combatType: detectedCombatType,
@@ -90,6 +98,7 @@ export default function Calculator() {
         potionStr: 0,
         potionRanged: 0,
         potionAttack: 0,
+        attackSpeedTicks,
         monsterHitpoints: selectedMonster.hitpoints,
         monsterAttack: selectedMonster.attack,
         monsterDefence: selectedMonster.defence,
