@@ -22,9 +22,9 @@ function getEffectiveStrength(strengthLevel, prayerMult, styleName, potionBoost 
   return Math.floor(strengthLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-function getEffectiveRanged(rangedLevel, prayerMult, styleName, potionBoost = 0) {
-  const styleBonus = STYLE_BONUS[styleName] || 0;
-  return Math.floor(rangedLevel * prayerMult) + styleBonus + 8 + potionBoost;
+function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
+  // Style bonus not used for ranged in 2004
+  return Math.floor(rangedLevel * prayerMult) + 8 + potionBoost;
 }
 
 // Max Hit Calculations
@@ -111,10 +111,9 @@ Deno.serve(async (req) => {
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'ranged') {
-      const effectiveRngStr = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
-      const effectiveRngAtk = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
-      maxHit = getRangedMaxHit(effectiveRngStr, rangedStrBonus);
-      const accuracyResult = getAccuracy(effectiveRngAtk, equipmentBonus, monsterRanged);
+      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
+      maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
+      const accuracyResult = getAccuracy(effectiveRanged, equipmentBonus, monsterRanged);
       accuracy = accuracyResult.accuracy;
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;
