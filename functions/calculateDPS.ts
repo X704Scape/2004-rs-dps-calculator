@@ -95,6 +95,13 @@ Deno.serve(async (req) => {
 
     const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
 
+    console.log('=== DPS Calculation Debug ===');
+    console.log('Combat Type:', combatType);
+    console.log('Ranged Level:', rangedLevel);
+    console.log('Ranged Str Bonus:', rangedStrBonus);
+    console.log('Equipment Bonus:', equipmentBonus);
+    console.log('Prayer Mult:', prayerMult);
+
     let maxHit = 0;
     let accuracy = 0;
     let attackRoll = 0;
@@ -112,7 +119,14 @@ Deno.serve(async (req) => {
       npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'ranged') {
       const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
+      console.log('Effective Ranged:', effectiveRanged);
+      console.log('Calculating max hit with:', effectiveRanged, rangedStrBonus);
+      console.log('Formula: 0.5 + (' + effectiveRanged + ' * (' + rangedStrBonus + ' + 64)) / 640');
+      console.log('= 0.5 + (' + effectiveRanged + ' * ' + (rangedStrBonus + 64) + ') / 640');
+      console.log('= 0.5 + ' + (effectiveRanged * (rangedStrBonus + 64)) + ' / 640');
+      console.log('= 0.5 + ' + ((effectiveRanged * (rangedStrBonus + 64)) / 640));
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
+      console.log('Max Hit Result:', maxHit);
       const accuracyResult = getAccuracy(effectiveRanged, equipmentBonus, monsterRanged);
       accuracy = accuracyResult.accuracy;
       attackRoll = accuracyResult.attackRoll;
