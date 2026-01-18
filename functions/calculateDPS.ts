@@ -23,8 +23,8 @@ function getEffectiveStrength(strengthLevel, prayerMult, styleName, potionBoost 
 }
 
 function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
-  // Style bonus not used for ranged in 2004
-  return Math.floor(rangedLevel * prayerMult) + 8 + potionBoost;
+  // +9 includes base 8 + style bonus of 1
+  return Math.floor(rangedLevel * prayerMult) + 9 + potionBoost;
 }
 
 // Max Hit Calculations
