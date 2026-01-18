@@ -93,10 +93,10 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                       className="w-full h-full object-contain" 
                       onError={(e) => {
                         e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML += `<span class="text-xs text-amber-700">${slot.charAt(0).toUpperCase()}</span>`;
                       }}
                     />
-                  ) : (
+                  ) : null}
+                  {item && !item.icon && (
                     <span className="text-xs text-amber-700">
                       {slot.charAt(0).toUpperCase()}
                     </span>
