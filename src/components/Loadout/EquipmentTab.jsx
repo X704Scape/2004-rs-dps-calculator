@@ -20,6 +20,8 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     const loadItems = async () => {
       try {
         const response = await base44.functions.invoke('fetchGameData', { type: 'items' });
+        console.log('Items response:', response.data);
+        console.log('Total items:', response.data?.items?.length);
         setItems(response.data.items || []);
       } catch (error) {
         console.error('Failed to load items:', error);
@@ -31,15 +33,20 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   }, []);
 
   useEffect(() => {
-    if (searchTerm) {
+    if (searchTerm && searchTerm.length > 0) {
       const results = items.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ).slice(0, 10);
+      ).slice(0, 20);
       setSearchResults(results);
     } else {
       setSearchResults([]);
     }
   }, [searchTerm, items]);
+
+  useEffect(() => {
+    console.log('Items loaded:', items.length);
+    console.log('Sample item:', items[0]);
+  }, [items]);
 
   const handleSelectItem = (item) => {
     const newEquipment = { ...equipment, [item.slot]: item };
