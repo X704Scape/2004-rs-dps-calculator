@@ -1,30 +1,5 @@
 import React from 'react';
-
-// Weapon-based combat styles
-const WEAPON_STYLES = {
-  fists: [
-    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
-  ],
-  default: [
-    { id: 'accurate', name: 'Accurate', type: 'stab', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'stab', bonus: '+3 Defence' },
-    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' }
-  ],
-  sword: [
-    { id: 'accurate', name: 'Accurate', type: 'stab', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' },
-    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' }
-  ],
-  ranged: [
-    { id: 'accurate', name: 'Accurate', type: 'ranged', bonus: '+3 Attack' },
-    { id: 'rapid', name: 'Rapid', type: 'ranged', bonus: 'Faster attacks' },
-    { id: 'longrange', name: 'Longrange', type: 'ranged', bonus: '+3 Defence' }
-  ]
-};
+import { WEAPON_COMBAT_STYLES, DEFAULT_STYLES } from '../../utils/weaponCombatStyles';
 
 export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
   const [selectedStyle, setSelectedStyle] = React.useState('aggressive');
@@ -46,23 +21,18 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
     return baseSpeed;
   };
   
-  // Use weapon metadata attack styles if available
-  let styles = WEAPON_STYLES.fists;
-  if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
-    // Map metadata styles to display format
+  // Use weapon category to determine styles
+  let styles = DEFAULT_STYLES;
+  if (weapon?.category && WEAPON_COMBAT_STYLES[weapon.category]) {
+    styles = WEAPON_COMBAT_STYLES[weapon.category];
+  } else if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
+    // Fallback to metadata if available
     styles = weapon.attackStyles.map(style => ({
       id: style.id,
       name: style.mode.charAt(0).toUpperCase() + style.mode.slice(1),
       type: style.type,
       bonus: style.id === 'rapid' ? 'Faster attacks' : ''
     }));
-  } else if (weapon) {
-    const weaponName = weapon?.name?.toLowerCase() || '';
-    if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
-      styles = WEAPON_STYLES.ranged;
-    } else {
-      styles = WEAPON_STYLES.default;
-    }
   }
 
   const handleStyleChange = (styleId) => {
