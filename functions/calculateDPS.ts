@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
-      
+
       // Determine which monster defense bonus to use based on player's attack style
       let monsterDefBonus = body.monsterDefenceStab || 0;
       if (styleName === 'aggressive') {
@@ -121,23 +121,19 @@ Deno.serve(async (req) => {
       } else if (styleName === 'controlled') {
         monsterDefBonus = body.monsterDefenceStab || 0;
       }
-      
-      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterDefence, monsterDefBonus);
-      accuracy = accuracyResult.accuracy;
-      attackRoll = accuracyResult.attackRoll;
-      npcDefRoll = accuracyResult.defenceRoll;
+
+      attackRoll = effectiveAtk * (equipmentBonus + 64);
+      npcDefRoll = monsterDefence * (monsterDefBonus + 64);
+      accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
       const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
-      console.log('Effective Ranged:', effectiveRanged);
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
-      console.log('Max Hit Result:', maxHit);
-      
+
       // Use monster's ranged defence bonus
       const monsterDefBonus = body.monsterDefenceRanged || 0;
-      const accuracyResult = getAccuracy(effectiveRanged, equipmentBonus, monsterRanged, monsterDefBonus);
-      accuracy = accuracyResult.accuracy;
-      attackRoll = accuracyResult.attackRoll;
-      npcDefRoll = accuracyResult.defenceRoll;
+      attackRoll = effectiveRanged * (equipmentBonus + 64);
+      npcDefRoll = monsterRanged * (monsterDefBonus + 64);
+      accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
       maxHit = getMagicMaxHit(spellMaxHit, hasChaosGauntlets, isBoltSpell);
       accuracy = 1.0; // Magic doesn't use accuracy in 2004
