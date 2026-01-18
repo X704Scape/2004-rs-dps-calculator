@@ -3,18 +3,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
 const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
 
-const WEARPOS_MAP = {
-  head: 'head',
-  neck: 'neck',
-  back: 'cape',
-  'right hand': 'weapon',
-  torso: 'body',
-  'left hand': 'shield',
-  legs: 'legs',
-  feet: 'feet',
-  hands: 'hands',
-  ring: 'ring',
-  ammunition: 'ammo'
+const SLOT_ALIASES = {
+  'weapon': 'weapon',
+  'shield': 'shield',
+  'head': 'head',
+  'body': 'body',
+  'legs': 'legs',
+  'hands': 'hands',
+  'feet': 'feet',
+  'cape': 'cape',
+  'neck': 'neck',
+  'ammo': 'ammo',
+  'ring': 'ring',
+  'ammunition': 'ammo'
 };
 
 Deno.serve(async (req) => {
@@ -36,7 +37,8 @@ Deno.serve(async (req) => {
           if (!hasWieldOp || !item.equipable_item) return null;
 
           const equipData = item.equipable_item;
-          const slot = WEARPOS_MAP[equipData.wearpos?.toLowerCase()];
+          const wearpos = equipData.wearpos?.toLowerCase();
+          const slot = SLOT_ALIASES[wearpos] || wearpos;
           if (!slot) return null;
 
           return {
