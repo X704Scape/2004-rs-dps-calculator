@@ -83,8 +83,12 @@ Deno.serve(async (req) => {
       
       const attackMonsters = npcData
         .map((npc, index) => {
-          const hasAttackOp = npc.op && Object.values(npc.op).some(op => op === 'Attack');
-          if (!hasAttackOp) return null;
+          // Check if NPC has Attack option in various formats
+          const hasAttackOp = npc.op && (
+            Object.values(npc.op).some(op => op === 'Attack') ||
+            Object.values(npc.op).some(op => op?.toLowerCase() === 'attack')
+          );
+          if (!hasAttackOp && !npc.attack) return null;
 
           return {
             id: index,
