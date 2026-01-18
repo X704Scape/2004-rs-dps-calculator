@@ -80,7 +80,15 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   title={item ? item.name : `Empty ${slot}`}
                 >
                   {item && item.icon ? (
-                    <img src={item.icon} alt={item.name} className="w-full h-full object-contain" />
+                    <img 
+                      src={item.icon} 
+                      alt={item.name} 
+                      className="w-full h-full object-contain" 
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML += `<span class="text-xs text-amber-700">${slot.charAt(0).toUpperCase()}</span>`;
+                      }}
+                    />
                   ) : (
                     <span className="text-xs text-amber-700">
                       {slot.charAt(0).toUpperCase()}
@@ -121,7 +129,12 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
                   {item.icon && (
-                    <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain" />
+                    <img 
+                      src={item.icon} 
+                      alt={item.name} 
+                      className="w-8 h-8 object-contain" 
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
                   )}
                   <div>
                     <div className="font-semibold">{item.name}</div>
