@@ -52,17 +52,17 @@ Deno.serve(async (req) => {
             slash: equipData.slashattack || 0,
             crush: equipData.crushattack || 0,
             strBonus: equipData.strengthbonus || 0,
-            // Ranged bonuses
-            ranged: equipData.rangedattack || 0,
-            rangedStrBonus: equipData.rangedstrengthbonus || 0,
+            // Ranged bonuses (try both naming conventions)
+            ranged: equipData.rangedattack || equipData.rangeattack || 0,
+            rangedStrBonus: equipData.rangedstrengthbonus || equipData.rangestrengthbonus || 0,
             // Magic bonuses
             magic: equipData.magicattack || 0,
             magicStrBonus: equipData.magicstrengthbonus || 0,
-            // Defensive bonuses
+            // Defensive bonuses (try both naming conventions for ranged)
             defenceStab: equipData.stabdefence || 0,
             defenceSlash: equipData.slashdefence || 0,
             defenceCrush: equipData.crushdefence || 0,
-            defenceRanged: equipData.rangeddefence || 0,
+            defenceRanged: equipData.rangeddefence || equipData.rangedefence || 0,
             defenceMagic: equipData.magicdefence || 0,
             // Prayer bonus
             prayer: equipData.prayerbonus || 0,
