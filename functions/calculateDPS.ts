@@ -150,7 +150,8 @@ Deno.serve(async (req) => {
     }
 
     // DPS calculation
-    const avgHit = maxHit * accuracy;
+    // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
+    const avgHit = (maxHit / 2) * accuracy;
     const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
     dps = avgHit / attackSpeed;
 
