@@ -33,7 +33,8 @@ function getMeleeMaxHit(effectiveStr, strBonus) {
 }
 
 function getRangedMaxHit(effectiveRanged, rangedStrBonus) {
-  return Math.floor(0.5 + (effectiveRanged * (rangedStrBonus + 64)) / 640);
+  const rangeStrength = effectiveRanged * (rangedStrBonus + 64);
+  return Math.floor((rangeStrength + 320) / 640);
 }
 
 function getMagicMaxHit(spellMaxHit, hasChaosGauntlets = false, isBoltSpell = false) {
