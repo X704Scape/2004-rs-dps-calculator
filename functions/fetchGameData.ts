@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
             // Prayer bonus
             prayer: equipData.prayerbonus || 0,
             // Attack speed (in ticks)
-            attackRate: item.attackrate || 4,
+            attackRate: equipData.attackrate || 4,
             // Requirement
             requirement: item.req || 0
           };
