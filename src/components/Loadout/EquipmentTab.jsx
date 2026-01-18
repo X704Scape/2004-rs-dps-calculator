@@ -66,9 +66,9 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     const weapon = equipment.weapon;
     if (!weapon) return { ticks: 4, seconds: 2.4 };
     
-    // Default is 4 ticks (2.4s), but some weapons are faster or slower
-    // This is a simplified version - you'd need to add attack speed data to items
-    return { ticks: 4, seconds: 2.4 };
+    const ticks = weapon.attackRate || 4;
+    const seconds = (ticks * 0.6).toFixed(1);
+    return { ticks, seconds };
   };
 
   return (

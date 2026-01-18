@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
       equipmentBonus = 0,
       strBonus = 0,
       rangedStrBonus = 0,
+      attackSpeedTicks = 4,
       prayerName = 'none',
       styleName = 'aggressive',
       potionStr = 0,
@@ -152,9 +153,9 @@ Deno.serve(async (req) => {
       npcDefRoll = 0;
     }
 
-    // DPS calculation (assuming 4 ticks per attack in 2004)
+    // DPS calculation
     const avgHit = maxHit * accuracy;
-    const attackSpeed = 2.4; // Default 4 ticks = 2.4 seconds
+    const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
     dps = avgHit / attackSpeed;
 
     // Time to kill
