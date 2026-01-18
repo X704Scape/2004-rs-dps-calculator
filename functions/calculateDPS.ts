@@ -129,7 +129,8 @@ Deno.serve(async (req) => {
       }
 
       attackRoll = effectiveAtk * (equipmentBonus + 64);
-      npcDefRoll = monsterDefence * (monsterDefBonus + 64);
+      const npcEffectiveDefence = monsterDefence + 9;
+      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
       const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
@@ -138,7 +139,8 @@ Deno.serve(async (req) => {
       // Use monster's defence level with ranged defence bonus
       const monsterDefBonus = body.monsterDefenceRanged || 0;
       attackRoll = effectiveRanged * (equipmentBonus + 64);
-      npcDefRoll = monsterDefence * (monsterDefBonus + 64);
+      const npcEffectiveDefence = monsterDefence + 9;
+      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
       maxHit = getMagicMaxHit(spellMaxHit, hasChaosGauntlets, isBoltSpell);
