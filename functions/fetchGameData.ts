@@ -33,35 +33,36 @@ Deno.serve(async (req) => {
       const wearableItems = itemData
         .map((item, index) => {
           const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
-          if (!hasWieldOp || !item.wearpos) return null;
+          if (!hasWieldOp || !item.equipable_item) return null;
 
-          const slot = WEARPOS_MAP[item.wearpos.toLowerCase()];
+          const equipData = item.equipable_item;
+          const slot = WEARPOS_MAP[equipData.wearpos?.toLowerCase()];
           if (!slot) return null;
 
           return {
             id: index,
             name: item.name || 'Unknown',
             slot,
-            wearpos: item.wearpos,
+            wearpos: equipData.wearpos,
             // Melee bonuses
-            stab: item.stabplus || 0,
-            slash: item.slashplus || 0,
-            crush: item.crushplus || 0,
-            strBonus: item.strengthplus || 0,
+            stab: equipData.stabattack || 0,
+            slash: equipData.slashattack || 0,
+            crush: equipData.crushattack || 0,
+            strBonus: equipData.strengthbonus || 0,
             // Ranged bonuses
-            ranged: item.rangedplus || 0,
-            rangedStrBonus: item.rangeddamageplus || 0,
+            ranged: equipData.rangedattack || 0,
+            rangedStrBonus: equipData.rangedstrengthbonus || 0,
             // Magic bonuses
-            magic: item.magicplus || 0,
-            magicStrBonus: item.magicdamageplus || 0,
+            magic: equipData.magicattack || 0,
+            magicStrBonus: equipData.magicstrengthbonus || 0,
             // Defensive bonuses
-            defenceStab: item.stabdefence || 0,
-            defenceSlash: item.slashdefence || 0,
-            defenceCrush: item.crushdefence || 0,
-            defenceRanged: item.rangeddefence || 0,
-            defenceMagic: item.magicdefence || 0,
+            defenceStab: equipData.stabdefence || 0,
+            defenceSlash: equipData.slashdefence || 0,
+            defenceCrush: equipData.crushdefence || 0,
+            defenceRanged: equipData.rangeddefence || 0,
+            defenceMagic: equipData.magicdefence || 0,
             // Prayer bonus
-            prayer: item.prayerplus || 0,
+            prayer: equipData.prayerbonus || 0,
             // Requirement
             requirement: item.req || 0
           };
