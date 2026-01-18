@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
 const STATS = [
@@ -7,6 +8,7 @@ const STATS = [
   { id: 'strength', label: 'Strength' },
   { id: 'defence', label: 'Defence' },
   { id: 'ranged', label: 'Ranged' },
+  { id: 'prayer', label: 'Prayer' },
   { id: 'magic', label: 'Magic' }
 ];
 
@@ -23,19 +25,11 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     
     setLoading(true);
     try {
-      const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${username}`);
-      const html = await response.text();
+      const response = await base44.functions.invoke('fetchHiscores', { username });
       
-      // Parse the HTML to extract stats
-      // This is a basic parser - adjust based on actual HTML structure
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      
-      // Update stats based on parsed data
-      // You'll need to adjust selectors based on actual page structure
-      const newStats = { ...stats };
-      
-      onStatsChange(newStats);
+      if (response.data.stats) {
+        onStatsChange({ ...stats, ...response.data.stats });
+      }
     } catch (error) {
       console.error('Failed to load hiscores:', error);
     } finally {

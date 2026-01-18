@@ -7,14 +7,15 @@ import ResultsPanel from '../components/Results/ResultsPanel';
 export default function Calculator() {
   const [equipment, setEquipment] = useState({});
   const [playerStats, setPlayerStats] = useState({
-    hitpoints: 1,
+    hitpoints: 10,
     attack: 1,
     strength: 1,
     defence: 1,
     ranged: 1,
+    prayer: 1,
     magic: 1,
     combatType: 'melee',
-    prayer: 'none',
+    prayerActive: 'none',
     style: 'aggressive',
     combatLevel: 3
   });
@@ -51,7 +52,7 @@ export default function Calculator() {
         equipmentBonus: getTotalBonus('stab'), // Using stab as the equipment bonus
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getTotalBonus('rangedStrBonus'),
-        prayerName: prayerMap[playerStats.prayer] || 'none',
+        prayerName: prayerMap[playerStats.prayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
         potionRanged: 0,
@@ -79,7 +80,7 @@ export default function Calculator() {
   };
 
   const handlePrayerChange = (prayer) => {
-    setPlayerStats({ ...playerStats, prayer });
+    setPlayerStats({ ...playerStats, prayerActive: prayer });
   };
 
   React.useEffect(() => {

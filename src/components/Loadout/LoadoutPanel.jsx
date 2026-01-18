@@ -66,7 +66,7 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
         )}
         {activeTab === 'prayer' && (
           <PrayerTab 
-            selectedPrayer={playerStats?.prayer}
+            selectedPrayer={playerStats?.prayerActive}
             onPrayerChange={onPrayerChange}
           />
         )}
