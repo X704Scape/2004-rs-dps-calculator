@@ -31,10 +31,19 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
 
   // Detect weapon type from equipment
   const weapon = equipment?.weapon;
-  const weaponName = weapon?.name?.toLowerCase() || '';
   
+  // Use weapon metadata attack styles if available
   let styles = WEAPON_STYLES.fists;
-  if (weapon) {
+  if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
+    // Map metadata styles to display format
+    styles = weapon.attackStyles.map(style => ({
+      id: style.id,
+      name: style.mode.charAt(0).toUpperCase() + style.mode.slice(1),
+      type: style.type,
+      bonus: style.id === 'rapid' ? 'Faster attacks' : ''
+    }));
+  } else if (weapon) {
+    const weaponName = weapon?.name?.toLowerCase() || '';
     if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
       styles = WEAPON_STYLES.ranged;
     } else {
