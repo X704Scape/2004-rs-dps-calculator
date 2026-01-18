@@ -15,6 +15,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const loadItems = async () => {
@@ -52,6 +53,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     const newEquipment = { ...equipment, [item.slot]: item };
     onEquipmentChange(newEquipment);
     setSearchTerm('');
+    setShowDropdown(false);
   };
 
   const getTotalBonus = (bonusType) => {
@@ -96,21 +98,27 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
             placeholder="Search for equipment..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => setShowDropdown(true)}
             className="w-full bg-transparent text-xs text-amber-100 outline-none"
           />
         </div>
 
-        {searchResults.length > 0 && (
+        {showDropdown && searchTerm && (
           <div className="absolute z-50 w-full mt-1 bg-gray-900 border-2 border-amber-900 rounded shadow-lg max-h-48 overflow-y-auto">
-            {searchResults.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleSelectItem(item)}
-                className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
-              >
-                <div className="font-semibold">{item.name}</div>
-                <div className="text-amber-700">{item.slot}</div>
-              </button>
+            {loading ? (
+              <div className="p-3 text-xs text-amber-100 text-center">Loading...</div>
+            ) : searchResults.length === 0 ? (
+              <div className="p-3 text-xs text-amber-100 text-center">No items found</div>
+            ) : (
+              searchResults.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleSelectItem(item)}
+                  className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
+                >
+                  <div className="font-semibold">{item.name}</div>
+                  <div className="text-amber-700">{item.slot}</div>
+                </button>
               ))
             )}
           </div>
