@@ -46,10 +46,25 @@ export default function Calculator() {
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
       let detectedCombatType = 'melee';
-      if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
-        detectedCombatType = 'ranged';
-      } else if (weaponName.includes('staff') || weaponName.includes('wand')) {
-        detectedCombatType = 'magic';
+      
+      // Check weapon metadata first
+      if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
+        const hasRanged = weapon.attackStyles.some(s => s.type === 'ranged');
+        const hasMagic = weapon.attackStyles.some(s => s.type === 'magic');
+        if (hasRanged) {
+          detectedCombatType = 'ranged';
+        } else if (hasMagic) {
+          detectedCombatType = 'magic';
+        }
+      } else {
+        // Fallback to name detection
+        if (weaponName.includes('bow') || weaponName.includes('crossbow') || weaponName.includes('dart') || 
+            weaponName.includes('knife') || weaponName.includes('javelin') || weaponName.includes('thrownaxe') ||
+            weaponName.includes('blowpipe')) {
+          detectedCombatType = 'ranged';
+        } else if (weaponName.includes('staff') || weaponName.includes('wand')) {
+          detectedCombatType = 'magic';
+        }
       }
 
       // Determine which attack bonus to use based on combat type and style
