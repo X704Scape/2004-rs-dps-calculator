@@ -81,53 +81,69 @@ Deno.serve(async (req) => {
         console.log('Fetching from:', NPC_URL);
         const npcResponse = await fetch(NPC_URL);
         console.log('NPC Response status:', npcResponse.status);
+        console.log('NPC Response headers:', Object.fromEntries(npcResponse.headers.entries()));
         
-        if (!npcResponse.ok) {
-          throw new Error(`Failed to fetch NPCs: ${npcResponse.status}`);
+        const rawText = await npcResponse.text();
+        console.log('Raw response length:', rawText.length);
+        console.log('First 500 chars:', rawText.substring(0, 500));
+        
+        let npcData;
+        try {
+          npcData = JSON.parse(rawText);
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          return Response.json({ 
+            error: 'Failed to parse NPC data', 
+            details: parseError.message,
+            sample: rawText.substring(0, 200)
+          }, { status: 500 });
         }
         
-        const npcData = await npcResponse.json();
-        console.log('Fetched NPCs from API:', npcData?.length);
+        console.log('Parsed data type:', typeof npcData);
         console.log('Is array?', Array.isArray(npcData));
-        console.log('Sample NPC data:', JSON.stringify(npcData?.[0], null, 2));
         
         if (!Array.isArray(npcData)) {
-          throw new Error('NPC data is not an array');
+          console.log('NPC data keys:', Object.keys(npcData).slice(0, 10));
+          return Response.json({ 
+            error: 'NPC data is not an array',
+            dataType: typeof npcData,
+            keys: Object.keys(npcData).slice(0, 10)
+          }, { status: 500 });
         }
         
         const allMonsters = npcData
           .map((npc, index) => {
-            if (!npc.name) return null;
+            if (!npc || !npc.name) return null;
 
             return {
               id: index,
               name: npc.name,
-              // Combat stats
               hitpoints: npc.hitpoints || 10,
               attack: npc.attack || 1,
               strength: npc.strength || 1,
               defence: npc.defence || 1,
               ranged: npc.ranged || 1,
               magic: npc.magic || 1,
-              // Defensive bonuses
               defenceStab: npc.stabdefence || 0,
               defenceSlash: npc.slashdefence || 0,
               defenceCrush: npc.crushdefence || 0,
               defenceRanged: npc.rangeddefence || 0,
               defenceMagic: npc.magicdefence || 0,
-              // Other
               size: npc.size || 1,
               aggressive: npc.aggressive || false
             };
           })
           .filter(npc => npc !== null);
 
-        console.log('Returning monsters:', allMonsters.length);
-        console.log('First 5 monsters:', allMonsters.slice(0, 5).map(m => m.name));
+        console.log('Total monsters processed:', allMonsters.length);
         return Response.json({ monsters: allMonsters });
       } catch (monsterError) {
         console.error('Monster fetch error:', monsterError);
-        throw monsterError;
+        console.error('Error stack:', monsterError.stack);
+        return Response.json({ 
+          error: monsterError.message,
+          stack: monsterError.stack 
+        }, { status: 500 });
       }
     }
 
