@@ -62,6 +62,15 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     }, 0);
   };
 
+  const getAttackSpeed = () => {
+    const weapon = equipment.weapon;
+    if (!weapon) return { ticks: 4, seconds: 2.4 };
+    
+    // Default is 4 ticks (2.4s), but some weapons are faster or slower
+    // This is a simplified version - you'd need to add attack speed data to items
+    return { ticks: 4, seconds: 2.4 };
+  };
+
   return (
     <div>
       {/* Equipment Grid */}
@@ -195,6 +204,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               <div>Rng: {getTotalBonus('rangedStrBonus')}</div>
               <div>Mag: {getTotalBonus('magic')}</div>
               <div>Pray: {getTotalBonus('prayer')}</div>
+              <div>Speed: {getAttackSpeed().ticks} ticks ({getAttackSpeed().seconds}s)</div>
             </div>
           </div>
         </div>
