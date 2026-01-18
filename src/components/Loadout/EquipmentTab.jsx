@@ -20,10 +20,24 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   useEffect(() => {
     const loadItems = async () => {
       try {
-        const response = await base44.functions.invoke('fetchGameData', { type: 'items' });
-        console.log('Items response:', response.data);
-        console.log('Total items:', response.data?.items?.length);
-        setItems(response.data.items || []);
+        const [itemsResponse, metaResponse] = await Promise.all([
+          base44.functions.invoke('fetchGameData', { type: 'items' }),
+          base44.functions.invoke('fetchWeaponsMeta', {})
+        ]);
+        console.log('Items response:', itemsResponse.data);
+        console.log('Total items:', itemsResponse.data?.items?.length);
+        
+        // Merge weapons metadata into items
+        const itemsWithMeta = (itemsResponse.data.items || []).map(item => {
+          const meta = metaResponse.data.weaponsMeta[item.id];
+          return {
+            ...item,
+            attackStyles: meta?.attackStyles || item.attackStyles,
+            speedOverrides: meta?.speedOverrides || item.speedOverrides
+          };
+        });
+        
+        setItems(itemsWithMeta);
       } catch (error) {
         console.error('Failed to load items:', error);
       } finally {
