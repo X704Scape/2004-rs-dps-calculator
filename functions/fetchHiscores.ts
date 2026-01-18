@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${username}`);
     const html = await response.text();
 
-    // Parse stats from HTML
+    // Parse stats from HTML table structure
     const stats = {
       hitpoints: 10,
       attack: 1,
@@ -23,20 +23,22 @@ Deno.serve(async (req) => {
       prayer: 1
     };
 
-    // Extract level values from the HTML
-    const levelMatches = html.matchAll(/level.*?(\d+)/gi);
-    const levels = Array.from(levelMatches).map(m => parseInt(m[1]));
+    // Extract skill rows - format: Skill | Rank | Level | XP
+    const attackMatch = html.match(/Attack.*?<td>(\d+)<\/td>/);
+    const defenceMatch = html.match(/Defence.*?<td>(\d+)<\/td>/);
+    const strengthMatch = html.match(/Strength.*?<td>(\d+)<\/td>/);
+    const hitpointsMatch = html.match(/Hitpoints.*?<td>(\d+)<\/td>/);
+    const rangedMatch = html.match(/Ranged.*?<td>(\d+)<\/td>/);
+    const prayerMatch = html.match(/Prayer.*?<td>(\d+)<\/td>/);
+    const magicMatch = html.match(/Magic.*?<td>(\d+)<\/td>/);
 
-    // Map to specific skills based on typical hiscores order
-    if (levels.length >= 7) {
-      stats.hitpoints = levels[3] || 10;
-      stats.attack = levels[0] || 1;
-      stats.strength = levels[1] || 1;
-      stats.defence = levels[2] || 1;
-      stats.ranged = levels[4] || 1;
-      stats.prayer = levels[5] || 1;
-      stats.magic = levels[6] || 1;
-    }
+    if (attackMatch) stats.attack = parseInt(attackMatch[1]);
+    if (defenceMatch) stats.defence = parseInt(defenceMatch[1]);
+    if (strengthMatch) stats.strength = parseInt(strengthMatch[1]);
+    if (hitpointsMatch) stats.hitpoints = parseInt(hitpointsMatch[1]);
+    if (rangedMatch) stats.ranged = parseInt(rangedMatch[1]);
+    if (prayerMatch) stats.prayer = parseInt(prayerMatch[1]);
+    if (magicMatch) stats.magic = parseInt(magicMatch[1]);
 
     return Response.json({ stats });
   } catch (error) {
