@@ -31,17 +31,11 @@ Deno.serve(async (req) => {
       const itemData = await itemResponse.json();
       console.log('Fetched items from API:', itemData?.length);
 
-      // Load weapons metadata for attack styles and speed overrides
-      const weaponsMetaResponse = await fetch('file:///tmp/weaponsMeta.json').catch(() => null);
-      let weaponsMeta = {};
-      if (weaponsMetaResponse) {
-        try {
-          const metaArray = await weaponsMetaResponse.json();
-          weaponsMeta = Object.fromEntries(metaArray.map(w => [w.id, w]));
-        } catch (e) {
-          console.log('Could not parse weapons metadata');
-        }
-      }
+      // Weapons metadata: attack styles and speed overrides indexed by item ID
+      const weaponsMeta = {
+        35: { attackStyles: [{ mode: 'accurate', id: 'accurate', type: 'slash' }, { mode: 'aggressive', id: 'aggressive', type: 'slash' }, { mode: 'controlled', id: 'controlled', type: 'stab' }, { mode: 'defensive', id: 'defensive', type: 'slash' }] },
+        767: { attackStyles: [{ mode: 'accurate', id: 'accurate', type: 'ranged' }, { mode: 'rapid', id: 'rapid', type: 'ranged' }, { mode: 'defensive', id: 'longrange', type: 'ranged' }], speedOverrides: [{ styleId: 'rapid', speedTicks: 5 }] }
+      };
 
       const wearableItems = itemData
         .map((item, index) => {
