@@ -53,11 +53,14 @@ function getAccuracy(effectiveAttack, equipmentBonus, monsterDefence) {
   const attackRoll = effectiveAttack * (equipmentBonus + 64);
   const defenceRoll = Math.floor(monsterDefence * 1.5 + 40);
   
+  let accuracy;
   if (attackRoll > defenceRoll) {
-    return Math.min(1.0, (2 * attackRoll - defenceRoll) / (2 * attackRoll));
+    accuracy = Math.min(1.0, (2 * attackRoll - defenceRoll) / (2 * attackRoll));
   } else {
-    return Math.max(0.0, (attackRoll - defenceRoll) / (2 * defenceRoll));
+    accuracy = Math.max(0.0, (attackRoll - defenceRoll) / (2 * defenceRoll));
   }
+  
+  return { accuracy, attackRoll, defenceRoll };
 }
 
 Deno.serve(async (req) => {
@@ -94,6 +97,8 @@ Deno.serve(async (req) => {
 
     let maxHit = 0;
     let accuracy = 0;
+    let attackRoll = 0;
+    let npcDefRoll = 0;
     let dps = 0;
     let ttk = 0;
 
@@ -101,15 +106,23 @@ Deno.serve(async (req) => {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
-      accuracy = getAccuracy(effectiveAtk, equipmentBonus, monsterDefence);
+      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterDefence);
+      accuracy = accuracyResult.accuracy;
+      attackRoll = accuracyResult.attackRoll;
+      npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'ranged') {
       const effectiveRng = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getRangedMaxHit(effectiveRng, rangedStrBonus);
-      accuracy = getAccuracy(effectiveAtk, equipmentBonus, monsterRanged);
+      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterRanged);
+      accuracy = accuracyResult.accuracy;
+      attackRoll = accuracyResult.attackRoll;
+      npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'magic') {
       maxHit = getMagicMaxHit(spellMaxHit, hasChaosGauntlets, isBoltSpell);
       accuracy = 1.0; // Magic doesn't use accuracy in 2004
+      attackRoll = 0;
+      npcDefRoll = 0;
     }
 
     // DPS calculation (assuming 4 ticks per attack in 2004)
@@ -123,6 +136,8 @@ Deno.serve(async (req) => {
     }
 
     return Response.json({
+      attackRoll,
+      npcDefRoll,
       maxHit,
       accuracy: (accuracy * 100).toFixed(2),
       dps: dps.toFixed(3),
