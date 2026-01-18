@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
             name: item.name || 'Unknown',
             slot,
             wearpos: equipData.wearpos,
+            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(item.name)}.png`,
             // Melee bonuses
             stab: equipData.stabattack || 0,
             slash: equipData.slashattack || 0,

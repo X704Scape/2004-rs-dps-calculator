@@ -76,12 +76,16 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               return (
                 <div
                   key={slot}
-                  className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition"
+                  className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition overflow-hidden"
                   title={item ? item.name : `Empty ${slot}`}
                 >
-                  <span className="text-xs text-amber-700">
-                    {item ? '✓' : slot.charAt(0).toUpperCase()}
-                  </span>
+                  {item && item.icon ? (
+                    <img src={item.icon} alt={item.name} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-amber-700">
+                      {slot.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -114,10 +118,15 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                 <button
                   key={item.id}
                   onClick={() => handleSelectItem(item)}
-                  className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
+                  className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
-                  <div className="font-semibold">{item.name}</div>
-                  <div className="text-amber-700">{item.slot}</div>
+                  {item.icon && (
+                    <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain" />
+                  )}
+                  <div>
+                    <div className="font-semibold">{item.name}</div>
+                    <div className="text-amber-700">{item.slot}</div>
+                  </div>
                 </button>
               ))
             )}
