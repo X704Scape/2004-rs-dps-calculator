@@ -42,11 +42,20 @@ export default function Calculator() {
         ultimate_strength: 'ultimate_strength'
       };
 
+      // Auto-detect combat type from equipped weapon
+      const weapon = equipment.weapon;
+      const weaponName = weapon?.name?.toLowerCase() || '';
+      let detectedCombatType = 'melee';
+      if (weaponName.includes('bow') || weaponName.includes('crossbow')) {
+        detectedCombatType = 'ranged';
+      } else if (weaponName.includes('staff') || weaponName.includes('wand')) {
+        detectedCombatType = 'magic';
+      }
+
       // Determine which attack bonus to use based on combat type and style
       let attackBonus = 0;
-      if (playerStats.combatType === 'melee') {
+      if (detectedCombatType === 'melee') {
         // Use the appropriate melee bonus based on attack style
-        const weapon = equipment.weapon;
         if (weapon?.attackType === 'stab' || playerStats.style === 'stab') {
           attackBonus = getTotalBonus('stab');
         } else if (weapon?.attackType === 'slash' || playerStats.style === 'slash') {
@@ -54,20 +63,20 @@ export default function Calculator() {
         } else {
           attackBonus = getTotalBonus('crush');
         }
-      } else if (playerStats.combatType === 'ranged') {
+      } else if (detectedCombatType === 'ranged') {
         attackBonus = getTotalBonus('ranged');
-      } else if (playerStats.combatType === 'magic') {
+      } else if (detectedCombatType === 'magic') {
         attackBonus = getTotalBonus('magic');
       }
 
       console.log('=== Sending to calculateDPS ===');
-      console.log('Combat Type:', playerStats.combatType);
+      console.log('Combat Type:', detectedCombatType);
       console.log('Ranged Level:', playerStats.ranged);
       console.log('Ranged Str Bonus from equipment:', getTotalBonus('rangedStrBonus'));
       console.log('Attack Bonus:', attackBonus);
 
       const dpsResponse = await base44.functions.invoke('calculateDPS', {
-        combatType: playerStats.combatType,
+        combatType: detectedCombatType,
         attackLevel: playerStats.attack,
         strengthLevel: playerStats.strength,
         rangedLevel: playerStats.ranged,
