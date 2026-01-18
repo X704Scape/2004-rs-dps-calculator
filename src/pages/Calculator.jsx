@@ -60,6 +60,12 @@ export default function Calculator() {
         attackBonus = getTotalBonus('magic');
       }
 
+      console.log('=== Sending to calculateDPS ===');
+      console.log('Combat Type:', playerStats.combatType);
+      console.log('Ranged Level:', playerStats.ranged);
+      console.log('Ranged Str Bonus from equipment:', getTotalBonus('rangedStrBonus'));
+      console.log('Attack Bonus:', attackBonus);
+
       const dpsResponse = await base44.functions.invoke('calculateDPS', {
         combatType: playerStats.combatType,
         attackLevel: playerStats.attack,
