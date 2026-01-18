@@ -77,41 +77,58 @@ Deno.serve(async (req) => {
     }
 
     if (dataType === 'monsters') {
-      const npcResponse = await fetch(NPC_URL);
-      const npcData = await npcResponse.json();
-      console.log('Fetched NPCs from API:', npcData?.length);
-      console.log('Sample NPC data:', npcData?.[0]);
-      
-      const allMonsters = npcData
-        .map((npc, index) => {
-          if (!npc.name) return null;
+      try {
+        console.log('Fetching from:', NPC_URL);
+        const npcResponse = await fetch(NPC_URL);
+        console.log('NPC Response status:', npcResponse.status);
+        
+        if (!npcResponse.ok) {
+          throw new Error(`Failed to fetch NPCs: ${npcResponse.status}`);
+        }
+        
+        const npcData = await npcResponse.json();
+        console.log('Fetched NPCs from API:', npcData?.length);
+        console.log('Is array?', Array.isArray(npcData));
+        console.log('Sample NPC data:', JSON.stringify(npcData?.[0], null, 2));
+        
+        if (!Array.isArray(npcData)) {
+          throw new Error('NPC data is not an array');
+        }
+        
+        const allMonsters = npcData
+          .map((npc, index) => {
+            if (!npc.name) return null;
 
-          return {
-            id: index,
-            name: npc.name,
-            // Combat stats
-            hitpoints: npc.hitpoints || 10,
-            attack: npc.attack || 1,
-            strength: npc.strength || 1,
-            defence: npc.defence || 1,
-            ranged: npc.ranged || 1,
-            magic: npc.magic || 1,
-            // Defensive bonuses
-            defenceStab: npc.stabdefence || 0,
-            defenceSlash: npc.slashdefence || 0,
-            defenceCrush: npc.crushdefence || 0,
-            defenceRanged: npc.rangeddefence || 0,
-            defenceMagic: npc.magicdefence || 0,
-            // Other
-            size: npc.size || 1,
-            aggressive: npc.aggressive || false
-          };
-        })
-        .filter(npc => npc !== null);
+            return {
+              id: index,
+              name: npc.name,
+              // Combat stats
+              hitpoints: npc.hitpoints || 10,
+              attack: npc.attack || 1,
+              strength: npc.strength || 1,
+              defence: npc.defence || 1,
+              ranged: npc.ranged || 1,
+              magic: npc.magic || 1,
+              // Defensive bonuses
+              defenceStab: npc.stabdefence || 0,
+              defenceSlash: npc.slashdefence || 0,
+              defenceCrush: npc.crushdefence || 0,
+              defenceRanged: npc.rangeddefence || 0,
+              defenceMagic: npc.magicdefence || 0,
+              // Other
+              size: npc.size || 1,
+              aggressive: npc.aggressive || false
+            };
+          })
+          .filter(npc => npc !== null);
 
-      console.log('Returning monsters:', allMonsters.length);
-      console.log('First 5 monsters:', allMonsters.slice(0, 5));
-      return Response.json({ monsters: allMonsters });
+        console.log('Returning monsters:', allMonsters.length);
+        console.log('First 5 monsters:', allMonsters.slice(0, 5).map(m => m.name));
+        return Response.json({ monsters: allMonsters });
+      } catch (monsterError) {
+        console.error('Monster fetch error:', monsterError);
+        throw monsterError;
+      }
     }
 
     return Response.json({ error: 'Invalid request' }, { status: 400 });
