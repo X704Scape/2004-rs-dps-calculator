@@ -76,8 +76,15 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               return (
                 <div
                   key={slot}
+                  onClick={() => {
+                    if (item) {
+                      const newEquipment = { ...equipment };
+                      delete newEquipment[slot];
+                      onEquipmentChange(newEquipment);
+                    }
+                  }}
                   className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition overflow-hidden"
-                  title={item ? item.name : `Empty ${slot}`}
+                  title={item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
                   {item && item.icon ? (
                     <img 
