@@ -111,10 +111,10 @@ Deno.serve(async (req) => {
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;
     } else if (combatType === 'ranged') {
-      const effectiveRng = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
-      const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
-      maxHit = getRangedMaxHit(effectiveRng, rangedStrBonus);
-      const accuracyResult = getAccuracy(effectiveAtk, equipmentBonus, monsterRanged);
+      const effectiveRngStr = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
+      const effectiveRngAtk = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
+      maxHit = getRangedMaxHit(effectiveRngStr, rangedStrBonus);
+      const accuracyResult = getAccuracy(effectiveRngAtk, equipmentBonus, monsterRanged);
       accuracy = accuracyResult.accuracy;
       attackRoll = accuracyResult.attackRoll;
       npcDefRoll = accuracyResult.defenceRoll;
