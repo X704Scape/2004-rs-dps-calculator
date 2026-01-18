@@ -50,10 +50,15 @@ function getEffectiveAttack(attackLevel, prayerMult, styleName, potionBoost = 0)
   return Math.floor(attackLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-// Matches 2004 randominc comparison: if (randominc(attackRoll) > randominc(defenceRoll))
+// Matches 2004 accuracy formula
 function getAccuracy(attackRoll, defenceRoll) {
-  // Probability that a random 0-attackRoll > random 0-defenceRoll
-  return (attackRoll + 1) / (attackRoll + defenceRoll + 2);
+  let accuracy;
+  if (attackRoll > defenceRoll) {
+    accuracy = 1 - (defenceRoll + 2) / (2 * (attackRoll + 1));
+  } else {
+    accuracy = attackRoll / (2 * (defenceRoll + 1));
+  }
+  return accuracy;
 }
 
 Deno.serve(async (req) => {
