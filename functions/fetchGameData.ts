@@ -20,8 +20,7 @@ const WEARPOS_MAP = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const url = new URL(req.url);
-    const dataType = url.searchParams.get('type');
+    const { type: dataType } = await req.json();
 
     if (dataType === 'items') {
       const itemResponse = await fetch(ITEM_URL);
