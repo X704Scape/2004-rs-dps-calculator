@@ -30,7 +30,19 @@ Deno.serve(async (req) => {
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
       console.log('Fetched items from API:', itemData?.length);
-      
+
+      // Load weapons metadata for attack styles and speed overrides
+      const weaponsMetaResponse = await fetch('file:///tmp/weaponsMeta.json').catch(() => null);
+      let weaponsMeta = {};
+      if (weaponsMetaResponse) {
+        try {
+          const metaArray = await weaponsMetaResponse.json();
+          weaponsMeta = Object.fromEntries(metaArray.map(w => [w.id, w]));
+        } catch (e) {
+          console.log('Could not parse weapons metadata');
+        }
+      }
+
       const wearableItems = itemData
         .map((item, index) => {
           const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
@@ -68,9 +80,12 @@ Deno.serve(async (req) => {
             prayer: equipData.prayerbonus || 0,
             // Attack speed (in ticks)
             attackRate: equipData.attackrate || 4,
+            // Attack styles and speed overrides from metadata
+            attackStyles: weaponsMeta[index]?.attackStyles || null,
+            speedOverrides: weaponsMeta[index]?.speedOverrides || null,
             // Requirement
             requirement: item.req || 0
-          };
+            };
         })
         .filter(item => item !== null);
 
