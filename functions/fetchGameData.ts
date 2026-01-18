@@ -80,15 +80,15 @@ Deno.serve(async (req) => {
       const npcResponse = await fetch(NPC_URL);
       const npcData = await npcResponse.json();
       console.log('Fetched NPCs from API:', npcData?.length);
+      console.log('Sample NPC data:', npcData?.[0]);
       
-      const attackMonsters = npcData
+      const allMonsters = npcData
         .map((npc, index) => {
-          // Include NPCs that have combat stats
           if (!npc.name) return null;
 
           return {
             id: index,
-            name: npc.name || 'Unknown',
+            name: npc.name,
             // Combat stats
             hitpoints: npc.hitpoints || 10,
             attack: npc.attack || 1,
@@ -109,8 +109,9 @@ Deno.serve(async (req) => {
         })
         .filter(npc => npc !== null);
 
-      console.log('Returning attack monsters:', attackMonsters.length);
-      return Response.json({ monsters: attackMonsters });
+      console.log('Returning monsters:', allMonsters.length);
+      console.log('First 5 monsters:', allMonsters.slice(0, 5));
+      return Response.json({ monsters: allMonsters });
     }
 
     return Response.json({ error: 'Invalid request' }, { status: 400 });
