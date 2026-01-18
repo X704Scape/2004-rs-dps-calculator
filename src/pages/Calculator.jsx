@@ -136,7 +136,7 @@ export default function Calculator() {
         isBoltSpell: false
       });
 
-      setResults(dpsResponse.data);
+      setResults({ ...dpsResponse.data, attackSpeedTicks });
     } catch (error) {
       console.error('Calculation failed:', error);
     } finally {

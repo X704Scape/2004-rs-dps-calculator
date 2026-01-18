@@ -49,6 +49,11 @@ export default function ResultsPanel({ results }) {
           <p className="text-amber-700 text-xs font-bold">NPC def roll</p>
           <p className="text-amber-100 text-2xl font-bold">{results.npcDefRoll}</p>
         </div>
+
+        <div className="bg-gray-900 rounded p-3 border border-amber-900">
+          <p className="text-amber-700 text-xs font-bold">Speed</p>
+          <p className="text-amber-100 text-lg font-bold">{results.attackSpeedTicks} ticks ({(results.attackSpeedTicks * 0.6).toFixed(2)}s)</p>
+        </div>
       </div>
     </div>
   );

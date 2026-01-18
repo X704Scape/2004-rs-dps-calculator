@@ -32,6 +32,20 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
   // Detect weapon type from equipment
   const weapon = equipment?.weapon;
   
+  // Calculate attack speed for selected style
+  const getAttackSpeed = () => {
+    if (!weapon) return null;
+    
+    let baseSpeed = weapon.speedTicks || 4;
+    if (weapon.speedOverrides && weapon.speedOverrides.length > 0) {
+      const override = weapon.speedOverrides.find(o => o.styleId === selectedStyle);
+      if (override) {
+        baseSpeed = override.speedTicks;
+      }
+    }
+    return baseSpeed;
+  };
+  
   // Use weapon metadata attack styles if available
   let styles = WEAPON_STYLES.fists;
   if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
@@ -58,9 +72,14 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
 
   return (
     <div>
-      <h3 className="text-amber-600 font-bold text-sm mb-3">
-        Combat Style {!weapon && <span className="text-amber-700 text-xs">(Fists)</span>}
-      </h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-amber-600 font-bold text-sm">
+          Combat Style {!weapon && <span className="text-amber-700 text-xs">(Fists)</span>}
+        </h3>
+        {getAttackSpeed() && (
+          <span className="text-amber-500 text-xs font-semibold">{getAttackSpeed()} ticks ({(getAttackSpeed() * 0.6).toFixed(2)}s)</span>
+        )}
+      </div>
       <div className="space-y-2">
         {styles.map((style) => (
           <button
