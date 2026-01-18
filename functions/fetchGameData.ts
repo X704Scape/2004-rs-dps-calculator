@@ -20,11 +20,15 @@ const WEARPOS_MAP = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { type: dataType } = await req.json();
+    const body = await req.json();
+    const dataType = body.type;
+    
+    console.log('fetchGameData called with type:', dataType);
 
     if (dataType === 'items') {
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
+      console.log('Fetched items from API:', itemData?.length);
       
       const wearableItems = itemData
         .map((item, index) => {
@@ -64,12 +68,14 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
+      console.log('Returning wearable items:', wearableItems.length);
       return Response.json({ items: wearableItems });
     }
 
     if (dataType === 'monsters') {
       const npcResponse = await fetch(NPC_URL);
       const npcData = await npcResponse.json();
+      console.log('Fetched NPCs from API:', npcData?.length);
       
       const attackMonsters = npcData
         .map((npc, index) => {
@@ -99,6 +105,7 @@ Deno.serve(async (req) => {
         })
         .filter(npc => npc !== null);
 
+      console.log('Returning attack monsters:', attackMonsters.length);
       return Response.json({ monsters: attackMonsters });
     }
 
