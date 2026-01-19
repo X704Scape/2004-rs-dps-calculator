@@ -78,7 +78,34 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   }, [items]);
 
   const handleSelectItem = (item) => {
-    const newEquipment = { ...equipment, [item.slot]: item };
+    const newEquipment = { ...equipment };
+    
+    // Check if item is 2-handed (occupies both weapon and shield slots)
+    const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
+    
+    // If equipping a 2-handed weapon, clear shield slot
+    if (is2Handed) {
+      delete newEquipment.shield;
+    }
+    
+    // If equipping to weapon or shield slot, check if a 2-handed weapon is equipped
+    if (item.slot === 'weapon' || item.slot === 'shield') {
+      const currentWeapon = newEquipment.weapon;
+      const currentShield = newEquipment.shield;
+      
+      // If a 2-handed weapon is equipped and we're equipping a shield or different weapon
+      if (currentWeapon?.wearpos2 === 'lefthand') {
+        delete newEquipment.weapon;
+        delete newEquipment.shield;
+      }
+      
+      // If equipping a shield and there's a 2-handed weapon, remove the 2-handed weapon
+      if (item.slot === 'shield' && currentWeapon?.wearpos2 === 'lefthand') {
+        delete newEquipment.weapon;
+      }
+    }
+    
+    newEquipment[item.slot] = item;
     onEquipmentChange(newEquipment);
     setSearchTerm('');
     setShowDropdown(false);
