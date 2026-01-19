@@ -96,7 +96,7 @@ const BOOSTS = [
         const drainDefence = Math.floor(allLevels.defence * 0.1);
         const drainRanged = Math.floor(allLevels.ranged * 0.1);
         const drainMagic = Math.floor(allLevels.magic * 0.1);
-        return drainAttack + drainDefence + drainRanged + drainMagic;
+        return Math.floor(10 + 0.25 * (drainAttack + drainDefence + drainRanged + drainMagic));
       }
       return 0;
     },
@@ -118,7 +118,7 @@ const BOOSTS = [
         const drainDefence = Math.floor(allLevels.defence * 0.1);
         const drainRanged = Math.floor(allLevels.ranged * 0.1);
         const drainMagic = Math.floor(allLevels.magic * 0.1);
-        return drainAttack + drainDefence + drainRanged + drainMagic;
+        return Math.floor(10 + 0.25 * (drainAttack + drainDefence + drainRanged + drainMagic));
       }
       return 0;
     },
