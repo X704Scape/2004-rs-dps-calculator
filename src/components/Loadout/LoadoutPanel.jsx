@@ -84,6 +84,8 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
             selectedSpell={playerStats.selectedSpell}
             onSpellChange={(spell) => onStatsChange({ ...playerStats, selectedSpell: spell })}
             playerStats={playerStats}
+            chargeActive={playerStats.chargeActive}
+            onChargeChange={(charge) => onStatsChange({ ...playerStats, chargeActive: charge })}
           />
         )}
       </div>

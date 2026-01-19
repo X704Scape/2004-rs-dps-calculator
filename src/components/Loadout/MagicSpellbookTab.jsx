@@ -35,9 +35,8 @@ const COMBAT_SPELLS = [
   { id: 'ibans_blast', name: "Iban's Blast", level: 50, maxHit: 25, speedTicks: 5, requiresStaff: true }
 ];
 
-export default function MagicSpellbookTab({ selectedSpell, onSpellChange, playerStats }) {
+export default function MagicSpellbookTab({ selectedSpell, onSpellChange, playerStats, chargeActive, onChargeChange }) {
   const [expandedSpell, setExpandedSpell] = useState(null);
-  const [chargeActive, setChargeActive] = useState(false);
 
   const handleSpellSelect = (spell) => {
     onSpellChange(spell);
@@ -60,7 +59,7 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
       
       {/* Charge Toggle */}
       <button
-        onClick={() => setChargeActive(!chargeActive)}
+        onClick={() => onChargeChange(!chargeActive)}
         className={`w-full mb-3 p-2 rounded border-2 transition ${
           chargeActive
             ? 'bg-yellow-900 border-yellow-600 text-yellow-100'
@@ -82,7 +81,7 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
               <span>Max: {getEffectiveMaxHit(selectedSpell)}</span>
             </div>
             <div className="flex items-center gap-1">
-              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/eeb289b44_image.png" className="w-3 h-3" alt="Speed" />
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aed2e430d_Screenshot2026-01-19020030.png" className="w-3 h-3" alt="Speed" />
               <span>{selectedSpell.speedTicks} ticks ({(selectedSpell.speedTicks * 0.6).toFixed(1)}s)</span>
             </div>
             {selectedSpell.requiresStaff && (

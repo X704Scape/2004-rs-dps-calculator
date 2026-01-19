@@ -18,7 +18,8 @@ export default function Calculator() {
     prayerActive: 'none',
     style: 'aggressive',
     combatLevel: 3,
-    selectedSpell: null
+    selectedSpell: null,
+    chargeActive: false
   });
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [results, setResults] = useState(null);
@@ -135,7 +136,7 @@ export default function Calculator() {
         monsterDefenceCrush: selectedMonster.defenceCrush,
         monsterDefenceRanged: selectedMonster.defenceRanged,
         monsterDefenceMagic: selectedMonster.defenceMagic,
-        spellMaxHit: playerStats.selectedSpell?.maxHit || 0,
+        spellMaxHit: (playerStats.selectedSpell?.requiresCharge && playerStats.chargeActive) ? 30 : (playerStats.selectedSpell?.maxHit || 0),
         hasChaosGauntlets: false,
         isBoltSpell: false
       });
