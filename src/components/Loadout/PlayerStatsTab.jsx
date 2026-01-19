@@ -174,28 +174,29 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       </div>
 
       {/* Manual Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="space-y-2 mb-4">
         {STATS.map((stat) => {
           const boostedKey = `boosted${stat.id.charAt(0).toUpperCase() + stat.id.slice(1)}`;
-          const boostedValue = stats[boostedKey];
+          const baseValue = stats[stat.id] || 1;
+          const boostedValue = stats[boostedKey] || baseValue;
+          const isBoosted = boostedValue !== baseValue;
           
           return (
-            <div key={stat.id}>
-              <label className="text-xs font-bold text-amber-700 block mb-1">{stat.label}</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  max={99}
-                  value={stats[stat.id] || 1}
-                  onChange={(e) => handleStatChange(stat.id, e.target.value)}
-                  className="w-full bg-gray-900 border border-amber-900 rounded px-2 py-1 text-xs text-amber-100 focus:outline-none"
-                />
-                {boostedValue && boostedValue !== stats[stat.id] && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-green-400 font-bold">
-                    +{boostedValue - stats[stat.id]}
-                  </span>
-                )}
+            <div key={stat.id} className="flex items-center gap-2">
+              <span className="text-amber-700 text-xs w-20">{stat.label}</span>
+              <input
+                type="number"
+                min={1}
+                max={99}
+                value={baseValue}
+                onChange={(e) => handleStatChange(stat.id, e.target.value)}
+                className="w-14 px-2 py-1 text-xs text-center rounded border border-amber-900 bg-gray-900 text-amber-100 focus:outline-none"
+              />
+              <span className="text-amber-700 text-xs">/</span>
+              <div className={`w-14 px-2 py-1 text-xs text-center rounded border ${
+                isBoosted ? 'border-green-600 bg-gray-800 text-green-400' : 'border-amber-900 bg-gray-950 text-amber-600'
+              }`}>
+                {boostedValue}
               </div>
             </div>
           );
