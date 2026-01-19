@@ -166,40 +166,36 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       {/* Potion Boosts */}
       <div className="bg-gray-900 rounded p-3 border border-amber-900">
         <label className="text-xs font-bold text-amber-700 block mb-2">Potion Boost</label>
-        <select
-          value={selectedPotion}
-          onChange={(e) => applyPotionBoost(e.target.value)}
-          className="w-full bg-gray-800 border border-amber-900 rounded px-2 py-1 text-xs text-amber-100 focus:outline-none"
-        >
-          {POTION_BOOSTS.map((potion) => (
-            <option key={potion.id} value={potion.id}>
-              {potion.label}
-            </option>
-          ))}
-        </select>
-        
-        {selectedPotion !== 'none' && (
-          <div className="mt-2 text-xs text-amber-300">
-            {selectedPotion === 'attack' && `+${Math.floor(3 + (stats.attack || 1) * 0.1)} Attack`}
-            {selectedPotion === 'super_attack' && `+${Math.floor(5 + (stats.attack || 1) * 0.15)} Attack`}
-            {selectedPotion === 'strength' && `+${Math.floor(3 + (stats.strength || 1) * 0.1)} Strength`}
-            {selectedPotion === 'super_strength' && `+${Math.floor(5 + (stats.strength || 1) * 0.15)} Strength`}
-            {selectedPotion === 'ranging' && `+${Math.floor(4 + (stats.ranged || 1) * 0.1)} Ranged`}
-            {selectedPotion === 'magic' && '+4 Magic'}
-            {selectedPotion === 'dragon_battleaxe' && (
-              <div>
-                <div className="text-red-400">-{Math.floor((stats.attack || 1) * 0.1)} Attack, -{Math.floor((stats.defence || 1) * 0.1)} Defence</div>
-                <div className="text-red-400">-{Math.floor((stats.ranged || 1) * 0.1)} Ranged, -{Math.floor((stats.magic || 1) * 0.1)} Magic</div>
-                <div className="text-green-400">+{Math.floor(10 + (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)) / 4)} Strength</div>
-              </div>
-            )}
-            {selectedPotion === 'dragon_battleaxe_restore' && (
-              <div className="text-green-400">
-                +{Math.floor(10 + (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)) / 4)} Strength (stats restored)
-              </div>
-            )}
-          </div>
-        )}
+        <div className="max-h-48 overflow-y-auto border border-amber-900 rounded">
+          {POTION_BOOSTS.map((potion) => {
+            const isSelected = selectedPotion === potion.id;
+            return (
+              <button
+                key={potion.id}
+                onClick={() => applyPotionBoost(potion.id)}
+                className={`w-full text-left px-3 py-2 text-xs border-b border-amber-900 last:border-b-0 transition ${
+                  isSelected
+                    ? 'bg-amber-900 text-amber-100 font-semibold'
+                    : 'bg-gray-800 text-amber-300 hover:bg-gray-700'
+                }`}
+              >
+                {potion.label}
+                {isSelected && potion.id !== 'none' && (
+                  <span className="ml-2 text-xs">
+                    {potion.id === 'attack' && `(+${Math.floor(3 + (stats.attack || 1) * 0.1)})`}
+                    {potion.id === 'super_attack' && `(+${Math.floor(5 + (stats.attack || 1) * 0.15)})`}
+                    {potion.id === 'strength' && `(+${Math.floor(3 + (stats.strength || 1) * 0.1)})`}
+                    {potion.id === 'super_strength' && `(+${Math.floor(5 + (stats.strength || 1) * 0.15)})`}
+                    {potion.id === 'ranging' && `(+${Math.floor(4 + (stats.ranged || 1) * 0.1)})`}
+                    {potion.id === 'magic' && '(+4)'}
+                    {potion.id === 'dragon_battleaxe' && `(+${Math.floor(10 + (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)) / 4)} Str)`}
+                    {potion.id === 'dragon_battleaxe_restore' && `(+${Math.floor(10 + (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)) / 4)} Str)`}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
