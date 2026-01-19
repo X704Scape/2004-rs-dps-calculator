@@ -27,7 +27,7 @@ const POTION_BOOSTS = [
 export default function PlayerStatsTab({ stats, onStatsChange }) {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedPotion, setSelectedPotion] = useState('none');
+  const [selectedPotions, setSelectedPotions] = useState([]);
 
   const handleStatChange = (id, value) => {
     onStatsChange({ ...stats, [id]: parseInt(value) || 1 });
@@ -50,11 +50,30 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     }
   };
 
-  const applyPotionBoost = (potionId) => {
-    setSelectedPotion(potionId);
-    const boostedStats = { ...stats, potionBoost: potionId };
-    
+  const togglePotionBoost = (potionId) => {
+    let newSelected;
     if (potionId === 'none') {
+      newSelected = [];
+    } else if (selectedPotions.includes(potionId)) {
+      newSelected = selectedPotions.filter(id => id !== potionId);
+    } else {
+      newSelected = [...selectedPotions, potionId];
+    }
+    
+    setSelectedPotions(newSelected);
+    applyAllBoosts(newSelected);
+  };
+
+  const applyAllBoosts = (potionIds) => {
+    const boostedStats = { ...stats, potionBoosts: potionIds };
+    
+    if (potionIds.length === 0) {
+      // Clear all boosts
+      delete boostedStats.boostedAttack;
+      delete boostedStats.boostedStrength;
+      delete boostedStats.boostedDefence;
+      delete boostedStats.boostedRanged;
+      delete boostedStats.boostedMagic;
       onStatsChange(boostedStats);
       return;
     }
@@ -65,46 +84,49 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     const currentMagic = stats.magic || 1;
     const currentDefence = stats.defence || 1;
 
-    switch (potionId) {
-      case 'attack':
-        boostedStats.boostedAttack = currentAttack + Math.floor(3 + currentAttack * 0.1);
-        break;
-      case 'super_attack':
-        boostedStats.boostedAttack = currentAttack + Math.floor(5 + currentAttack * 0.15);
-        break;
-      case 'strength':
-        boostedStats.boostedStrength = currentStrength + Math.floor(3 + currentStrength * 0.1);
-        break;
-      case 'super_strength':
-        boostedStats.boostedStrength = currentStrength + Math.floor(5 + currentStrength * 0.15);
-        break;
-      case 'ranging':
-        boostedStats.boostedRanged = currentRanged + Math.floor(4 + currentRanged * 0.1);
-        break;
-      case 'magic':
-        boostedStats.boostedMagic = currentMagic + 4;
-        break;
-      case 'dragon_battleaxe':
-        const drainAttack = Math.floor(currentAttack * 0.1);
-        const drainDefence = Math.floor(currentDefence * 0.1);
-        const drainRanged = Math.floor(currentRanged * 0.1);
-        const drainMagic = Math.floor(currentMagic * 0.1);
-        const totalDrained = drainAttack + drainDefence + drainRanged + drainMagic;
-        boostedStats.boostedAttack = currentAttack - drainAttack;
-        boostedStats.boostedDefence = currentDefence - drainDefence;
-        boostedStats.boostedRanged = currentRanged - drainRanged;
-        boostedStats.boostedMagic = currentMagic - drainMagic;
-        boostedStats.boostedStrength = currentStrength + Math.floor(10 + totalDrained / 4);
-        break;
-      case 'dragon_battleaxe_restore':
-        const drain2Attack = Math.floor(currentAttack * 0.1);
-        const drain2Defence = Math.floor(currentDefence * 0.1);
-        const drain2Ranged = Math.floor(currentRanged * 0.1);
-        const drain2Magic = Math.floor(currentMagic * 0.1);
-        const total2Drained = drain2Attack + drain2Defence + drain2Ranged + drain2Magic;
-        boostedStats.boostedStrength = currentStrength + Math.floor(10 + total2Drained / 4);
-        break;
-    }
+    // Apply each selected potion
+    potionIds.forEach(potionId => {
+      switch (potionId) {
+        case 'attack':
+          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(3 + currentAttack * 0.1));
+          break;
+        case 'super_attack':
+          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(5 + currentAttack * 0.15));
+          break;
+        case 'strength':
+          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(3 + currentStrength * 0.1));
+          break;
+        case 'super_strength':
+          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(5 + currentStrength * 0.15));
+          break;
+        case 'ranging':
+          boostedStats.boostedRanged = Math.max(boostedStats.boostedRanged || currentRanged, currentRanged + Math.floor(4 + currentRanged * 0.1));
+          break;
+        case 'magic':
+          boostedStats.boostedMagic = Math.max(boostedStats.boostedMagic || currentMagic, currentMagic + 4);
+          break;
+        case 'dragon_battleaxe':
+          const drainAttack = Math.floor(currentAttack * 0.1);
+          const drainDefence = Math.floor(currentDefence * 0.1);
+          const drainRanged = Math.floor(currentRanged * 0.1);
+          const drainMagic = Math.floor(currentMagic * 0.1);
+          const totalDrained = drainAttack + drainDefence + drainRanged + drainMagic;
+          boostedStats.boostedAttack = currentAttack - drainAttack;
+          boostedStats.boostedDefence = currentDefence - drainDefence;
+          boostedStats.boostedRanged = currentRanged - drainRanged;
+          boostedStats.boostedMagic = currentMagic - drainMagic;
+          boostedStats.boostedStrength = (boostedStats.boostedStrength || currentStrength) + Math.floor(10 + totalDrained / 4);
+          break;
+        case 'dragon_battleaxe_restore':
+          const drain2Attack = Math.floor(currentAttack * 0.1);
+          const drain2Defence = Math.floor(currentDefence * 0.1);
+          const drain2Ranged = Math.floor(currentRanged * 0.1);
+          const drain2Magic = Math.floor(currentMagic * 0.1);
+          const total2Drained = drain2Attack + drain2Defence + drain2Ranged + drain2Magic;
+          boostedStats.boostedStrength = (boostedStats.boostedStrength || currentStrength) + Math.floor(10 + total2Drained / 4);
+          break;
+      }
+    });
 
     onStatsChange(boostedStats);
   };
@@ -168,11 +190,11 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
         <label className="text-xs font-bold text-amber-700 block mb-2">Potion Boost</label>
         <div className="max-h-48 overflow-y-auto border border-amber-900 rounded">
           {POTION_BOOSTS.map((potion) => {
-            const isSelected = selectedPotion === potion.id;
+            const isSelected = potion.id === 'none' ? selectedPotions.length === 0 : selectedPotions.includes(potion.id);
             return (
               <button
                 key={potion.id}
-                onClick={() => applyPotionBoost(potion.id)}
+                onClick={() => togglePotionBoost(potion.id)}
                 className={`w-full text-left px-3 py-2 text-xs border-b border-amber-900 last:border-b-0 transition ${
                   isSelected
                     ? 'bg-amber-900 text-amber-100 font-semibold'
