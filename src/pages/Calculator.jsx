@@ -37,6 +37,47 @@ export default function Calculator() {
         }, 0);
       };
 
+      // Check if ammo is compatible with weapon
+      const isAmmoCompatible = () => {
+        const weapon = equipment.weapon;
+        const ammo = equipment.ammo;
+        if (!weapon || !ammo) return false;
+
+        const weaponName = weapon.name?.toLowerCase() || '';
+        const weaponCategory = weapon.category?.toLowerCase() || '';
+        const ammoName = ammo.name?.toLowerCase() || '';
+        const ammoCategory = ammo.category?.toLowerCase() || '';
+
+        // Bows use arrows
+        if (weaponName.includes('bow') && !weaponName.includes('crossbow')) {
+          return ammoCategory === 'arrows' || ammoName.includes('arrow');
+        }
+
+        // Crossbows use bolts
+        if (weaponName.includes('crossbow')) {
+          return ammoCategory === 'bolts' || ammoName.includes('bolt');
+        }
+
+        // Thrown weapons don't use ammo slot
+        return false;
+      };
+
+      // Get ranged strength bonus (only count ammo if compatible)
+      const getRangedStrBonus = () => {
+        let bonus = 0;
+        Object.entries(equipment).forEach(([slot, item]) => {
+          if (slot === 'ammo') {
+            // Only add ammo bonus if compatible with weapon
+            if (isAmmoCompatible()) {
+              bonus += item.rangedStrBonus || 0;
+            }
+          } else {
+            bonus += item.rangedStrBonus || 0;
+          }
+        });
+        return bonus;
+      };
+
       const prayerMap = {
         none: 'none',
         burst_of_strength: 'burst_of_strength',
@@ -118,7 +159,7 @@ export default function Calculator() {
         defenceLevel: playerStats.defence,
         equipmentBonus: attackBonus,
         strBonus: getTotalBonus('strBonus'),
-        rangedStrBonus: getTotalBonus('rangedStrBonus'),
+        rangedStrBonus: getRangedStrBonus(),
         magicBonus: getTotalBonus('magic'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
