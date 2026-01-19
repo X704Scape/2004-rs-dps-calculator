@@ -153,11 +153,15 @@ Deno.serve(async (req) => {
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
-      maxHit = getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets, isBoltSpell);
+      // Spell max hit is already calculated (base spell damage + charge boost if applicable)
+      maxHit = spellMaxHit;
 
-      // Magic accuracy in 2004
+      // Magic accuracy in 2004 - from npc_magic_attack_roll
+      // effective_magic = magic_level + 9 (style bonus of 1 = +9)
       const effectiveMagic = magicLevel + 9;
       attackRoll = effectiveMagic * (equipmentBonus + 64);
+      
+      // NPC magic defence roll
       const npcEffectiveMagic = monsterMagic + 9;
       npcDefRoll = npcEffectiveMagic * (monsterDefenceMagic + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
