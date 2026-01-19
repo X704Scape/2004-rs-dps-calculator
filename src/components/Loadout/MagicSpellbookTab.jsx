@@ -37,6 +37,7 @@ const COMBAT_SPELLS = [
 
 export default function MagicSpellbookTab({ selectedSpell, onSpellChange, playerStats }) {
   const [expandedSpell, setExpandedSpell] = useState(null);
+  const [chargeActive, setChargeActive] = useState(false);
 
   const handleSpellSelect = (spell) => {
     onSpellChange(spell);
@@ -46,9 +47,31 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
     setExpandedSpell(expandedSpell === spellId ? null : spellId);
   };
 
+  const getEffectiveMaxHit = (spell) => {
+    if (spell.requiresCharge && chargeActive) {
+      return 30;
+    }
+    return spell.maxHit;
+  };
+
   return (
     <div>
       <h3 className="text-amber-600 font-bold text-sm mb-3">Combat Spells</h3>
+      
+      {/* Charge Toggle */}
+      <button
+        onClick={() => setChargeActive(!chargeActive)}
+        className={`w-full mb-3 p-2 rounded border-2 transition ${
+          chargeActive
+            ? 'bg-yellow-900 border-yellow-600 text-yellow-100'
+            : 'bg-gray-900 border-gray-700 text-amber-100 hover:border-amber-800'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">⚡ Charge</span>
+          <span className="text-xs">{chargeActive ? 'Active' : 'Inactive'}</span>
+        </div>
+      </button>
       
       {selectedSpell && (
         <div className="mb-4 p-3 bg-amber-900 border-2 border-amber-700 rounded">
@@ -56,7 +79,7 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
           <div className="grid grid-cols-2 gap-2 text-xs text-amber-100">
             <div className="flex items-center gap-1">
               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/ca4eccc80_image.png" className="w-3 h-3" alt="Damage" />
-              <span>Max: {selectedSpell.maxHit}</span>
+              <span>Max: {getEffectiveMaxHit(selectedSpell)}</span>
             </div>
             <div className="flex items-center gap-1">
               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/eeb289b44_image.png" className="w-3 h-3" alt="Speed" />
@@ -98,7 +121,7 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-amber-100 font-semibold text-sm">{spell.name}</p>
-                    <p className="text-amber-700 text-xs">Max Hit: {spell.maxHit}</p>
+                    <p className="text-amber-700 text-xs">Max Hit: {getEffectiveMaxHit(spell)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-amber-500 text-xs">Lvl {spell.level}</p>
@@ -120,7 +143,7 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <p className="text-amber-700 font-semibold">Stats:</p>
-                      <p className="text-amber-100">• Max Hit: {spell.maxHit}</p>
+                      <p className="text-amber-100">• Max Hit: {getEffectiveMaxHit(spell)}</p>
                       <p className="text-amber-100">• Speed: {spell.speedTicks} ticks ({(spell.speedTicks * 0.6).toFixed(1)}s)</p>
                     </div>
                     <div>
