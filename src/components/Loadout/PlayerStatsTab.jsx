@@ -14,12 +14,15 @@ const STATS = [
 
 const POTION_BOOSTS = [
   { id: 'none', label: 'None' },
-  { id: 'attack', label: 'Attack Potion' },
-  { id: 'super_attack', label: 'Super Attack' },
-  { id: 'strength', label: 'Strength Potion' },
-  { id: 'super_strength', label: 'Super Strength' },
-  { id: 'ranging', label: 'Ranging Potion' },
-  { id: 'magic', label: 'Magic Potion' },
+  { id: 'attack', label: 'Attack Potion', priority: 1 },
+  { id: 'super_attack', label: 'Super Attack', priority: 2 },
+  { id: 'strength', label: 'Strength Potion', priority: 1 },
+  { id: 'super_strength', label: 'Super Strength', priority: 2 },
+  { id: 'defence', label: 'Defence Potion', priority: 1 },
+  { id: 'super_defence', label: 'Super Defence', priority: 2 },
+  { id: 'ranging', label: 'Ranging Potion', priority: 1 },
+  { id: 'magic', label: 'Magic Potion', priority: 1 },
+  { id: 'zamorak_brew', label: 'Zamorak Brew', priority: 3 },
   { id: 'dragon_battleaxe', label: 'Dragon Battleaxe Special' },
   { id: 'dragon_battleaxe_restore', label: 'Dragon Battleaxe + Restore' }
 ];
@@ -52,12 +55,15 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
 
   const getStatConflicts = (potionId) => {
     const conflicts = {
-      attack: ['attack', 'super_attack'],
-      super_attack: ['attack', 'super_attack'],
-      strength: ['strength', 'super_strength'],
-      super_strength: ['strength', 'super_strength'],
+      attack: ['attack', 'super_attack', 'zamorak_brew'],
+      super_attack: ['attack', 'super_attack', 'zamorak_brew'],
+      strength: ['strength', 'super_strength', 'zamorak_brew'],
+      super_strength: ['strength', 'super_strength', 'zamorak_brew'],
+      defence: ['defence', 'super_defence'],
+      super_defence: ['defence', 'super_defence'],
       ranging: ['ranging'],
       magic: ['magic'],
+      zamorak_brew: ['attack', 'super_attack', 'strength', 'super_strength', 'zamorak_brew'],
       dragon_battleaxe: ['dragon_battleaxe', 'dragon_battleaxe_restore'],
       dragon_battleaxe_restore: ['dragon_battleaxe', 'dragon_battleaxe_restore']
     };
@@ -100,47 +106,73 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     const currentRanged = stats.ranged || 1;
     const currentMagic = stats.magic || 1;
     const currentDefence = stats.defence || 1;
+    const currentHitpoints = stats.hitpoints || 10;
+    const currentPrayer = stats.prayer || 1;
 
     // Apply each selected potion
     potionIds.forEach(potionId => {
       switch (potionId) {
         case 'attack':
-          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(3 + currentAttack * 0.1));
+          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(currentAttack * 0.1) + 3);
           break;
         case 'super_attack':
-          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(5 + currentAttack * 0.15));
+          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(currentAttack * 0.15) + 5);
           break;
         case 'strength':
-          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(3 + currentStrength * 0.1));
+          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(currentStrength * 0.1) + 3);
           break;
         case 'super_strength':
-          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(5 + currentStrength * 0.15));
+          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(currentStrength * 0.15) + 5);
+          break;
+        case 'defence':
+          boostedStats.boostedDefence = Math.max(boostedStats.boostedDefence || currentDefence, currentDefence + Math.floor(currentDefence * 0.1) + 3);
+          break;
+        case 'super_defence':
+          boostedStats.boostedDefence = Math.max(boostedStats.boostedDefence || currentDefence, currentDefence + Math.floor(currentDefence * 0.15) + 5);
           break;
         case 'ranging':
-          boostedStats.boostedRanged = Math.max(boostedStats.boostedRanged || currentRanged, currentRanged + Math.floor(4 + currentRanged * 0.1));
+          boostedStats.boostedRanged = Math.max(boostedStats.boostedRanged || currentRanged, currentRanged + Math.floor(currentRanged * 0.1) + 4);
           break;
         case 'magic':
           boostedStats.boostedMagic = Math.max(boostedStats.boostedMagic || currentMagic, currentMagic + 4);
+          break;
+        case 'zamorak_brew':
+          boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(currentAttack * 0.2) + 2);
+          boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(currentStrength * 0.12) + 2);
+          boostedStats.boostedDefence = currentDefence - Math.floor(currentDefence * 0.1);
+          boostedStats.boostedHitpoints = currentHitpoints - Math.floor(currentHitpoints * 0.1);
+          boostedStats.boostedPrayer = currentPrayer - Math.floor(currentPrayer * 0.1);
           break;
         case 'dragon_battleaxe':
           const drainAttack = Math.floor(currentAttack * 0.1);
           const drainDefence = Math.floor(currentDefence * 0.1);
           const drainRanged = Math.floor(currentRanged * 0.1);
           const drainMagic = Math.floor(currentMagic * 0.1);
-          const strBoost = Math.floor(10 + 0.25 * (drainAttack + drainDefence + drainRanged + drainMagic));
+          const totalDrain = drainAttack + drainDefence + drainRanged + drainMagic;
           boostedStats.boostedAttack = currentAttack - drainAttack;
           boostedStats.boostedDefence = currentDefence - drainDefence;
           boostedStats.boostedRanged = currentRanged - drainRanged;
           boostedStats.boostedMagic = currentMagic - drainMagic;
-          boostedStats.boostedStrength = currentStrength + strBoost;
+          boostedStats.boostedStrength = currentStrength + totalDrain;
           break;
         case 'dragon_battleaxe_restore':
           const drain2Attack = Math.floor(currentAttack * 0.1);
           const drain2Defence = Math.floor(currentDefence * 0.1);
           const drain2Ranged = Math.floor(currentRanged * 0.1);
           const drain2Magic = Math.floor(currentMagic * 0.1);
-          const str2Boost = Math.floor(10 + 0.25 * (drain2Attack + drain2Defence + drain2Ranged + drain2Magic));
-          boostedStats.boostedStrength = currentStrength + str2Boost;
+          const total2Drain = drain2Attack + drain2Defence + drain2Ranged + drain2Magic;
+          
+          // Calculate restore amounts (30% + 10, but can't exceed base level)
+          const attackRestore = Math.min(Math.floor(currentAttack * 0.3) + 10, drain2Attack);
+          const defenceRestore = Math.min(Math.floor(currentDefence * 0.3) + 10, drain2Defence);
+          const rangedRestore = Math.min(Math.floor(currentRanged * 0.3) + 10, drain2Ranged);
+          const magicRestore = Math.min(Math.floor(currentMagic * 0.3) + 10, drain2Magic);
+          
+          boostedStats.boostedAttack = currentAttack - drain2Attack + attackRestore;
+          boostedStats.boostedDefence = currentDefence - drain2Defence + defenceRestore;
+          boostedStats.boostedRanged = currentRanged - drain2Ranged + rangedRestore;
+          boostedStats.boostedMagic = currentMagic - drain2Magic + magicRestore;
+          boostedStats.boostedStrength = currentStrength + total2Drain;
           break;
       }
     });
@@ -222,14 +254,17 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
                 {potion.label}
                 {isSelected && potion.id !== 'none' && (
                   <span className="ml-2 text-xs">
-                    {potion.id === 'attack' && `(+${Math.floor(3 + (stats.attack || 1) * 0.1)})`}
-                    {potion.id === 'super_attack' && `(+${Math.floor(5 + (stats.attack || 1) * 0.15)})`}
-                    {potion.id === 'strength' && `(+${Math.floor(3 + (stats.strength || 1) * 0.1)})`}
-                    {potion.id === 'super_strength' && `(+${Math.floor(5 + (stats.strength || 1) * 0.15)})`}
-                    {potion.id === 'ranging' && `(+${Math.floor(4 + (stats.ranged || 1) * 0.1)})`}
+                    {potion.id === 'attack' && `(+${Math.floor((stats.attack || 1) * 0.1) + 3})`}
+                    {potion.id === 'super_attack' && `(+${Math.floor((stats.attack || 1) * 0.15) + 5})`}
+                    {potion.id === 'strength' && `(+${Math.floor((stats.strength || 1) * 0.1) + 3})`}
+                    {potion.id === 'super_strength' && `(+${Math.floor((stats.strength || 1) * 0.15) + 5})`}
+                    {potion.id === 'defence' && `(+${Math.floor((stats.defence || 1) * 0.1) + 3})`}
+                    {potion.id === 'super_defence' && `(+${Math.floor((stats.defence || 1) * 0.15) + 5})`}
+                    {potion.id === 'ranging' && `(+${Math.floor((stats.ranged || 1) * 0.1) + 4})`}
                     {potion.id === 'magic' && '(+4)'}
-                    {potion.id === 'dragon_battleaxe' && `(+${Math.floor(10 + 0.25 * (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)))} Str)`}
-                    {potion.id === 'dragon_battleaxe_restore' && `(+${Math.floor(10 + 0.25 * (Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)))} Str)`}
+                    {potion.id === 'zamorak_brew' && `(Atk +${Math.floor((stats.attack || 1) * 0.2) + 2}, Str +${Math.floor((stats.strength || 1) * 0.12) + 2})`}
+                    {potion.id === 'dragon_battleaxe' && `(+${Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)} Str)`}
+                    {potion.id === 'dragon_battleaxe_restore' && `(+${Math.floor((stats.attack || 1) * 0.1) + Math.floor((stats.defence || 1) * 0.1) + Math.floor((stats.ranged || 1) * 0.1) + Math.floor((stats.magic || 1) * 0.1)} Str)`}
                   </span>
                 )}
               </button>
