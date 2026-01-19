@@ -18,8 +18,8 @@ const SLOT_ALIASES = {
   'ammunition': 'ammo'
 };
 
-// Parse melee weapons from config format
-function parseMeleeWeapons(configText) {
+// Parse config format (works for both melee and ranged)
+function parseConfigWeapons(configText) {
   const weapons = [];
   const lines = configText.split('\n');
   let currentWeapon = {};
@@ -51,6 +51,8 @@ function parseMeleeWeapons(configText) {
         equipable: true,
         requirement: 1
       };
+    } else if (line.startsWith('wearpos=quiver')) {
+      currentWeapon.slot = 'ammo';
     } else if (line.startsWith('category=')) {
       currentWeapon.category = line.substring(9);
       if (currentWeapon.category.includes('armour_body')) {
@@ -67,6 +69,8 @@ function parseMeleeWeapons(configText) {
         currentWeapon.slot = 'cape';
       } else if (currentWeapon.category.includes('armour_shield')) {
         currentWeapon.slot = 'shield';
+      } else if (currentWeapon.category === 'arrows' || currentWeapon.category === 'bolts') {
+        currentWeapon.slot = 'ammo';
       }
     } else if (line.startsWith('param=stabattack,')) {
       currentWeapon.stab = parseInt(line.split(',')[1]) || 0;
@@ -80,6 +84,8 @@ function parseMeleeWeapons(configText) {
       currentWeapon.ranged = parseInt(line.split(',')[1]) || 0;
     } else if (line.startsWith('param=strengthbonus,')) {
       currentWeapon.strBonus = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=rangebonus,')) {
+      currentWeapon.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
     } else if (line.startsWith('param=rangestrengthbonus,')) {
       currentWeapon.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
     } else if (line.startsWith('param=attackrate,')) {
@@ -117,8 +123,15 @@ Deno.serve(async (req) => {
       const meleeConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/21fdc43de_combined_melee_configs.txt';
       const meleeConfigResponse = await fetch(meleeConfigUrl);
       const meleeConfigText = await meleeConfigResponse.text();
-      const meleeWeapons = parseMeleeWeapons(meleeConfigText);
+      const meleeWeapons = parseConfigWeapons(meleeConfigText);
       console.log('Parsed melee weapons from config:', meleeWeapons.length);
+
+      // Fetch ranged weapons config
+      const rangedConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/c02381c5b_combined_ranged_configs.txt';
+      const rangedConfigResponse = await fetch(rangedConfigUrl);
+      const rangedConfigText = await rangedConfigResponse.text();
+      const rangedWeapons = parseConfigWeapons(rangedConfigText);
+      console.log('Parsed ranged weapons from config:', rangedWeapons.length);
 
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
@@ -176,8 +189,8 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
-      // Combine API items with melee weapons (melee weapons take priority)
-      const combinedItems = [...meleeWeapons, ...wearableItems];
+      // Combine API items with config weapons (config weapons take priority)
+      const combinedItems = [...meleeWeapons, ...rangedWeapons, ...wearableItems];
       
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
