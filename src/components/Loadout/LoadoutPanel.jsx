@@ -45,7 +45,7 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
             </button>
             {showCopyMenu && (
               <div className="absolute right-0 top-full mt-1 bg-gray-800 border-2 border-amber-900 rounded shadow-lg z-50 min-w-[120px]">
-                {otherLoadouts.map((loadout) => (
+                {otherLoadouts.map((loadout, index) => (
                   <button
                     key={loadout.id}
                     onClick={() => {
@@ -54,7 +54,7 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-gray-700 border-b border-amber-900 last:border-b-0"
                   >
-                    Copy from Loadout {loadout.id}
+                    Copy from Loadout {loadout.displayNumber || loadout.id}
                   </button>
                 ))}
               </div>

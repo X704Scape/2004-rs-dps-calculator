@@ -296,7 +296,7 @@ export default function Calculator() {
           <div className="lg:col-span-1">
             {/* Tabs */}
             <div className="flex items-center gap-1 mb-3">
-              {loadouts.map((loadout) => (
+              {loadouts.map((loadout, index) => (
                 <button
                   key={loadout.id}
                   onClick={() => setActiveLoadoutId(loadout.id)}
@@ -306,7 +306,7 @@ export default function Calculator() {
                       : 'bg-gray-900 border-amber-900/50 text-amber-700 hover:bg-gray-850'
                   }`}
                 >
-                  {loadout.id}
+                  {index + 1}
                   {loadouts.length > 1 && (
                     <button
                       onClick={(e) => {
@@ -329,20 +329,30 @@ export default function Calculator() {
             </div>
 
             {/* Active Loadout */}
-            {loadouts.filter(l => l.id === activeLoadoutId).map((loadout) => (
-              <LoadoutPanel
-                key={loadout.id}
-                loadoutName={loadout.name}
-                equipment={loadout.equipment}
-                onEquipmentChange={(eq) => updateLoadout(loadout.id, 'equipment', eq)}
-                playerStats={loadout.playerStats}
-                onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
-                onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
-                onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
-                otherLoadouts={loadouts.filter(l => l.id !== loadout.id)}
-                onCopyFrom={(fromId) => copyLoadout(loadout.id, fromId)}
-              />
-            ))}
+            {loadouts.filter(l => l.id === activeLoadoutId).map((loadout) => {
+              const activeIndex = loadouts.findIndex(l => l.id === activeLoadoutId);
+              const otherLoadoutsWithNumbers = loadouts
+                .filter(l => l.id !== loadout.id)
+                .map((l, idx) => {
+                  const actualIndex = loadouts.findIndex(lo => lo.id === l.id);
+                  return { ...l, displayNumber: actualIndex + 1 };
+                });
+              
+              return (
+                <LoadoutPanel
+                  key={loadout.id}
+                  loadoutName={loadout.name}
+                  equipment={loadout.equipment}
+                  onEquipmentChange={(eq) => updateLoadout(loadout.id, 'equipment', eq)}
+                  playerStats={loadout.playerStats}
+                  onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
+                  onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
+                  onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
+                  otherLoadouts={otherLoadoutsWithNumbers}
+                  onCopyFrom={(fromId) => copyLoadout(loadout.id, fromId)}
+                />
+              );
+            })}
           </div>
 
           {/* Middle Column - Monster */}
