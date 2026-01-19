@@ -31,8 +31,10 @@ function parseConfigWeapons(configText) {
       if (currentWeapon.name) {
         weapons.push(currentWeapon);
       }
+      const weaponName = line.substring(5);
       currentWeapon = {
-        name: line.substring(5),
+        name: weaponName,
+        iconUrl: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(weaponName)}.png`,
         stab: 0,
         slash: 0,
         crush: 0,

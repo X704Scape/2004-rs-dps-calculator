@@ -108,15 +108,26 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
   
   // Calculate attack speed for selected style
   const getAttackSpeed = () => {
-    if (!weapon) return null;
+    if (!weapon) return 4;
     
-    let baseSpeed = weapon.speedTicks || 4;
+    // Use attackRate from weapon data (from config)
+    let baseSpeed = weapon.attackRate || 4;
+    
+    // Check for metadata overrides
     if (weapon.speedOverrides && weapon.speedOverrides.length > 0) {
       const override = weapon.speedOverrides.find(o => o.styleId === selectedStyle);
       if (override) {
         baseSpeed = override.speedTicks;
       }
     }
+    
+    // Apply rapid style bonus for ranged
+    if (selectedStyle === 'rapid' && weapon.category && 
+        (weapon.category.includes('bow') || weapon.category.includes('crossbow') || 
+         weapon.category.includes('thrown') || weapon.category.includes('javelin'))) {
+      baseSpeed = Math.max(1, baseSpeed - 1);
+    }
+    
     return baseSpeed;
   };
   
@@ -145,9 +156,7 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
         <h3 className="text-amber-600 font-bold text-sm">
           Combat Style {!weapon && <span className="text-amber-700 text-xs">(Fists)</span>}
         </h3>
-        {getAttackSpeed() && (
-          <span className="text-amber-500 text-xs font-semibold">{getAttackSpeed()} ticks ({(getAttackSpeed() * 0.6).toFixed(2)}s)</span>
-        )}
+        <span className="text-amber-500 text-xs font-semibold">{getAttackSpeed()} ticks ({(getAttackSpeed() * 0.6).toFixed(1)}s)</span>
       </div>
       <div className="space-y-2">
         {styles.map((style) => (
