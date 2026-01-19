@@ -17,7 +17,8 @@ export default function Calculator() {
     combatType: 'melee',
     prayerActive: 'none',
     style: 'aggressive',
-    combatLevel: 3
+    combatLevel: 3,
+    selectedSpell: null
   });
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [results, setResults] = useState(null);
@@ -42,13 +43,15 @@ export default function Calculator() {
         ultimate_strength: 'ultimate_strength'
       };
 
-      // Auto-detect combat type from equipped weapon
+      // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
       let detectedCombatType = 'melee';
-      
-      // Check weapon metadata first
-      if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
+
+      // If spell style is selected, use magic
+      if (playerStats.style === 'spell') {
+        detectedCombatType = 'magic';
+      } else if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
         const hasRanged = weapon.attackStyles.some(s => s.type === 'ranged');
         const hasMagic = weapon.attackStyles.some(s => s.type === 'magic');
         if (hasRanged) {
@@ -115,6 +118,7 @@ export default function Calculator() {
         equipmentBonus: attackBonus,
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getTotalBonus('rangedStrBonus'),
+        magicBonus: getTotalBonus('magic'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
@@ -131,7 +135,7 @@ export default function Calculator() {
         monsterDefenceCrush: selectedMonster.defenceCrush,
         monsterDefenceRanged: selectedMonster.defenceRanged,
         monsterDefenceMagic: selectedMonster.defenceMagic,
-        spellMaxHit: 0,
+        spellMaxHit: playerStats.selectedSpell?.maxHit || 0,
         hasChaosGauntlets: false,
         isBoltSpell: false
       });

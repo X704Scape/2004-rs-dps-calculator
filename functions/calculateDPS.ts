@@ -37,11 +37,20 @@ function getRangedMaxHit(effectiveRanged, rangedStrBonus) {
   return Math.floor((rangeStrength + 320) / 640);
 }
 
-function getMagicMaxHit(spellMaxHit, hasChaosGauntlets = false, isBoltSpell = false) {
+function getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets = false, isBoltSpell = false) {
+  let maxHit = spellMaxHit;
+  
+  // Apply chaos gauntlets bonus for bolt spells
   if (hasChaosGauntlets && isBoltSpell) {
-    return spellMaxHit + 3;
+    maxHit += 3;
   }
-  return spellMaxHit;
+  
+  // Magic damage bonus from equipment (in 2004, this is a % bonus)
+  // Each point of magic bonus adds 0.5% to damage
+  const damageMultiplier = 1 + (magicBonus * 0.005);
+  maxHit = Math.floor(maxHit * damageMultiplier);
+  
+  return maxHit;
 }
 
 // Accuracy calculations
@@ -76,6 +85,7 @@ Deno.serve(async (req) => {
       equipmentBonus = 0,
       strBonus = 0,
       rangedStrBonus = 0,
+      magicBonus = 0,
       attackSpeedTicks = 4,
       prayerName = 'none',
       styleName = 'aggressive',
@@ -143,10 +153,14 @@ Deno.serve(async (req) => {
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
-      maxHit = getMagicMaxHit(spellMaxHit, hasChaosGauntlets, isBoltSpell);
-      accuracy = 1.0; // Magic doesn't use accuracy in 2004
-      attackRoll = 0;
-      npcDefRoll = 0;
+      maxHit = getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets, isBoltSpell);
+
+      // Magic accuracy in 2004
+      const effectiveMagic = magicLevel + 9;
+      attackRoll = effectiveMagic * (equipmentBonus + 64);
+      const npcEffectiveMagic = monsterMagic + 9;
+      npcDefRoll = npcEffectiveMagic * (monsterDefenceMagic + 64);
+      accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
     // DPS calculation

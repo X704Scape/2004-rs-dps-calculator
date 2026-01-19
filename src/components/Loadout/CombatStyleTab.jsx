@@ -83,7 +83,8 @@ const WEAPON_COMBAT_STYLES = {
   weapon_staff: [
     { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
     { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
+    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' },
+    { id: 'spell', name: 'Spell', type: 'magic', bonus: 'Spell damage' }
   ],
   weapon_claws: [
     { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },

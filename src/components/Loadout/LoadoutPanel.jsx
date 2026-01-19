@@ -71,7 +71,11 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
           />
         )}
         {activeTab === 'magic' && (
-          <MagicSpellbookTab />
+          <MagicSpellbookTab 
+            selectedSpell={playerStats.selectedSpell}
+            onSpellChange={(spell) => onStatsChange({ ...playerStats, selectedSpell: spell })}
+            playerStats={playerStats}
+          />
         )}
       </div>
     </div>
