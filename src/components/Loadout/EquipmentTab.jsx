@@ -109,9 +109,9 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition overflow-hidden"
                   title={item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
-                  {item && item.icon ? (
+                  {item && (item.icon || item.iconUrl) ? (
                     <img 
-                      src={item.icon} 
+                      src={item.iconUrl || item.icon} 
                       alt={item.name} 
                       className="w-full h-full object-contain" 
                       onError={(e) => {
@@ -158,9 +158,9 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   onClick={() => handleSelectItem(item)}
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
-                  {item.icon && (
+                  {(item.icon || item.iconUrl) && (
                     <img 
-                      src={item.icon} 
+                      src={item.iconUrl || item.icon} 
                       alt={item.name} 
                       className="w-8 h-8 object-contain" 
                       onError={(e) => e.target.style.display = 'none'}
