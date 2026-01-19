@@ -83,29 +83,31 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     // Check if item is 2-handed (occupies both weapon and shield slots)
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
     
-    // If equipping a 2-handed weapon, clear shield slot
+    // If equipping a 2-handed weapon
     if (is2Handed) {
       delete newEquipment.shield;
+      newEquipment.weapon = item;
+      newEquipment._2handed = true; // Mark that weapon is 2-handed
     }
-    
-    // If equipping to weapon or shield slot, check if a 2-handed weapon is equipped
-    if (item.slot === 'weapon' || item.slot === 'shield') {
-      const currentWeapon = newEquipment.weapon;
-      const currentShield = newEquipment.shield;
-      
-      // If a 2-handed weapon is equipped and we're equipping a shield or different weapon
-      if (currentWeapon?.wearpos2 === 'lefthand') {
-        delete newEquipment.weapon;
-        delete newEquipment.shield;
-      }
-      
-      // If equipping a shield and there's a 2-handed weapon, remove the 2-handed weapon
-      if (item.slot === 'shield' && currentWeapon?.wearpos2 === 'lefthand') {
+    // If equipping a shield
+    else if (item.slot === 'shield') {
+      // Remove 2-handed weapon if equipped
+      if (newEquipment.weapon?.wearpos2 === 'lefthand') {
         delete newEquipment.weapon;
       }
+      delete newEquipment._2handed;
+      newEquipment.shield = item;
+    }
+    // If equipping a 1-handed weapon
+    else if (item.slot === 'weapon') {
+      delete newEquipment._2handed;
+      newEquipment.weapon = item;
+    }
+    // Other slots
+    else {
+      newEquipment[item.slot] = item;
     }
     
-    newEquipment[item.slot] = item;
     onEquipmentChange(newEquipment);
     setSearchTerm('');
     setShowDropdown(false);
@@ -137,20 +139,27 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                 return <div key={colIdx} className="w-14 h-14" />;
               }
               const item = equipment[slot];
+              // If shield slot and 2-handed weapon equipped, show as blocked
+              const is2HandedEquipped = slot === 'shield' && equipment.weapon?.wearpos2 === 'lefthand';
+              
               return (
                 <div
                   key={slot}
                   onClick={() => {
-                    if (item) {
+                    if (item && !is2HandedEquipped) {
                       const newEquipment = { ...equipment };
                       delete newEquipment[slot];
+                      // If removing a 2-handed weapon, also clear the marker
+                      if (slot === 'weapon' && item.wearpos2 === 'lefthand') {
+                        delete newEquipment._2handed;
+                      }
                       onEquipmentChange(newEquipment);
                     }
                   }}
-                  className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition overflow-hidden"
-                  title={item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
+                  className={`w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center transition overflow-hidden ${is2HandedEquipped ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-amber-700'}`}
+                  title={is2HandedEquipped ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
-                  {item ? (
+                  {item && !is2HandedEquipped ? (
                     <img 
                       src={item.iconUrl || item.icon} 
                       alt={item.name} 
