@@ -185,23 +185,23 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
             <p className="text-amber-700 text-xs font-bold mb-1">Offensive</p>
             <div className="space-y-1 text-xs text-amber-100">
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/79db41041_image.png" className="w-4 h-4" alt="Stab" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" />
                 <span>{getTotalBonus('stab')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/5c40aa703_image.png" className="w-4 h-4" alt="Slash" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" />
                 <span>{getTotalBonus('slash')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/96eb633d6_image.png" className="w-4 h-4" alt="Crush" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" />
                 <span>{getTotalBonus('crush')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/82da4b80c_image.png" className="w-4 h-4" alt="Ranged" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" />
                 <span>{getTotalBonus('ranged')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/ca4eccc80_image.png" className="w-4 h-4" alt="Magic" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" />
                 <span>{getTotalBonus('magic')}</span>
               </div>
             </div>
@@ -210,23 +210,23 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
             <p className="text-amber-700 text-xs font-bold mb-1">Defensive</p>
             <div className="space-y-1 text-xs text-amber-100">
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/79db41041_image.png" className="w-4 h-4" alt="Stab" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" />
                 <span>{getTotalBonus('defenceStab')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/5c40aa703_image.png" className="w-4 h-4" alt="Slash" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" />
                 <span>{getTotalBonus('defenceSlash')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/96eb633d6_image.png" className="w-4 h-4" alt="Crush" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" />
                 <span>{getTotalBonus('defenceCrush')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/82da4b80c_image.png" className="w-4 h-4" alt="Ranged" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" />
                 <span>{getTotalBonus('defenceRanged')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/ca4eccc80_image.png" className="w-4 h-4" alt="Magic" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" />
                 <span>{getTotalBonus('defenceMagic')}</span>
               </div>
             </div>
@@ -235,19 +235,19 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
             <p className="text-amber-700 text-xs font-bold mb-1">Other</p>
             <div className="space-y-1 text-xs text-amber-100">
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aa2b9e483_image.png" className="w-4 h-4" alt="Strength" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/453a291c6_Screenshot2026-01-19015942.png" className="w-4 h-4" alt="Strength" />
                 <span>{getTotalBonus('strBonus')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/8fc04fb71_image.png" className="w-4 h-4" alt="Ranged Str" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/11e84d1fb_Screenshot2026-01-19015950.png" className="w-4 h-4" alt="Ranged Str" />
                 <span>{getTotalBonus('rangedStrBonus')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/68458de70_image.png" className="w-4 h-4" alt="Prayer" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/973d3f90f_Screenshot2026-01-19020003.png" className="w-4 h-4" alt="Prayer" />
                 <span>{getTotalBonus('prayer')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/eeb289b44_image.png" className="w-4 h-4" alt="Speed" />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aed2e430d_Screenshot2026-01-19020030.png" className="w-4 h-4" alt="Speed" />
                 <span>{getAttackSpeed().ticks} ticks ({getAttackSpeed().seconds}s)</span>
               </div>
             </div>
