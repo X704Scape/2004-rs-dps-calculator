@@ -10,6 +10,20 @@ const EQUIPMENT_LAYOUT = [
   ['hands', 'feet', 'ring']
 ];
 
+const SLOT_ICONS = {
+  head: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/355d8f601_Screenshot2026-01-19174415.png',
+  cape: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e918a39d4_Screenshot2026-01-19174428.png',
+  neck: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dc0f72912_Screenshot2026-01-19174436.png',
+  ammo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2b31f8d07_Screenshot2026-01-19174446.png',
+  weapon: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2e4842359_Screenshot2026-01-19174455.png',
+  body: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/6cc0cea65_Screenshot2026-01-19174459.png',
+  shield: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/b19038579_Screenshot2026-01-19174505.png',
+  legs: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/1518772df_Screenshot2026-01-19174515.png',
+  hands: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e590b19c2_Screenshot2026-01-19174522.png',
+  feet: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/1b207d49d_Screenshot2026-01-19174527.png',
+  ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
+};
+
 export default function EquipmentTab({ equipment, onEquipmentChange }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,20 +123,21 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   className="w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center cursor-pointer hover:border-amber-700 transition overflow-hidden"
                   title={item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
-                  {item && (item.icon || item.iconUrl) ? (
+                  {item ? (
                     <img 
                       src={item.iconUrl || item.icon} 
                       alt={item.name} 
                       className="w-full h-full object-contain" 
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        e.target.src = SLOT_ICONS[slot];
                       }}
                     />
-                  ) : null}
-                  {item && !item.icon && (
-                    <span className="text-xs text-amber-700">
-                      {slot.charAt(0).toUpperCase()}
-                    </span>
+                  ) : (
+                    <img 
+                      src={SLOT_ICONS[slot]} 
+                      alt={`Empty ${slot}`} 
+                      className="w-full h-full object-contain opacity-50" 
+                    />
                   )}
                 </div>
               );
