@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import LoadoutPanel from '../components/Loadout/LoadoutPanel';
 import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
+
+const calculateCombatLevel = (stats) => {
+  const base = 10 * (stats.defence + stats.hitpoints + Math.floor(stats.prayer / 2));
+  const melee = 13 * (stats.attack + stats.strength);
+  const ranged = Math.floor(13 * 1.5 * stats.ranged);
+  const magic = Math.floor(13 * 1.5 * stats.magic);
+  return Math.floor((base + Math.max(melee, ranged, magic)) / 40);
+};
 
 export default function Calculator() {
   const [loadouts, setLoadouts] = useState([
@@ -69,9 +77,17 @@ export default function Calculator() {
   };
 
   const updateLoadout = (id, field, value) => {
-    setLoadouts(loadouts.map(l => 
-      l.id === id ? { ...l, [field]: value } : l
-    ));
+    setLoadouts(loadouts.map(l => {
+      if (l.id === id) {
+        const updated = { ...l, [field]: value };
+        // Update combat level when player stats change
+        if (field === 'playerStats') {
+          updated.playerStats.combatLevel = calculateCombatLevel(value);
+        }
+        return updated;
+      }
+      return l;
+    }));
   };
 
   const copyLoadout = (toId, fromId) => {
