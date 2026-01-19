@@ -28,6 +28,7 @@ export default function Calculator() {
       results: null
     }
   ]);
+  const [activeLoadoutId, setActiveLoadoutId] = useState(1);
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [calculating, setCalculating] = useState(false);
 
@@ -59,6 +60,11 @@ export default function Calculator() {
   const removeLoadout = (id) => {
     if (loadouts.length > 1) {
       setLoadouts(loadouts.filter(l => l.id !== id));
+      // Switch to first remaining loadout if removing active one
+      if (activeLoadoutId === id) {
+        const remaining = loadouts.filter(l => l.id !== id);
+        setActiveLoadoutId(remaining[0]?.id || 1);
+      }
     }
   };
 
@@ -261,48 +267,65 @@ export default function Calculator() {
 
       {/* Main Layout */}
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={addLoadout}
-            className="bg-amber-900 hover:bg-amber-800 px-4 py-2 rounded text-amber-100 font-semibold border-2 border-amber-700"
-          >
-            + Add Loadout
-          </button>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Loadout with Tabs */}
+          <div className="lg:col-span-1">
+            {/* Tabs */}
+            <div className="flex items-center gap-1 mb-3">
+              {loadouts.map((loadout) => (
+                <button
+                  key={loadout.id}
+                  onClick={() => setActiveLoadoutId(loadout.id)}
+                  className={`px-4 py-2 rounded-t font-semibold text-sm border-2 border-b-0 relative ${
+                    activeLoadoutId === loadout.id
+                      ? 'bg-gray-800 border-amber-900 text-amber-600 z-10'
+                      : 'bg-gray-900 border-amber-900/50 text-amber-700 hover:bg-gray-850'
+                  }`}
+                >
+                  {loadout.id}
+                  {loadouts.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeLoadout(loadout.id);
+                      }}
+                      className="ml-2 text-red-600 hover:text-red-400"
+                    >
+                      ×
+                    </button>
+                  )}
+                </button>
+              ))}
+              <button
+                onClick={addLoadout}
+                className="px-3 py-2 rounded-t bg-amber-900 hover:bg-amber-800 border-2 border-amber-700 text-amber-100 font-bold text-sm"
+              >
+                +
+              </button>
+            </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          {/* Loadouts Row */}
-          <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${loadouts.length}, minmax(300px, 1fr))` }}>
-            {loadouts.map((loadout) => (
-              <div key={loadout.id} className="relative">
-                {loadouts.length > 1 && (
-                  <button
-                    onClick={() => removeLoadout(loadout.id)}
-                    className="absolute -top-2 -right-2 z-10 bg-red-900 hover:bg-red-800 text-amber-100 rounded-full w-6 h-6 flex items-center justify-center border-2 border-red-700"
-                  >
-                    ×
-                  </button>
-                )}
-                <LoadoutPanel 
-                  loadoutName={loadout.name}
-                  equipment={loadout.equipment}
-                  onEquipmentChange={(eq) => updateLoadout(loadout.id, 'equipment', eq)}
-                  playerStats={loadout.playerStats}
-                  onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
-                  onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
-                  onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
-                />
-              </div>
+            {/* Active Loadout */}
+            {loadouts.filter(l => l.id === activeLoadoutId).map((loadout) => (
+              <LoadoutPanel
+                key={loadout.id}
+                loadoutName={loadout.name}
+                equipment={loadout.equipment}
+                onEquipmentChange={(eq) => updateLoadout(loadout.id, 'equipment', eq)}
+                playerStats={loadout.playerStats}
+                onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
+                onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
+                onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
+              />
             ))}
           </div>
 
-          {/* Monster Selection */}
-          <div className="max-w-md mx-auto w-full">
+          {/* Middle Column - Monster */}
+          <div className="lg:col-span-1">
             <MonsterSelect selectedMonster={selectedMonster} onMonsterChange={setSelectedMonster} />
           </div>
 
-          {/* Results Comparison */}
-          <div>
+          {/* Right Column - Results */}
+          <div className="lg:col-span-1">
             <ResultsPanel loadouts={loadouts} />
           </div>
         </div>
