@@ -5,31 +5,74 @@ import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
 
 export default function Calculator() {
-  const [equipment, setEquipment] = useState({});
-  const [playerStats, setPlayerStats] = useState({
-    hitpoints: 10,
-    attack: 1,
-    strength: 1,
-    defence: 1,
-    ranged: 1,
-    prayer: 1,
-    magic: 1,
-    combatType: 'melee',
-    prayerActive: 'none',
-    style: 'aggressive',
-    combatLevel: 3,
-    selectedSpell: null,
-    chargeActive: false
-  });
+  const [loadouts, setLoadouts] = useState([
+    {
+      id: 1,
+      name: 'Loadout 1',
+      equipment: {},
+      playerStats: {
+        hitpoints: 10,
+        attack: 1,
+        strength: 1,
+        defence: 1,
+        ranged: 1,
+        prayer: 1,
+        magic: 1,
+        combatType: 'melee',
+        prayerActive: 'none',
+        style: 'aggressive',
+        combatLevel: 3,
+        selectedSpell: null,
+        chargeActive: false
+      },
+      results: null
+    }
+  ]);
   const [selectedMonster, setSelectedMonster] = useState(null);
-  const [results, setResults] = useState(null);
   const [calculating, setCalculating] = useState(false);
 
-  const calculateDPS = async () => {
-    if (!selectedMonster) return;
+  const addLoadout = () => {
+    const newId = Math.max(...loadouts.map(l => l.id)) + 1;
+    setLoadouts([...loadouts, {
+      id: newId,
+      name: `Loadout ${newId}`,
+      equipment: {},
+      playerStats: {
+        hitpoints: 10,
+        attack: 1,
+        strength: 1,
+        defence: 1,
+        ranged: 1,
+        prayer: 1,
+        magic: 1,
+        combatType: 'melee',
+        prayerActive: 'none',
+        style: 'aggressive',
+        combatLevel: 3,
+        selectedSpell: null,
+        chargeActive: false
+      },
+      results: null
+    }]);
+  };
+
+  const removeLoadout = (id) => {
+    if (loadouts.length > 1) {
+      setLoadouts(loadouts.filter(l => l.id !== id));
+    }
+  };
+
+  const updateLoadout = (id, field, value) => {
+    setLoadouts(loadouts.map(l => 
+      l.id === id ? { ...l, [field]: value } : l
+    ));
+  };
+
+  const calculateDPS = async (loadout) => {
+    if (!selectedMonster) return null;
     
-    setCalculating(true);
     try {
+      const { equipment, playerStats } = loadout;
       // Calculate total bonuses from equipment
       const getTotalBonus = (bonusType) => {
         return Object.values(equipment).reduce((sum, item) => {
@@ -150,7 +193,7 @@ export default function Calculator() {
       console.log('Attack Bonus:', attackBonus);
       console.log('Attack Speed Ticks:', attackSpeedTicks);
 
-      const dpsResponse = await base44.functions.invoke('calculateDPS', {
+      return await base44.functions.invoke('calculateDPS', {
         combatType: detectedCombatType,
         attackLevel: playerStats.attack,
         strengthLevel: playerStats.strength,
@@ -181,26 +224,32 @@ export default function Calculator() {
         hasChaosGauntlets: false,
         isBoltSpell: false
       });
-
-      setResults({ ...dpsResponse.data, attackSpeedTicks });
     } catch (error) {
       console.error('Calculation failed:', error);
-    } finally {
-      setCalculating(false);
+      return null;
     }
   };
 
-  const handleCombatStyleChange = (style) => {
-    setPlayerStats({ ...playerStats, style });
-  };
-
-  const handlePrayerChange = (prayer) => {
-    setPlayerStats({ ...playerStats, prayerActive: prayer });
-  };
-
   React.useEffect(() => {
-    calculateDPS();
-  }, [equipment, playerStats, selectedMonster]);
+    const updateAllResults = async () => {
+      if (!selectedMonster) return;
+      
+      setCalculating(true);
+      const updatedLoadouts = await Promise.all(
+        loadouts.map(async (loadout) => {
+          const response = await calculateDPS(loadout);
+          return {
+            ...loadout,
+            results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
+          };
+        })
+      );
+      setLoadouts(updatedLoadouts);
+      setCalculating(false);
+    };
+
+    updateAllResults();
+  }, [loadouts.map(l => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950">
@@ -212,27 +261,49 @@ export default function Calculator() {
 
       {/* Main Layout */}
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Loadout */}
-          <div className="lg:col-span-1">
-            <LoadoutPanel 
-              equipment={equipment}
-              onEquipmentChange={setEquipment}
-              playerStats={playerStats}
-              onStatsChange={setPlayerStats}
-              onCombatStyleChange={handleCombatStyleChange}
-              onPrayerChange={handlePrayerChange}
-            />
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={addLoadout}
+            className="bg-amber-900 hover:bg-amber-800 px-4 py-2 rounded text-amber-100 font-semibold border-2 border-amber-700"
+          >
+            + Add Loadout
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          {/* Loadouts Row */}
+          <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${loadouts.length}, minmax(300px, 1fr))` }}>
+            {loadouts.map((loadout) => (
+              <div key={loadout.id} className="relative">
+                {loadouts.length > 1 && (
+                  <button
+                    onClick={() => removeLoadout(loadout.id)}
+                    className="absolute -top-2 -right-2 z-10 bg-red-900 hover:bg-red-800 text-amber-100 rounded-full w-6 h-6 flex items-center justify-center border-2 border-red-700"
+                  >
+                    ×
+                  </button>
+                )}
+                <LoadoutPanel 
+                  loadoutName={loadout.name}
+                  equipment={loadout.equipment}
+                  onEquipmentChange={(eq) => updateLoadout(loadout.id, 'equipment', eq)}
+                  playerStats={loadout.playerStats}
+                  onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
+                  onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
+                  onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
+                />
+              </div>
+            ))}
           </div>
 
-          {/* Middle Column - Monster */}
-          <div className="lg:col-span-1">
+          {/* Monster Selection */}
+          <div className="max-w-md mx-auto w-full">
             <MonsterSelect selectedMonster={selectedMonster} onMonsterChange={setSelectedMonster} />
           </div>
 
-          {/* Right Column - Results */}
-          <div className="lg:col-span-1">
-            <ResultsPanel results={results} />
+          {/* Results Comparison */}
+          <div>
+            <ResultsPanel loadouts={loadouts} />
           </div>
         </div>
       </div>

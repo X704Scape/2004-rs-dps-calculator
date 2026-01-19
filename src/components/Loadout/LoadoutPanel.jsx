@@ -14,7 +14,7 @@ const TABS = [
   { id: 'magic', icon: BookOpen, label: 'Magic' }
 ];
 
-export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats, onStatsChange, onCombatStyleChange, onPrayerChange }) {
+export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange, playerStats, onStatsChange, onCombatStyleChange, onPrayerChange }) {
   const [activeTab, setActiveTab] = useState('equipment');
 
   const handleCombatStyleChange = (style) => {
@@ -29,7 +29,7 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
     <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
       {/* Header */}
       <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
-        <h2 className="text-amber-600 font-bold text-sm">Loadout 1</h2>
+        <h2 className="text-amber-600 font-bold text-sm">{loadoutName || 'Loadout'}</h2>
         <p className="text-amber-700 text-xs">Level {playerStats?.combatLevel || 3}</p>
       </div>
 
