@@ -100,8 +100,8 @@ const DEFAULT_STYLES = [
   { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
 ];
 
-export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
-  const [selectedStyle, setSelectedStyle] = React.useState('aggressive');
+export default function CombatStyleTab({ equipment, onCombatStyleChange, currentStyle }) {
+  const selectedStyle = currentStyle || 'aggressive';
 
   // Detect weapon type from equipment
   const weapon = equipment?.weapon;
@@ -146,7 +146,6 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange }) {
   }
 
   const handleStyleChange = (styleId) => {
-    setSelectedStyle(styleId);
     onCombatStyleChange(styleId);
   };
 

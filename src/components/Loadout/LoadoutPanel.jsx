@@ -50,6 +50,7 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
           <CombatStyleTab 
             equipment={equipment}
             onCombatStyleChange={onCombatStyleChange}
+            currentStyle={playerStats.style}
           />
         )}
         {activeTab === 'stats' && (
