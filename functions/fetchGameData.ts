@@ -18,6 +18,92 @@ const SLOT_ALIASES = {
   'ammunition': 'ammo'
 };
 
+// Parse melee weapons from config format
+function parseMeleeWeapons(configText) {
+  const weapons = [];
+  const lines = configText.split('\n');
+  let currentWeapon = {};
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (line.startsWith('name=')) {
+      if (currentWeapon.name) {
+        weapons.push(currentWeapon);
+      }
+      currentWeapon = {
+        name: line.substring(5),
+        stab: 0,
+        slash: 0,
+        crush: 0,
+        magic: 0,
+        ranged: 0,
+        strBonus: 0,
+        rangedStrBonus: 0,
+        defenceStab: 0,
+        defenceSlash: 0,
+        defenceCrush: 0,
+        defenceMagic: 0,
+        defenceRanged: 0,
+        attackRate: 4,
+        slot: 'weapon',
+        category: null,
+        equipable: true,
+        requirement: 1
+      };
+    } else if (line.startsWith('category=')) {
+      currentWeapon.category = line.substring(9);
+      if (currentWeapon.category.includes('armour_body')) {
+        currentWeapon.slot = 'body';
+      } else if (currentWeapon.category.includes('armour_legs')) {
+        currentWeapon.slot = 'legs';
+      } else if (currentWeapon.category.includes('armour_head')) {
+        currentWeapon.slot = 'head';
+      } else if (currentWeapon.category.includes('armour_hands')) {
+        currentWeapon.slot = 'hands';
+      } else if (currentWeapon.category.includes('armour_feet')) {
+        currentWeapon.slot = 'feet';
+      } else if (currentWeapon.category.includes('armour_cape')) {
+        currentWeapon.slot = 'cape';
+      } else if (currentWeapon.category.includes('armour_shield')) {
+        currentWeapon.slot = 'shield';
+      }
+    } else if (line.startsWith('param=stabattack,')) {
+      currentWeapon.stab = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=slashattack,')) {
+      currentWeapon.slash = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=crushattack,')) {
+      currentWeapon.crush = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=magicattack,')) {
+      currentWeapon.magic = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=rangeattack,')) {
+      currentWeapon.ranged = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=strengthbonus,')) {
+      currentWeapon.strBonus = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=rangestrengthbonus,')) {
+      currentWeapon.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=attackrate,')) {
+      currentWeapon.attackRate = parseInt(line.split(',')[1]) || 4;
+    } else if (line.startsWith('param=stabdefence,')) {
+      currentWeapon.defenceStab = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=slashdefence,')) {
+      currentWeapon.defenceSlash = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=crushdefence,')) {
+      currentWeapon.defenceCrush = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=magicdefence,')) {
+      currentWeapon.defenceMagic = parseInt(line.split(',')[1]) || 0;
+    } else if (line.startsWith('param=rangedefence,')) {
+      currentWeapon.defenceRanged = parseInt(line.split(',')[1]) || 0;
+    }
+  }
+  
+  if (currentWeapon.name) {
+    weapons.push(currentWeapon);
+  }
+  
+  return weapons;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -27,6 +113,13 @@ Deno.serve(async (req) => {
     console.log('fetchGameData called with type:', dataType);
 
     if (dataType === 'items') {
+      // Fetch melee weapons config
+      const meleeConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/21fdc43de_combined_melee_configs.txt';
+      const meleeConfigResponse = await fetch(meleeConfigUrl);
+      const meleeConfigText = await meleeConfigResponse.text();
+      const meleeWeapons = parseMeleeWeapons(meleeConfigText);
+      console.log('Parsed melee weapons from config:', meleeWeapons.length);
+
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
       console.log('Fetched items from API:', itemData?.length);
@@ -83,8 +176,11 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
-      console.log('Returning wearable items:', wearableItems.length);
-      return Response.json({ items: wearableItems });
+      // Combine API items with melee weapons (melee weapons take priority)
+      const combinedItems = [...meleeWeapons, ...wearableItems];
+      
+      console.log('Returning combined items:', combinedItems.length);
+      return Response.json({ items: combinedItems });
     }
 
     if (dataType === 'monsters') {
