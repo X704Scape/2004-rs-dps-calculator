@@ -198,8 +198,23 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
-      // Combine API items with config weapons (config weapons take priority)
-      const combinedItems = [...meleeWeapons, ...rangedWeapons, ...magicWeapons, ...wearableItems];
+      // Combine API items with config weapons, removing duplicates
+      // Create a map by name to deduplicate (config weapons take priority)
+      const itemsByName = new Map();
+      
+      // Add config weapons first (they take priority)
+      [...meleeWeapons, ...rangedWeapons, ...magicWeapons].forEach(weapon => {
+        itemsByName.set(weapon.name, weapon);
+      });
+      
+      // Add API items only if not already present
+      wearableItems.forEach(item => {
+        if (!itemsByName.has(item.name)) {
+          itemsByName.set(item.name, item);
+        }
+      });
+      
+      const combinedItems = Array.from(itemsByName.values());
       
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
