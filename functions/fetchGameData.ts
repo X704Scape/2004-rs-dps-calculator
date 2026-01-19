@@ -133,6 +133,13 @@ Deno.serve(async (req) => {
       const rangedWeapons = parseConfigWeapons(rangedConfigText);
       console.log('Parsed ranged weapons from config:', rangedWeapons.length);
 
+      // Fetch magic weapons config
+      const magicConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/b4fa4e195_combined_magic_configs.txt';
+      const magicConfigResponse = await fetch(magicConfigUrl);
+      const magicConfigText = await magicConfigResponse.text();
+      const magicWeapons = parseConfigWeapons(magicConfigText);
+      console.log('Parsed magic weapons from config:', magicWeapons.length);
+
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
       console.log('Fetched items from API:', itemData?.length);
@@ -190,7 +197,7 @@ Deno.serve(async (req) => {
         .filter(item => item !== null);
 
       // Combine API items with config weapons (config weapons take priority)
-      const combinedItems = [...meleeWeapons, ...rangedWeapons, ...wearableItems];
+      const combinedItems = [...meleeWeapons, ...rangedWeapons, ...magicWeapons, ...wearableItems];
       
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
