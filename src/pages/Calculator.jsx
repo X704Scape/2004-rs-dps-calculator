@@ -74,6 +74,14 @@ export default function Calculator() {
     ));
   };
 
+  const copyLoadout = (toId, fromId) => {
+    const fromLoadout = loadouts.find(l => l.id === fromId);
+    if (fromLoadout) {
+      updateLoadout(toId, 'equipment', { ...fromLoadout.equipment });
+      updateLoadout(toId, 'playerStats', { ...fromLoadout.playerStats });
+    }
+  };
+
   const calculateDPS = async (loadout) => {
     if (!selectedMonster) return null;
     
@@ -315,6 +323,8 @@ export default function Calculator() {
                 onStatsChange={(stats) => updateLoadout(loadout.id, 'playerStats', stats)}
                 onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
                 onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
+                otherLoadouts={loadouts.filter(l => l.id !== loadout.id)}
+                onCopyFrom={(fromId) => copyLoadout(loadout.id, fromId)}
               />
             ))}
           </div>
