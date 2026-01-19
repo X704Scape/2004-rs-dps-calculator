@@ -50,6 +50,20 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     }
   };
 
+  const getStatConflicts = (potionId) => {
+    const conflicts = {
+      attack: ['attack', 'super_attack', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      super_attack: ['attack', 'super_attack', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      strength: ['strength', 'super_strength', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      super_strength: ['strength', 'super_strength', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      ranging: ['ranging', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      magic: ['magic', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      dragon_battleaxe: ['attack', 'super_attack', 'strength', 'super_strength', 'ranging', 'magic', 'dragon_battleaxe', 'dragon_battleaxe_restore'],
+      dragon_battleaxe_restore: ['attack', 'super_attack', 'strength', 'super_strength', 'ranging', 'magic', 'dragon_battleaxe', 'dragon_battleaxe_restore']
+    };
+    return conflicts[potionId] || [];
+  };
+
   const togglePotionBoost = (potionId) => {
     let newSelected;
     if (potionId === 'none') {
@@ -57,7 +71,10 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     } else if (selectedPotions.includes(potionId)) {
       newSelected = selectedPotions.filter(id => id !== potionId);
     } else {
-      newSelected = [...selectedPotions, potionId];
+      // Remove conflicting potions
+      const conflicts = getStatConflicts(potionId);
+      newSelected = selectedPotions.filter(id => !conflicts.includes(id));
+      newSelected.push(potionId);
     }
     
     setSelectedPotions(newSelected);
