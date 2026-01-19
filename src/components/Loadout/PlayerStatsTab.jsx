@@ -97,6 +97,8 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       delete boostedStats.boostedDefence;
       delete boostedStats.boostedRanged;
       delete boostedStats.boostedMagic;
+      delete boostedStats.boostedHitpoints;
+      delete boostedStats.boostedPrayer;
       onStatsChange(boostedStats);
       return;
     }
@@ -140,8 +142,6 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
           boostedStats.boostedAttack = Math.max(boostedStats.boostedAttack || currentAttack, currentAttack + Math.floor(currentAttack * 0.2) + 2);
           boostedStats.boostedStrength = Math.max(boostedStats.boostedStrength || currentStrength, currentStrength + Math.floor(currentStrength * 0.12) + 2);
           boostedStats.boostedDefence = currentDefence - Math.floor(currentDefence * 0.1);
-          boostedStats.boostedHitpoints = currentHitpoints - Math.floor(currentHitpoints * 0.1);
-          boostedStats.boostedPrayer = currentPrayer - Math.floor(currentPrayer * 0.1);
           break;
         case 'dragon_battleaxe':
           const drainAttack = Math.floor(currentAttack * 0.1);
