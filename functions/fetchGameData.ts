@@ -162,11 +162,19 @@ Deno.serve(async (req) => {
           const slot = SLOT_ALIASES[wearpos] || wearpos;
           if (!slot) return null;
 
+          // Force weapon_staff category for specific staves
+          const itemName = item.name?.toLowerCase() || '';
+          let category = null;
+          if (itemName.includes('staff') || itemName.includes('iban')) {
+            category = 'weapon_staff';
+          }
+
           return {
             id: index,
             name: item.name || 'Unknown',
             slot,
             wearpos: equipData.wearpos,
+            category: category,
             icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(item.name)}.png`,
             // Melee bonuses
             stab: equipData.stabattack || 0,
