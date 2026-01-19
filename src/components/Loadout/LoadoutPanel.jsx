@@ -17,6 +17,14 @@ const TABS = [
 export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats, onStatsChange, onCombatStyleChange, onPrayerChange }) {
   const [activeTab, setActiveTab] = useState('equipment');
 
+  const handleCombatStyleChange = (style) => {
+    onCombatStyleChange(style);
+    // Auto-switch to magic tab when spell style is selected
+    if (style === 'spell') {
+      setActiveTab('magic');
+    }
+  };
+
   return (
     <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
       {/* Header */}
@@ -49,7 +57,7 @@ export default function LoadoutPanel({ equipment, onEquipmentChange, playerStats
         {activeTab === 'combat' && (
           <CombatStyleTab 
             equipment={equipment}
-            onCombatStyleChange={onCombatStyleChange}
+            onCombatStyleChange={handleCombatStyleChange}
             currentStyle={playerStats.style}
           />
         )}
