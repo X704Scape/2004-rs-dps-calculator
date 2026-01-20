@@ -104,8 +104,7 @@ Deno.serve(async (req) => {
       monsterDefenceMagic = 0,
       spellMaxHit = 0,
       hasChaosGauntlets = false,
-      isBoltSpell = false,
-      isPvP = false
+      isBoltSpell = false
     } = body;
 
     const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
@@ -124,78 +123,7 @@ Deno.serve(async (req) => {
     let dps = 0;
     let ttk = 0;
 
-    // PvP Mode - use different formula
-    if (isPvP) {
-      const prayerBonus = prayerMult * 100; // Convert multiplier to percentage (1.15 -> 115)
-      
-      if (combatType === 'melee') {
-        // Effective levels
-        const effectiveAttack = Math.floor(attackLevel * (prayerBonus / 100));
-        const effectiveStrength = Math.floor(strengthLevel * (prayerBonus / 100));
-        const effectiveDefence = Math.floor(defenceLevel * (prayerBonus / 100));
-        
-        // Attack and defence rolls
-        attackRoll = effectiveAttack * (equipmentBonus + 64);
-        npcDefRoll = effectiveDefence * (monsterDefenceStab + 64); // Using stab as default
-        
-        // Hit chance
-        if (attackRoll < npcDefRoll) {
-          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
-        } else {
-          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
-        }
-        
-        // Max hit
-        const combatStat = effectiveStrength * (strBonus + 64);
-        maxHit = Math.floor((combatStat + 320) / 640);
-      } else if (combatType === 'ranged') {
-        // Effective levels
-        const effectiveRanged = Math.floor(rangedLevel * (prayerBonus / 100));
-        const effectiveDefence = Math.floor(defenceLevel * (prayerBonus / 100));
-        
-        // Attack and defence rolls
-        attackRoll = effectiveRanged * (equipmentBonus + 64);
-        npcDefRoll = effectiveDefence * (monsterDefenceRanged + 64);
-        
-        // Hit chance
-        if (attackRoll < npcDefRoll) {
-          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
-        } else {
-          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
-        }
-        
-        // Max hit
-        const combatStat = effectiveRanged * (rangedStrBonus + 64);
-        maxHit = Math.floor((combatStat + 320) / 640);
-      } else if (combatType === 'magic') {
-        // Effective levels
-        const effectiveMagic = Math.floor(magicLevel * (prayerBonus / 100));
-        const effectiveDefence = Math.floor(defenceLevel * (prayerBonus / 100));
-        
-        // Attack and defence rolls
-        attackRoll = effectiveMagic * (equipmentBonus + 64);
-        npcDefRoll = effectiveDefence * (monsterDefenceMagic + 64);
-        
-        // Hit chance
-        if (attackRoll < npcDefRoll) {
-          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
-        } else {
-          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
-        }
-        
-        // Max hit for magic uses spell base damage
-        maxHit = spellMaxHit;
-      }
-      
-      // Expected damage and DPS
-      const expectedDamage = accuracy * (maxHit / 2);
-      const cycleSeconds = attackSpeedTicks * 0.6;
-      dps = expectedDamage / cycleSeconds;
-      
-      if (dps > 0) {
-        ttk = monsterHitpoints / dps;
-      }
-    } else if (combatType === 'melee') {
+    if (combatType === 'melee') {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
@@ -239,21 +167,17 @@ Deno.serve(async (req) => {
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
-    // DPS calculation (only for non-PvP)
-    if (!isPvP) {
-      // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
-      const avgHit = (maxHit / 2) * accuracy;
-      const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
-      dps = avgHit / attackSpeed;
+    // DPS calculation
+    // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
+    const avgHit = (maxHit / 2) * accuracy;
+    const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
+    dps = avgHit / attackSpeed;
 
-      // Time to kill
-      if (dps > 0) {
-        ttk = monsterHitpoints / dps;
-      }
+    // Time to kill
+    if (dps > 0) {
+      ttk = monsterHitpoints / dps;
     }
 
-    const avgHit = (maxHit / 2) * accuracy;
-    
     return Response.json({
       attackRoll,
       npcDefRoll,
@@ -261,8 +185,7 @@ Deno.serve(async (req) => {
       accuracy: (accuracy * 100).toFixed(2),
       dps: dps.toFixed(3),
       ttk: ttk.toFixed(1),
-      avgHit: avgHit.toFixed(2),
-      attackSpeedTicks
+      avgHit: avgHit.toFixed(2)
     });
   } catch (error) {
     console.error('Calculation error:', error);
