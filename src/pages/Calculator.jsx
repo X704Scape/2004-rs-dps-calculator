@@ -166,6 +166,13 @@ export default function Calculator() {
         ultimate_strength: 'ultimate_strength'
       };
 
+      const attackPrayerMap = {
+        none: 'none',
+        clarity_of_thought: 'clarity_of_thought',
+        improved_reflexes: 'improved_reflexes',
+        incredible_reflexes: 'incredible_reflexes'
+      };
+
       // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
