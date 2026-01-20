@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function MissingIcons() {
   const [items, setItems] = useState([]);
@@ -44,6 +45,40 @@ export default function MissingIcons() {
     fetchAndTestIcons();
   }, []);
 
+  const exportToCSV = () => {
+    const headers = ['ID', 'Name', 'Slot', 'Reason', 'Icon URL'];
+    const rows = missingIcons.map(item => [
+      item.id,
+      item.name,
+      item.slot,
+      item.reason,
+      item.iconUrl || ''
+    ]);
+    
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `missing-icons-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToJSON = () => {
+    const data = JSON.stringify(missingIcons, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `missing-icons-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 p-6 flex items-center justify-center">
@@ -77,8 +112,28 @@ export default function MissingIcons() {
         </div>
 
         <div className="bg-gray-900 border-2 border-amber-900 rounded">
-          <div className="bg-gray-950 border-b-2 border-amber-900 p-4">
+          <div className="bg-gray-950 border-b-2 border-amber-900 p-4 flex justify-between items-center">
             <h2 className="text-xl font-bold text-amber-600">Items with Missing Icons</h2>
+            <div className="flex gap-2">
+              <Button
+                onClick={exportToCSV}
+                disabled={missingIcons.length === 0}
+                className="bg-amber-900 hover:bg-amber-800 text-amber-100"
+                size="sm"
+              >
+                <Download size={16} className="mr-2" />
+                Export CSV
+              </Button>
+              <Button
+                onClick={exportToJSON}
+                disabled={missingIcons.length === 0}
+                className="bg-amber-900 hover:bg-amber-800 text-amber-100"
+                size="sm"
+              >
+                <Download size={16} className="mr-2" />
+                Export JSON
+              </Button>
+            </div>
           </div>
           
           <div className="p-4">
