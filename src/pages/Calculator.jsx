@@ -225,11 +225,11 @@ export default function Calculator() {
 
       return await base44.functions.invoke('calculateDPS', {
         combatType: detectedCombatType,
-        attackLevel: playerStats.attack,
-        strengthLevel: playerStats.strength,
-        rangedLevel: playerStats.ranged,
-        magicLevel: playerStats.magic,
-        defenceLevel: playerStats.defence,
+        attackLevel: playerStats.boostedAttack || playerStats.attack,
+        strengthLevel: playerStats.boostedStrength || playerStats.strength,
+        rangedLevel: playerStats.boostedRanged || playerStats.ranged,
+        magicLevel: playerStats.boostedMagic || playerStats.magic,
+        defenceLevel: playerStats.boostedDefence || playerStats.defence,
         equipmentBonus: attackBonus,
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getRangedStrBonus(),
