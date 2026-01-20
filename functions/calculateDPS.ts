@@ -233,6 +233,8 @@ Deno.serve(async (req) => {
       }
     }
 
+    const avgHit = accuracy * (maxHit / 2);
+    
     return Response.json({
       attackRoll,
       npcDefRoll,
