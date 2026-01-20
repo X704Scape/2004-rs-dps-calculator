@@ -218,8 +218,10 @@ Deno.serve(async (req) => {
       
       // Add config weapons first (they take priority) - but ONLY actual weapons and ammo
       [...meleeWeapons, ...rangedWeapons, ...magicWeapons].forEach(weapon => {
-        // Only add if it's actually a weapon, shield, or ammo (not armor)
-        if (weapon.slot === 'weapon' || weapon.slot === 'shield' || weapon.slot === 'ammo') {
+        // Only add if wearpos indicates it's truly a weapon/shield/ammo
+        const wearpos = weapon.wearpos?.toLowerCase();
+        const validWearpos = ['righthand', 'lefthand', 'quiver'];
+        if (wearpos && validWearpos.includes(wearpos)) {
           itemsByName.set(weapon.name, weapon);
         }
       });
