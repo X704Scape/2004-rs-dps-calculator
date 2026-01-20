@@ -225,28 +225,59 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
-      // Combine API items with config weapons
-      // Use ID as unique key, preserve all items even with duplicate names
-      const itemsById = new Map();
-
-      // Add config weapons first - use name as ID since they don't have numeric IDs
+      // Merge API items with config weapons by name
+      // Build a map of config weapons by name for quick lookup
+      const configWeaponsByName = new Map();
       [...meleeWeapons, ...rangedWeapons, ...magicWeapons].forEach(weapon => {
-        // Only add if wearpos indicates it's truly a weapon/shield/ammo
         const wearpos = weapon.wearpos?.toLowerCase();
         const validWearpos = ['righthand', 'lefthand', 'quiver'];
         if (wearpos && validWearpos.includes(wearpos)) {
-          // Use name as ID for config weapons (prefixed to avoid collisions)
-          const uniqueId = `config_${weapon.name}`;
-          itemsById.set(uniqueId, { ...weapon, id: uniqueId });
+          configWeaponsByName.set(weapon.name, weapon);
         }
       });
 
-      // Add all API items by their ID (no deduplication by name)
-      wearableItems.forEach(item => {
-        itemsById.set(item.id, item);
+      // Merge API items with matching config data
+      const mergedItems = wearableItems.map(apiItem => {
+        const configWeapon = configWeaponsByName.get(apiItem.name);
+        if (configWeapon) {
+          // Merge: API item as base, but preserve config metadata
+          return {
+            ...apiItem,
+            // Keep API's numeric ID, icon URL, and name
+            // Merge stats - prefer config if non-zero, otherwise use API
+            stab: configWeapon.stab || apiItem.stab,
+            slash: configWeapon.slash || apiItem.slash,
+            crush: configWeapon.crush || apiItem.crush,
+            ranged: configWeapon.ranged || apiItem.ranged,
+            magic: configWeapon.magic || apiItem.magic,
+            strBonus: configWeapon.strBonus || apiItem.strBonus,
+            rangedStrBonus: configWeapon.rangedStrBonus || apiItem.rangedStrBonus,
+            defenceStab: configWeapon.defenceStab || apiItem.defenceStab,
+            defenceSlash: configWeapon.defenceSlash || apiItem.defenceSlash,
+            defenceCrush: configWeapon.defenceCrush || apiItem.defenceCrush,
+            defenceRanged: configWeapon.defenceRanged || apiItem.defenceRanged,
+            defenceMagic: configWeapon.defenceMagic || apiItem.defenceMagic,
+            attackRate: configWeapon.attackRate || apiItem.attackRate,
+            // Preserve config's wearpos data and category
+            wearpos: configWeapon.wearpos || apiItem.wearpos,
+            wearpos2: configWeapon.wearpos2 || apiItem.wearpos2,
+            category: configWeapon.category || apiItem.category,
+            slot: configWeapon.slot || apiItem.slot
+          };
+        }
+        return apiItem;
       });
 
-      const combinedItems = Array.from(itemsById.values());
+      // Add config weapons that have no API match (truly unique items)
+      const apiItemNames = new Set(wearableItems.map(item => item.name));
+      const uniqueConfigWeapons = Array.from(configWeaponsByName.values())
+        .filter(weapon => !apiItemNames.has(weapon.name))
+        .map(weapon => ({
+          ...weapon,
+          id: `config_${weapon.name}` // Keep config ID for truly unique items
+        }));
+
+      const combinedItems = [...mergedItems, ...uniqueConfigWeapons];
       
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
