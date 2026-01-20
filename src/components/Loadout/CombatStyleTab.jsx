@@ -119,12 +119,10 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
       if (override) {
         baseSpeed = override.speedTicks;
       }
-    }
-    
-    // Apply rapid style bonus for ranged
-    if (selectedStyle === 'rapid' && weapon.category && 
+    } else if (selectedStyle === 'rapid' && weapon.category && 
         (weapon.category.includes('bow') || weapon.category.includes('crossbow') || 
          weapon.category.includes('thrown') || weapon.category.includes('javelin'))) {
+      // Apply rapid style bonus for ranged (only if no override exists)
       baseSpeed = Math.max(1, baseSpeed - 1);
     }
     
