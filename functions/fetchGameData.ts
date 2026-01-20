@@ -96,24 +96,37 @@ function parseConfigWeapons(configText) {
     weapons.push(currentWeapon);
   }
   
-  // Filter out armor items - only keep actual weapons, shields, and ammo
-  return weapons.filter(weapon => {
-    // If it has an armor category, exclude it
-    if (weapon.category && weapon.category.includes('armour_')) {
-      return false;
-    }
-    
-    // If wearpos indicates armor slot, exclude it
-    if (weapon.wearpos) {
-      const wearpos = weapon.wearpos.toLowerCase();
-      if (['head', 'body', 'legs', 'hands', 'feet', 'cape', 'neck', 'ring'].includes(wearpos)) {
+  // Post-process to set correct slots and filter armor
+  return weapons
+    .map(weapon => {
+      // Set correct slot based on wearpos
+      if (weapon.wearpos) {
+        const wearpos = weapon.wearpos.toLowerCase();
+        if (wearpos === 'quiver') {
+          weapon.slot = 'ammo';
+        } else if (wearpos === 'lefthand' && weapon.wearpos2 !== 'lefthand') {
+          weapon.slot = 'shield';
+        }
+      }
+      return weapon;
+    })
+    .filter(weapon => {
+      // If it has an armor category, exclude it
+      if (weapon.category && weapon.category.includes('armour_')) {
         return false;
       }
-    }
-    
-    // Keep weapons, shields, and ammo
-    return true;
-  });
+      
+      // If wearpos indicates armor slot, exclude it
+      if (weapon.wearpos) {
+        const wearpos = weapon.wearpos.toLowerCase();
+        if (['head', 'body', 'legs', 'hands', 'feet', 'cape', 'neck', 'ring'].includes(wearpos)) {
+          return false;
+        }
+      }
+      
+      // Keep weapons, shields, and ammo
+      return true;
+    });
 }
 
 Deno.serve(async (req) => {
