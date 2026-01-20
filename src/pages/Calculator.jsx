@@ -93,8 +93,16 @@ export default function Calculator() {
   const copyLoadout = (toId, fromId) => {
     const fromLoadout = loadouts.find(l => l.id === fromId);
     if (fromLoadout) {
-      updateLoadout(toId, 'equipment', { ...fromLoadout.equipment });
-      updateLoadout(toId, 'playerStats', { ...fromLoadout.playerStats });
+      setLoadouts(loadouts.map(l => {
+        if (l.id === toId) {
+          return {
+            ...l,
+            equipment: JSON.parse(JSON.stringify(fromLoadout.equipment)),
+            playerStats: JSON.parse(JSON.stringify(fromLoadout.playerStats))
+          };
+        }
+        return l;
+      }));
     }
   };
 
