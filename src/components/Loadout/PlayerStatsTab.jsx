@@ -58,7 +58,7 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   }, [selectedBoosts]);
 
   const applyAllBoosts = (boosts) => {
-    const boostedStats = { ...stats };
+    const boostedStats = { ...stats, selectedBoosts: boosts };
     
     if (boosts.length === 0) {
       // Clear all boosts
