@@ -60,15 +60,16 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   const applyAllBoosts = (boosts) => {
     const boostedStats = { ...stats, selectedBoosts: boosts };
     
+    // Always clear all boosts first
+    delete boostedStats.boostedAttack;
+    delete boostedStats.boostedStrength;
+    delete boostedStats.boostedDefence;
+    delete boostedStats.boostedRanged;
+    delete boostedStats.boostedMagic;
+    delete boostedStats.boostedHitpoints;
+    delete boostedStats.boostedPrayer;
+    
     if (boosts.length === 0) {
-      // Clear all boosts
-      delete boostedStats.boostedAttack;
-      delete boostedStats.boostedStrength;
-      delete boostedStats.boostedDefence;
-      delete boostedStats.boostedRanged;
-      delete boostedStats.boostedMagic;
-      delete boostedStats.boostedHitpoints;
-      delete boostedStats.boostedPrayer;
       onStatsChange(boostedStats);
       return;
     }
@@ -81,15 +82,15 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       magic: stats.magic || 1
     };
 
-    // Apply each boost
+    // Apply each boost from base stats
     boosts.forEach(boost => {
       boost.skills.forEach(skill => {
         const boostedKey = `boosted${skill.charAt(0).toUpperCase() + skill.slice(1)}`;
-        const currentValue = boostedStats[boostedKey] || currentStats[skill];
+        const currentBoostedValue = boostedStats[boostedKey] || currentStats[skill];
         
         if (boost.formula) {
           const boostAmount = boost.formula(currentStats[skill], skill, currentStats);
-          boostedStats[boostedKey] = Math.max(currentValue, currentStats[skill] + boostAmount);
+          boostedStats[boostedKey] = Math.max(currentBoostedValue, currentStats[skill] + boostAmount);
         }
       });
       
