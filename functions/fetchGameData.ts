@@ -225,28 +225,28 @@ Deno.serve(async (req) => {
         })
         .filter(item => item !== null);
 
-      // Combine API items with config weapons, removing duplicates
-      // Create a map by name to deduplicate (config weapons take priority)
-      const itemsByName = new Map();
-      
-      // Add config weapons first (they take priority) - but ONLY actual weapons and ammo
+      // Combine API items with config weapons
+      // Use ID as unique key, preserve all items even with duplicate names
+      const itemsById = new Map();
+
+      // Add config weapons first - use name as ID since they don't have numeric IDs
       [...meleeWeapons, ...rangedWeapons, ...magicWeapons].forEach(weapon => {
         // Only add if wearpos indicates it's truly a weapon/shield/ammo
         const wearpos = weapon.wearpos?.toLowerCase();
         const validWearpos = ['righthand', 'lefthand', 'quiver'];
         if (wearpos && validWearpos.includes(wearpos)) {
-          itemsByName.set(weapon.name, weapon);
+          // Use name as ID for config weapons (prefixed to avoid collisions)
+          const uniqueId = `config_${weapon.name}`;
+          itemsById.set(uniqueId, { ...weapon, id: uniqueId });
         }
       });
-      
-      // Add API items only if not already present
+
+      // Add all API items by their ID (no deduplication by name)
       wearableItems.forEach(item => {
-        if (!itemsByName.has(item.name)) {
-          itemsByName.set(item.name, item);
-        }
+        itemsById.set(item.id, item);
       });
-      
-      const combinedItems = Array.from(itemsByName.values());
+
+      const combinedItems = Array.from(itemsById.values());
       
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
