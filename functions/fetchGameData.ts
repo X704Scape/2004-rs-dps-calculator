@@ -224,14 +224,9 @@ Deno.serve(async (req) => {
         }
       });
       
-      // Add API items only if not already present AND only if they're actual armor (not weapons)
+      // Add API items only if not already present
       wearableItems.forEach(item => {
         if (!itemsByName.has(item.name)) {
-          // Skip adding if it would go to weapon slot but comes from API
-          // (weapons should come from config files only)
-          if (item.slot === 'weapon') {
-            return;
-          }
           itemsByName.set(item.name, item);
         }
       });
