@@ -23,11 +23,27 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
     defenceMagic: 0
   });
 
+  const pvpMonster = {
+    id: 'pvp',
+    name: 'PvP Mode',
+    hitpoints: 99,
+    attack: 99,
+    strength: 99,
+    defence: 99,
+    ranged: 99,
+    magic: 99,
+    defenceStab: 0,
+    defenceSlash: 0,
+    defenceCrush: 0,
+    defenceRanged: 0,
+    defenceMagic: 0
+  };
+
   useEffect(() => {
     const loadMonsters = async () => {
       try {
         const response = await base44.functions.invoke('fetchGameData', { type: 'monsters' });
-        setMonsters([customStats, ...(response.data?.monsters || [])]);
+        setMonsters([pvpMonster, customStats, ...(response.data?.monsters || [])]);
       } catch (error) {
         console.error('Failed to load monsters:', error);
       } finally {
@@ -101,7 +117,13 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
         <div className="bg-gray-900 rounded p-3 border border-amber-900">
           <h3 className="text-amber-600 font-bold text-sm mb-3">{selectedMonster.name}</h3>
           
-          {selectedMonster.id === 'custom' ? (
+          {selectedMonster.id === 'pvp' ? (
+            <div className="text-center py-4">
+              <p className="text-amber-100 text-sm mb-2">⚔️ PvP Mode Active</p>
+              <p className="text-amber-700 text-xs">Loadout 1 vs Loadout 2</p>
+              <p className="text-amber-700 text-xs mt-2">See Results panel for comparison</p>
+            </div>
+          ) : selectedMonster.id === 'custom' ? (
             <>
               <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                 {['hitpoints', 'attack', 'strength', 'defence', 'ranged', 'magic'].map(stat => (

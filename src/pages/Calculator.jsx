@@ -370,7 +370,7 @@ export default function Calculator() {
 
           {/* Right Column - Results */}
           <div className="lg:col-span-1">
-            <ResultsPanel loadouts={loadouts} />
+            <ResultsPanel loadouts={loadouts} selectedMonster={selectedMonster} />
           </div>
         </div>
       </div>
