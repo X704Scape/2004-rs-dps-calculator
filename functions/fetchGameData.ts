@@ -49,12 +49,17 @@ function parseConfigWeapons(configText) {
         defenceRanged: 0,
         attackRate: 4,
         slot: 'weapon',
+        wearpos: 'righthand',
+        wearpos2: null,
         category: null,
         equipable: true,
         requirement: 1
       };
     } else if (line.startsWith('wearpos=quiver')) {
       currentWeapon.slot = 'ammo';
+      currentWeapon.wearpos = 'quiver';
+    } else if (line.startsWith('wearpos2=')) {
+      currentWeapon.wearpos2 = line.substring(9);
     } else if (line.startsWith('category=')) {
       currentWeapon.category = line.substring(9);
       if (currentWeapon.category.includes('armour_body')) {
@@ -159,6 +164,7 @@ Deno.serve(async (req) => {
 
           const equipData = item.equipable_item;
           const wearpos = equipData.wearpos?.toLowerCase();
+          const wearpos2 = equipData.wearpos2?.toLowerCase();
           const slot = SLOT_ALIASES[wearpos] || wearpos;
           if (!slot) return null;
 
@@ -174,6 +180,7 @@ Deno.serve(async (req) => {
             name: item.name || 'Unknown',
             slot,
             wearpos: equipData.wearpos,
+            wearpos2: equipData.wearpos2,
             category: category,
             icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(item.name)}.png`,
             // Melee bonuses
@@ -215,9 +222,14 @@ Deno.serve(async (req) => {
         itemsByName.set(weapon.name, weapon);
       });
       
-      // Add API items only if not already present
+      // Add API items only if not already present AND only if they're actual armor (not weapons)
       wearableItems.forEach(item => {
         if (!itemsByName.has(item.name)) {
+          // Skip adding if it would go to weapon slot but comes from API
+          // (weapons should come from config files only)
+          if (item.slot === 'weapon') {
+            return;
+          }
           itemsByName.set(item.name, item);
         }
       });
