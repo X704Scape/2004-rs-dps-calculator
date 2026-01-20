@@ -292,9 +292,8 @@ Deno.serve(async (req) => {
         .map(([key, npc], index) => {
           if (!npc || !npc.name) return null;
           
-          // Only include NPCs that are attackable (have "Attack" operation)
-          const hasAttackOp = npc.op && Object.values(npc.op).some(op => op === 'Attack');
-          if (!hasAttackOp) return null;
+          // Only include NPCs that are attackable (have "Attack" in op2)
+          if (npc.op2 !== 'Attack') return null;
           
           // Extract defense bonuses from params array
           let defenceStab = 0, defenceSlash = 0, defenceCrush = 0, defenceRanged = 0, defenceMagic = 0;
