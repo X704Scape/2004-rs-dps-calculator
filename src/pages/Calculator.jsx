@@ -57,6 +57,7 @@ export default function Calculator() {
         magic: 1,
         combatType: 'melee',
         prayerActive: 'none',
+        attackPrayerActive: 'none',
         style: 'aggressive',
         combatLevel: 3,
         selectedSpell: null,
