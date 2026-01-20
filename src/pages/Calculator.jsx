@@ -175,6 +175,9 @@ export default function Calculator() {
         incredible_reflexes: 'incredible_reflexes'
       };
 
+      // Ensure attackPrayerActive has a default value
+      const attackPrayerActive = playerStats.attackPrayerActive || 'none';
+
       // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
