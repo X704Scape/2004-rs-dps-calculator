@@ -278,7 +278,7 @@ export default function Calculator() {
           const response = await calculateDPS(loadout);
           return {
             ...loadout,
-            results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
+            results: response ? response.data : null
           };
         })
       );
