@@ -250,6 +250,7 @@ export default function Calculator() {
         rangedStrBonus: getRangedStrBonus(),
         magicBonus: getTotalBonus('magic'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
+        attackPrayerName: attackPrayerMap[playerStats.attackPrayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
         potionRanged: 0,
@@ -267,7 +268,8 @@ export default function Calculator() {
         monsterDefenceMagic: selectedMonster.defenceMagic,
         spellMaxHit: (playerStats.selectedSpell?.requiresCharge && playerStats.chargeActive) ? 30 : (playerStats.selectedSpell?.maxHit || 0),
         hasChaosGauntlets: false,
-        isBoltSpell: false
+        isBoltSpell: false,
+        isPvP: selectedMonster.id === 'pvp'
       });
     } catch (error) {
       console.error('Calculation failed:', error);
