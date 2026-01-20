@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ResultsPanel({ loadouts, selectedMonster }) {
+export default function ResultsPanel({ loadouts, selectedMonster, calculationMode, onModeChange }) {
   const [activeTab, setActiveTab] = React.useState('pve');
 
   if (!loadouts || loadouts.length === 0) {
@@ -23,28 +23,59 @@ export default function ResultsPanel({ loadouts, selectedMonster }) {
   }
 
   return (
-    <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
-      <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
-        <div className="flex justify-between items-center">
-          <h2 className="text-amber-600 font-bold text-sm">Results</h2>
-          {isPvP && (
-            <div className="flex gap-1">
-              <button
-                onClick={() => setActiveTab('pve')}
-                className={`px-3 py-1 text-xs rounded ${activeTab === 'pve' ? 'bg-amber-900 text-amber-100' : 'bg-gray-800 text-amber-700 hover:bg-gray-700'}`}
-              >
-                PvE
-              </button>
-              <button
-                onClick={() => setActiveTab('pvp')}
-                className={`px-3 py-1 text-xs rounded ${activeTab === 'pvp' ? 'bg-amber-900 text-amber-100' : 'bg-gray-800 text-amber-700 hover:bg-gray-700'}`}
-              >
-                PvP
-              </button>
-            </div>
-          )}
+    <div className="space-y-3">
+      {/* Mode Selector */}
+      <div className="bg-gray-800 border-2 border-amber-900 rounded p-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-amber-600 font-bold text-sm">Calculation Mode</h3>
+          <div className="flex gap-1">
+            <button
+              onClick={() => onModeChange('pvm')}
+              className={`px-4 py-1.5 text-xs rounded font-semibold ${
+                calculationMode === 'pvm' 
+                  ? 'bg-amber-900 text-amber-100' 
+                  : 'bg-gray-900 text-amber-700 hover:bg-gray-700 border border-amber-900'
+              }`}
+            >
+              PvM
+            </button>
+            <button
+              onClick={() => onModeChange('pvp')}
+              className={`px-4 py-1.5 text-xs rounded font-semibold ${
+                calculationMode === 'pvp' 
+                  ? 'bg-amber-900 text-amber-100' 
+                  : 'bg-gray-900 text-amber-700 hover:bg-gray-700 border border-amber-900'
+              }`}
+            >
+              PvP
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Results Panel */}
+      <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
+        <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
+          <div className="flex justify-between items-center">
+            <h2 className="text-amber-600 font-bold text-sm">Results</h2>
+            {isPvP && (
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setActiveTab('pve')}
+                  className={`px-3 py-1 text-xs rounded ${activeTab === 'pve' ? 'bg-amber-900 text-amber-100' : 'bg-gray-800 text-amber-700 hover:bg-gray-700'}`}
+                >
+                  PvE
+                </button>
+                <button
+                  onClick={() => setActiveTab('pvp')}
+                  className={`px-3 py-1 text-xs rounded ${activeTab === 'pvp' ? 'bg-amber-900 text-amber-100' : 'bg-gray-800 text-amber-700 hover:bg-gray-700'}`}
+                >
+                  PvP
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
       {isPvP && activeTab === 'pvp' ? (
         <div className="p-4">
