@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
       magicBonus = 0,
       attackSpeedTicks = 4,
       prayerName = 'none',
+      attackPrayerName = 'none',
       styleName = 'aggressive',
       potionStr = 0,
       potionRanged = 0,
@@ -104,7 +105,8 @@ Deno.serve(async (req) => {
       monsterDefenceMagic = 0,
       spellMaxHit = 0,
       hasChaosGauntlets = false,
-      isBoltSpell = false
+      isBoltSpell = false,
+      isPvP = false
     } = body;
 
     const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
