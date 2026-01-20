@@ -63,9 +63,11 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   useEffect(() => {
     if (searchTerm && searchTerm.length > 0) {
-      const results = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ).slice(0, 20);
+      const results = items.filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const idMatch = String(item.id).toLowerCase().includes(searchTerm.toLowerCase());
+        return nameMatch || idMatch;
+      }).slice(0, 20);
       setSearchResults(results);
     } else {
       setSearchResults([]);
