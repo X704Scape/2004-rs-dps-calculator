@@ -57,13 +57,6 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     applyAllBoosts(selectedBoosts);
   }, [selectedBoosts]);
 
-  useEffect(() => {
-    // Persist selected boosts to parent state
-    if (JSON.stringify(stats.selectedBoosts) !== JSON.stringify(selectedBoosts)) {
-      onStatsChange({ ...stats, selectedBoosts });
-    }
-  }, [selectedBoosts]);
-
   const applyAllBoosts = (boosts) => {
     const boostedStats = { ...stats };
     
