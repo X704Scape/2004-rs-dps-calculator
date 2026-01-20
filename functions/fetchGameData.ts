@@ -34,7 +34,6 @@ function parseConfigWeapons(configText) {
       const weaponName = line.substring(5);
       currentWeapon = {
         name: weaponName,
-        iconUrl: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(weaponName)}.png`,
         stab: 0,
         slash: 0,
         crush: 0,
@@ -194,7 +193,7 @@ Deno.serve(async (req) => {
             wearpos: equipData.wearpos,
             wearpos2: equipData.wearpos2,
             category: category,
-            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/Icons/${encodeURIComponent(item.name)}.png`,
+            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/icons/${index}.png`,
             // Melee bonuses
             stab: equipData.stabattack || 0,
             slash: equipData.slashattack || 0,
