@@ -16,7 +16,7 @@ const STATS = [
 export default function PlayerStatsTab({ stats, onStatsChange }) {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedBoosts, setSelectedBoosts] = useState([]);
+  const [selectedBoosts, setSelectedBoosts] = useState(stats.selectedBoosts || []);
 
   const handleStatChange = (id, value) => {
     onStatsChange({ ...stats, [id]: parseInt(value) || 1 });
