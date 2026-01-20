@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
     } = body;
 
     const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
+    const attackPrayerMult = ATTACK_PRAYER_MULTS[attackPrayerName] || 1.0;
 
     console.log('=== DPS Calculation Debug ===');
     console.log('Combat Type:', combatType);
@@ -124,6 +125,8 @@ Deno.serve(async (req) => {
     console.log('Ranged Str Bonus:', rangedStrBonus);
     console.log('Equipment Bonus:', equipmentBonus);
     console.log('Prayer Mult:', prayerMult);
+    console.log('Attack Prayer Mult:', attackPrayerMult);
+    console.log('Is PvP:', isPvP);
 
     let maxHit = 0;
     let accuracy = 0;
@@ -132,7 +135,48 @@ Deno.serve(async (req) => {
     let dps = 0;
     let ttk = 0;
 
-    if (combatType === 'melee') {
+    // PvP Formula
+    if (isPvP) {
+      if (combatType === 'melee') {
+        const effectiveStrength = Math.floor(strengthLevel * prayerMult);
+        const effectiveAttack = Math.floor(attackLevel * attackPrayerMult);
+        const effectiveDefence = Math.floor(defenceLevel * 1.0);
+
+        attackRoll = effectiveAttack * (equipmentBonus + 64);
+        npcDefRoll = effectiveDefence * (monsterDefenceSlash + 64);
+
+        if (attackRoll < npcDefRoll) {
+          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
+        } else {
+          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
+        }
+
+        const combatStat = effectiveStrength * (strBonus + 64);
+        maxHit = Math.floor((combatStat + 320) / 640);
+      } else if (combatType === 'ranged') {
+        const effectiveRanged = Math.floor(rangedLevel * prayerMult);
+        const effectiveDefence = Math.floor(defenceLevel * 1.0);
+
+        attackRoll = effectiveRanged * (equipmentBonus + 64);
+        npcDefRoll = effectiveDefence * (monsterDefenceRanged + 64);
+
+        if (attackRoll < npcDefRoll) {
+          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
+        } else {
+          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
+        }
+
+        const combatStat = effectiveRanged * (rangedStrBonus + 64);
+        maxHit = Math.floor((combatStat + 320) / 640);
+      }
+
+      const avgHit = accuracy * (maxHit / 2);
+      const attackSpeed = attackSpeedTicks * 0.6;
+      dps = avgHit / attackSpeed;
+      if (dps > 0) {
+        ttk = monsterHitpoints / dps;
+      }
+    } else if (combatType === 'melee') {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
