@@ -10,12 +10,19 @@ const PRAYERS = [
 ];
 
 export default function PrayerTab({ selectedPrayer, onPrayerChange }) {
-  const [activePrayer, setActivePrayer] = React.useState(selectedPrayer || null);
+  const [activeStrengthPrayer, setActiveStrengthPrayer] = React.useState(null);
+  const [activeAttackPrayer, setActiveAttackPrayer] = React.useState(null);
 
-  const handlePrayerClick = (prayerId) => {
-    const newPrayer = activePrayer === prayerId ? null : prayerId;
-    setActivePrayer(newPrayer);
-    onPrayerChange(newPrayer || 'none');
+  const handlePrayerClick = (prayer) => {
+    if (prayer.type === 'strength') {
+      const newPrayer = activeStrengthPrayer === prayer.id ? null : prayer.id;
+      setActiveStrengthPrayer(newPrayer);
+      onPrayerChange({ strength: newPrayer, attack: activeAttackPrayer });
+    } else {
+      const newPrayer = activeAttackPrayer === prayer.id ? null : prayer.id;
+      setActiveAttackPrayer(newPrayer);
+      onPrayerChange({ strength: activeStrengthPrayer, attack: newPrayer });
+    }
   };
 
   const leftPrayers = PRAYERS.filter(p => p.position.includes('left'));
@@ -32,9 +39,9 @@ export default function PrayerTab({ selectedPrayer, onPrayerChange }) {
           {leftPrayers.map((prayer) => (
             <button
               key={prayer.id}
-              onClick={() => handlePrayerClick(prayer.id)}
+              onClick={() => handlePrayerClick(prayer)}
               className={`w-full p-3 rounded border-2 transition ${
-                activePrayer === prayer.id
+                activeStrengthPrayer === prayer.id
                   ? 'bg-amber-900 border-amber-700'
                   : 'bg-gray-900 border-gray-700 hover:border-amber-900'
               }`}
@@ -53,9 +60,9 @@ export default function PrayerTab({ selectedPrayer, onPrayerChange }) {
           {rightPrayers.map((prayer) => (
             <button
               key={prayer.id}
-              onClick={() => handlePrayerClick(prayer.id)}
+              onClick={() => handlePrayerClick(prayer)}
               className={`w-full p-3 rounded border-2 transition ${
-                activePrayer === prayer.id
+                activeAttackPrayer === prayer.id
                   ? 'bg-amber-900 border-amber-700'
                   : 'bg-gray-900 border-gray-700 hover:border-amber-900'
               }`}
