@@ -55,9 +55,34 @@ function parseConfigWeapons(configText) {
         equipable: true,
         requirement: 1
       };
-    } else if (line.startsWith('wearpos=quiver')) {
-      currentWeapon.slot = 'ammo';
-      currentWeapon.wearpos = 'quiver';
+    } else if (line.startsWith('wearpos=')) {
+      const wearpos = line.substring(8).toLowerCase();
+      currentWeapon.wearpos = wearpos;
+      
+      // Map wearpos to slot
+      if (wearpos === 'quiver') {
+        currentWeapon.slot = 'ammo';
+      } else if (wearpos === 'righthand') {
+        currentWeapon.slot = 'weapon';
+      } else if (wearpos === 'lefthand') {
+        currentWeapon.slot = 'shield';
+      } else if (wearpos === 'head') {
+        currentWeapon.slot = 'head';
+      } else if (wearpos === 'body') {
+        currentWeapon.slot = 'body';
+      } else if (wearpos === 'legs') {
+        currentWeapon.slot = 'legs';
+      } else if (wearpos === 'hands') {
+        currentWeapon.slot = 'hands';
+      } else if (wearpos === 'feet') {
+        currentWeapon.slot = 'feet';
+      } else if (wearpos === 'cape') {
+        currentWeapon.slot = 'cape';
+      } else if (wearpos === 'neck') {
+        currentWeapon.slot = 'neck';
+      } else if (wearpos === 'ring') {
+        currentWeapon.slot = 'ring';
+      }
     } else if (line.startsWith('wearpos2=')) {
       currentWeapon.wearpos2 = line.substring(9);
     } else if (line.startsWith('category=')) {
