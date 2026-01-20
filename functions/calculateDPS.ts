@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
-    // DPS calculation
+    // DPS calculation (only for non-PvP, PvP already calculated above)
     // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
     const avgHit = (maxHit / 2) * accuracy;
     const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
