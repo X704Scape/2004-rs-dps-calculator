@@ -27,9 +27,11 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
     loadMonsters();
   }, []);
 
-  const filteredMonsters = monsters.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMonsters = monsters.filter(m => {
+    const nameMatch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const idMatch = String(m.id).toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || idMatch;
+  });
 
   return (
     <div className="bg-gray-800 border-2 border-amber-900 rounded p-4">
@@ -66,7 +68,8 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
                   >
-                    {monster.name}
+                    <div className="font-semibold">{monster.name}</div>
+                    <div className="text-amber-700">ID: {monster.id}</div>
                   </button>
                 ))
               )}
