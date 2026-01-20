@@ -305,7 +305,7 @@ Deno.serve(async (req) => {
           }
 
           return {
-            id: npc.id || index,
+            id: parseInt(key) || npc.id || index,
             name: npc.name,
             hitpoints: parseInt(npc.hitpoints) || 10,
             attack: parseInt(npc.attack) || 1,
