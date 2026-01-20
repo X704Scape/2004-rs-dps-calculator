@@ -50,7 +50,7 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
           />
         </div>
 
-        {showDropdown && searchTerm && (
+        {showDropdown && (
           <div className="absolute z-40 w-full mt-1 bg-gray-900 border-2 border-amber-900 rounded shadow-lg">
             <div className="max-h-48 overflow-y-auto">
               {loading ? (
