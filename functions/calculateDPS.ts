@@ -8,6 +8,13 @@ const PRAYER_MULTS = {
   ultimate_strength: 1.15
 };
 
+const ATTACK_PRAYER_MULTS = {
+  none: 1.0,
+  clarity_of_thought: 1.05,
+  improved_reflexes: 1.10,
+  incredible_reflexes: 1.15
+};
+
 // Style bonuses for strength
 const STYLE_BONUS = {
   aggressive: 3,
