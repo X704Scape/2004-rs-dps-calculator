@@ -221,7 +221,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   )}
                   <div>
                     <div className="font-semibold">{item.name}</div>
-                    <div className="text-amber-700">{item.slot}</div>
+                    <div className="text-amber-700">{item.slot} • ID: {item.id}</div>
                   </div>
                 </button>
               ))
