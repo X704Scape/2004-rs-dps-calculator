@@ -8,13 +8,6 @@ const PRAYER_MULTS = {
   ultimate_strength: 1.15
 };
 
-const ATTACK_PRAYER_MULTS = {
-  none: 1.0,
-  clarity_of_thought: 1.05,
-  improved_reflexes: 1.10,
-  incredible_reflexes: 1.15
-};
-
 // Style bonuses for strength
 const STYLE_BONUS = {
   aggressive: 3,
@@ -95,7 +88,6 @@ Deno.serve(async (req) => {
       magicBonus = 0,
       attackSpeedTicks = 4,
       prayerName = 'none',
-      attackPrayerName = 'none',
       styleName = 'aggressive',
       potionStr = 0,
       potionRanged = 0,
@@ -112,12 +104,10 @@ Deno.serve(async (req) => {
       monsterDefenceMagic = 0,
       spellMaxHit = 0,
       hasChaosGauntlets = false,
-      isBoltSpell = false,
-      isPvP = false
+      isBoltSpell = false
     } = body;
 
     const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
-    const attackPrayerMult = ATTACK_PRAYER_MULTS[attackPrayerName] || 1.0;
 
     console.log('=== DPS Calculation Debug ===');
     console.log('Combat Type:', combatType);
@@ -125,8 +115,6 @@ Deno.serve(async (req) => {
     console.log('Ranged Str Bonus:', rangedStrBonus);
     console.log('Equipment Bonus:', equipmentBonus);
     console.log('Prayer Mult:', prayerMult);
-    console.log('Attack Prayer Mult:', attackPrayerMult);
-    console.log('Is PvP:', isPvP);
 
     let maxHit = 0;
     let accuracy = 0;
@@ -135,48 +123,7 @@ Deno.serve(async (req) => {
     let dps = 0;
     let ttk = 0;
 
-    // PvP Formula
-    if (isPvP) {
-      if (combatType === 'melee') {
-        const effectiveStrength = Math.floor(strengthLevel * prayerMult);
-        const effectiveAttack = Math.floor(attackLevel * attackPrayerMult);
-        const effectiveDefence = Math.floor(defenceLevel * 1.0);
-
-        attackRoll = effectiveAttack * (equipmentBonus + 64);
-        npcDefRoll = effectiveDefence * (monsterDefenceSlash + 64);
-
-        if (attackRoll < npcDefRoll) {
-          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
-        } else {
-          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
-        }
-
-        const combatStat = effectiveStrength * (strBonus + 64);
-        maxHit = Math.floor((combatStat + 320) / 640);
-      } else if (combatType === 'ranged') {
-        const effectiveRanged = Math.floor(rangedLevel * prayerMult);
-        const effectiveDefence = Math.floor(defenceLevel * 1.0);
-
-        attackRoll = effectiveRanged * (equipmentBonus + 64);
-        npcDefRoll = effectiveDefence * (monsterDefenceRanged + 64);
-
-        if (attackRoll < npcDefRoll) {
-          accuracy = (attackRoll + 1) / (2 * (npcDefRoll + 1));
-        } else {
-          accuracy = 1 - ((npcDefRoll + 1) / (2 * (attackRoll + 1)));
-        }
-
-        const combatStat = effectiveRanged * (rangedStrBonus + 64);
-        maxHit = Math.floor((combatStat + 320) / 640);
-      }
-
-      const avgHit = accuracy * (maxHit / 2);
-      const attackSpeed = attackSpeedTicks * 0.6;
-      dps = avgHit / attackSpeed;
-      if (dps > 0) {
-        ttk = monsterHitpoints / dps;
-      }
-    } else if (combatType === 'melee') {
+    if (combatType === 'melee') {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
@@ -220,21 +167,17 @@ Deno.serve(async (req) => {
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
-    // DPS calculation (only for non-PvP, PvP already calculated above)
-    if (!isPvP) {
-      // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
-      const avgHit = (maxHit / 2) * accuracy;
-      const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
-      dps = avgHit / attackSpeed;
+    // DPS calculation
+    // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
+    const avgHit = (maxHit / 2) * accuracy;
+    const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
+    dps = avgHit / attackSpeed;
 
-      // Time to kill
-      if (dps > 0) {
-        ttk = monsterHitpoints / dps;
-      }
+    // Time to kill
+    if (dps > 0) {
+      ttk = monsterHitpoints / dps;
     }
 
-    const avgHit = accuracy * (maxHit / 2);
-    
     return Response.json({
       attackRoll,
       npcDefRoll,

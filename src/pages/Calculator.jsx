@@ -28,7 +28,6 @@ export default function Calculator() {
         magic: 1,
         combatType: 'melee',
         prayerActive: 'none',
-        attackPrayerActive: 'none',
         style: 'aggressive',
         combatLevel: 3,
         selectedSpell: null,
@@ -57,7 +56,6 @@ export default function Calculator() {
         magic: 1,
         combatType: 'melee',
         prayerActive: 'none',
-        attackPrayerActive: 'none',
         style: 'aggressive',
         combatLevel: 3,
         selectedSpell: null,
@@ -168,16 +166,6 @@ export default function Calculator() {
         ultimate_strength: 'ultimate_strength'
       };
 
-      const attackPrayerMap = {
-        none: 'none',
-        clarity_of_thought: 'clarity_of_thought',
-        improved_reflexes: 'improved_reflexes',
-        incredible_reflexes: 'incredible_reflexes'
-      };
-
-      // Ensure attackPrayerActive has a default value
-      const attackPrayerActive = playerStats.attackPrayerActive || 'none';
-
       // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
@@ -255,7 +243,6 @@ export default function Calculator() {
         rangedStrBonus: getRangedStrBonus(),
         magicBonus: getTotalBonus('magic'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
-        attackPrayerName: attackPrayerMap[attackPrayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
         potionRanged: 0,
@@ -273,8 +260,7 @@ export default function Calculator() {
         monsterDefenceMagic: selectedMonster.defenceMagic,
         spellMaxHit: (playerStats.selectedSpell?.requiresCharge && playerStats.chargeActive) ? 30 : (playerStats.selectedSpell?.maxHit || 0),
         hasChaosGauntlets: false,
-        isBoltSpell: false,
-        isPvP: selectedMonster.id === 'pvp'
+        isBoltSpell: false
       });
     } catch (error) {
       console.error('Calculation failed:', error);
