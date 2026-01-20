@@ -96,57 +96,24 @@ function parseConfigWeapons(configText) {
     weapons.push(currentWeapon);
   }
   
-  // Post-process to assign slots based on category first, then wearpos
-  weapons.forEach(weapon => {
-    // Category-based slot assignment (highest priority)
-    if (weapon.category) {
-      if (weapon.category.includes('armour_head')) {
-        weapon.slot = 'head';
-      } else if (weapon.category.includes('armour_body')) {
-        weapon.slot = 'body';
-      } else if (weapon.category.includes('armour_legs')) {
-        weapon.slot = 'legs';
-      } else if (weapon.category.includes('armour_hands')) {
-        weapon.slot = 'hands';
-      } else if (weapon.category.includes('armour_feet')) {
-        weapon.slot = 'feet';
-      } else if (weapon.category.includes('armour_cape')) {
-        weapon.slot = 'cape';
-      } else if (weapon.category.includes('armour_shield')) {
-        weapon.slot = 'shield';
-      } else if (weapon.category === 'arrows' || weapon.category === 'bolts') {
-        weapon.slot = 'ammo';
+  // Filter out armor items - only keep actual weapons, shields, and ammo
+  return weapons.filter(weapon => {
+    // If it has an armor category, exclude it
+    if (weapon.category && weapon.category.includes('armour_')) {
+      return false;
+    }
+    
+    // If wearpos indicates armor slot, exclude it
+    if (weapon.wearpos) {
+      const wearpos = weapon.wearpos.toLowerCase();
+      if (['head', 'body', 'legs', 'hands', 'feet', 'cape', 'neck', 'ring'].includes(wearpos)) {
+        return false;
       }
     }
     
-    // If no category-based slot, use wearpos
-    if (weapon.slot === 'weapon' && weapon.wearpos) {
-      const wearpos = weapon.wearpos.toLowerCase();
-      if (wearpos === 'quiver') {
-        weapon.slot = 'ammo';
-      } else if (wearpos === 'head') {
-        weapon.slot = 'head';
-      } else if (wearpos === 'body') {
-        weapon.slot = 'body';
-      } else if (wearpos === 'legs') {
-        weapon.slot = 'legs';
-      } else if (wearpos === 'hands') {
-        weapon.slot = 'hands';
-      } else if (wearpos === 'feet') {
-        weapon.slot = 'feet';
-      } else if (wearpos === 'cape') {
-        weapon.slot = 'cape';
-      } else if (wearpos === 'neck') {
-        weapon.slot = 'neck';
-      } else if (wearpos === 'ring') {
-        weapon.slot = 'ring';
-      } else if (wearpos === 'lefthand') {
-        weapon.slot = 'shield';
-      }
-    }
+    // Keep weapons, shields, and ammo
+    return true;
   });
-  
-  return weapons;
 }
 
 Deno.serve(async (req) => {
