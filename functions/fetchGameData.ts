@@ -307,9 +307,11 @@ Deno.serve(async (req) => {
             });
           }
 
+          const npcId = parseInt(key) || npc.id || index;
           return {
-            id: parseInt(key) || npc.id || index,
+            id: npcId,
             name: npc.name,
+            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/npc_icons/${npcId}.png`,
             hitpoints: parseInt(npc.hitpoints) || 10,
             attack: parseInt(npc.attack) || 1,
             strength: parseInt(npc.strength) || 1,

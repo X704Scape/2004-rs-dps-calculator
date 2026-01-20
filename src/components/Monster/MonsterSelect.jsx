@@ -66,10 +66,13 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
                       setShowDropdown(false);
                       setSearchTerm('');
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
+                    className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                   >
-                    <div className="font-semibold">{monster.name}</div>
-                    <div className="text-amber-700">ID: {monster.id}</div>
+                    <img src={monster.icon} alt={monster.name} className="w-8 h-8 object-contain" />
+                    <div>
+                      <div className="font-semibold">{monster.name}</div>
+                      <div className="text-amber-700">ID: {monster.id}</div>
+                    </div>
                   </button>
                 ))
               )}
@@ -80,7 +83,10 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
 
       {selectedMonster && (
         <div className="bg-gray-900 rounded p-3 border border-amber-900">
-          <h3 className="text-amber-600 font-bold text-sm mb-3">{selectedMonster.name}</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <img src={selectedMonster.icon} alt={selectedMonster.name} className="w-12 h-12 object-contain" />
+            <h3 className="text-amber-600 font-bold text-sm">{selectedMonster.name}</h3>
+          </div>
           
           <div className="grid grid-cols-2 gap-2 text-xs text-amber-100 mb-3">
             <div>HP: {selectedMonster.hitpoints}</div>
