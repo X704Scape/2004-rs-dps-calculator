@@ -41,6 +41,13 @@ export default function Calculator() {
   const [calculating, setCalculating] = useState(false);
   const [calculationMode, setCalculationMode] = useState('pvm'); // 'pvm' or 'pvp'
 
+  // Auto-switch to PvP mode when PvP monster is selected
+  React.useEffect(() => {
+    if (selectedMonster?.id === 'pvp') {
+      setCalculationMode('pvp');
+    }
+  }, [selectedMonster]);
+
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map(l => l.id)) + 1;
     setLoadouts([...loadouts, {
