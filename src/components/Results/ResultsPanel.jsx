@@ -210,6 +210,7 @@ export default function ResultsPanel({ loadouts, selectedMonster, calculationMod
         </table>
       </div>
       )}
+      </div>
     </div>
   );
 }
