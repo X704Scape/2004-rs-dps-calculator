@@ -249,9 +249,12 @@ Deno.serve(async (req) => {
       // Create a map by name to deduplicate (config weapons take priority)
       const itemsByName = new Map();
       
-      // Add config weapons first (they take priority)
+      // Add config weapons first (they take priority) - but ONLY actual weapons and ammo
       [...meleeWeapons, ...rangedWeapons, ...magicWeapons].forEach(weapon => {
-        itemsByName.set(weapon.name, weapon);
+        // Only add if it's actually a weapon, shield, or ammo (not armor)
+        if (weapon.slot === 'weapon' || weapon.slot === 'shield' || weapon.slot === 'ammo') {
+          itemsByName.set(weapon.name, weapon);
+        }
       });
       
       // Add API items only if not already present AND only if they're actual armor (not weapons)
