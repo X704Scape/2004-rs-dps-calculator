@@ -255,7 +255,7 @@ export default function Calculator() {
         rangedStrBonus: getRangedStrBonus(),
         magicBonus: getTotalBonus('magic'),
         prayerName: prayerMap[playerStats.prayerActive] || 'none',
-        attackPrayerName: attackPrayerMap[playerStats.attackPrayerActive] || 'none',
+        attackPrayerName: attackPrayerMap[attackPrayerActive] || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
         potionRanged: 0,
