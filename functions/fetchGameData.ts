@@ -56,54 +56,11 @@ function parseConfigWeapons(configText) {
         requirement: 1
       };
     } else if (line.startsWith('wearpos=')) {
-      const wearpos = line.substring(8).toLowerCase();
-      currentWeapon.wearpos = wearpos;
-      
-      // Map wearpos to slot
-      if (wearpos === 'quiver') {
-        currentWeapon.slot = 'ammo';
-      } else if (wearpos === 'righthand') {
-        currentWeapon.slot = 'weapon';
-      } else if (wearpos === 'lefthand') {
-        currentWeapon.slot = 'shield';
-      } else if (wearpos === 'head') {
-        currentWeapon.slot = 'head';
-      } else if (wearpos === 'body') {
-        currentWeapon.slot = 'body';
-      } else if (wearpos === 'legs') {
-        currentWeapon.slot = 'legs';
-      } else if (wearpos === 'hands') {
-        currentWeapon.slot = 'hands';
-      } else if (wearpos === 'feet') {
-        currentWeapon.slot = 'feet';
-      } else if (wearpos === 'cape') {
-        currentWeapon.slot = 'cape';
-      } else if (wearpos === 'neck') {
-        currentWeapon.slot = 'neck';
-      } else if (wearpos === 'ring') {
-        currentWeapon.slot = 'ring';
-      }
+      currentWeapon.wearpos = line.substring(8);
     } else if (line.startsWith('wearpos2=')) {
       currentWeapon.wearpos2 = line.substring(9);
     } else if (line.startsWith('category=')) {
       currentWeapon.category = line.substring(9);
-      if (currentWeapon.category.includes('armour_body')) {
-        currentWeapon.slot = 'body';
-      } else if (currentWeapon.category.includes('armour_legs')) {
-        currentWeapon.slot = 'legs';
-      } else if (currentWeapon.category.includes('armour_head')) {
-        currentWeapon.slot = 'head';
-      } else if (currentWeapon.category.includes('armour_hands')) {
-        currentWeapon.slot = 'hands';
-      } else if (currentWeapon.category.includes('armour_feet')) {
-        currentWeapon.slot = 'feet';
-      } else if (currentWeapon.category.includes('armour_cape')) {
-        currentWeapon.slot = 'cape';
-      } else if (currentWeapon.category.includes('armour_shield')) {
-        currentWeapon.slot = 'shield';
-      } else if (currentWeapon.category === 'arrows' || currentWeapon.category === 'bolts') {
-        currentWeapon.slot = 'ammo';
-      }
     } else if (line.startsWith('param=stabattack,')) {
       currentWeapon.stab = parseInt(line.split(',')[1]) || 0;
     } else if (line.startsWith('param=slashattack,')) {
@@ -138,6 +95,56 @@ function parseConfigWeapons(configText) {
   if (currentWeapon.name) {
     weapons.push(currentWeapon);
   }
+  
+  // Post-process to assign slots based on category first, then wearpos
+  weapons.forEach(weapon => {
+    // Category-based slot assignment (highest priority)
+    if (weapon.category) {
+      if (weapon.category.includes('armour_head')) {
+        weapon.slot = 'head';
+      } else if (weapon.category.includes('armour_body')) {
+        weapon.slot = 'body';
+      } else if (weapon.category.includes('armour_legs')) {
+        weapon.slot = 'legs';
+      } else if (weapon.category.includes('armour_hands')) {
+        weapon.slot = 'hands';
+      } else if (weapon.category.includes('armour_feet')) {
+        weapon.slot = 'feet';
+      } else if (weapon.category.includes('armour_cape')) {
+        weapon.slot = 'cape';
+      } else if (weapon.category.includes('armour_shield')) {
+        weapon.slot = 'shield';
+      } else if (weapon.category === 'arrows' || weapon.category === 'bolts') {
+        weapon.slot = 'ammo';
+      }
+    }
+    
+    // If no category-based slot, use wearpos
+    if (weapon.slot === 'weapon' && weapon.wearpos) {
+      const wearpos = weapon.wearpos.toLowerCase();
+      if (wearpos === 'quiver') {
+        weapon.slot = 'ammo';
+      } else if (wearpos === 'head') {
+        weapon.slot = 'head';
+      } else if (wearpos === 'body') {
+        weapon.slot = 'body';
+      } else if (wearpos === 'legs') {
+        weapon.slot = 'legs';
+      } else if (wearpos === 'hands') {
+        weapon.slot = 'hands';
+      } else if (wearpos === 'feet') {
+        weapon.slot = 'feet';
+      } else if (wearpos === 'cape') {
+        weapon.slot = 'cape';
+      } else if (wearpos === 'neck') {
+        weapon.slot = 'neck';
+      } else if (wearpos === 'ring') {
+        weapon.slot = 'ring';
+      } else if (wearpos === 'lefthand') {
+        weapon.slot = 'shield';
+      }
+    }
+  });
   
   return weapons;
 }
