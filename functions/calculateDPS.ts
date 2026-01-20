@@ -221,14 +221,16 @@ Deno.serve(async (req) => {
     }
 
     // DPS calculation (only for non-PvP, PvP already calculated above)
-    // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
-    const avgHit = (maxHit / 2) * accuracy;
-    const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
-    dps = avgHit / attackSpeed;
+    if (!isPvP) {
+      // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
+      const avgHit = (maxHit / 2) * accuracy;
+      const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
+      dps = avgHit / attackSpeed;
 
-    // Time to kill
-    if (dps > 0) {
-      ttk = monsterHitpoints / dps;
+      // Time to kill
+      if (dps > 0) {
+        ttk = monsterHitpoints / dps;
+      }
     }
 
     return Response.json({
