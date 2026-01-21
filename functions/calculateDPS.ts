@@ -22,9 +22,10 @@ function getEffectiveStrength(strengthLevel, prayerMult, styleName, potionBoost 
   return Math.floor(strengthLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
-  // +9 includes base 8 + style bonus of 1
-  return Math.floor(rangedLevel * prayerMult) + 9 + potionBoost;
+function getEffectiveRanged(rangedLevel, prayerMult, styleName, potionBoost = 0) {
+  // Ranged styles: accurate = +3, rapid = +0, longrange = +0
+  const styleBonus = styleName === 'accurate' ? 3 : 0;
+  return Math.floor(rangedLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
 // Max Hit Calculations
@@ -144,7 +145,7 @@ Deno.serve(async (req) => {
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
-      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
+      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
 
       // Use monster's defence level with ranged defence bonus
