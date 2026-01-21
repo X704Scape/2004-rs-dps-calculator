@@ -233,7 +233,7 @@ export default function Calculator() {
         defenceMagic: selectedMonster.defenceMagic
       };
 
-      if (selectedMonster.id === 'pvp' && targetLoadout) {
+      if (targetLoadout) {
         const getTargetDefBonus = (bonusType) => {
           return Object.values(targetLoadout.equipment).reduce((sum, item) => {
             return sum + (item[bonusType] || 0);
@@ -249,6 +249,17 @@ export default function Calculator() {
           defenceRanged: getTargetDefBonus('defRanged'),
           defenceMagic: getTargetDefBonus('defMagic')
         };
+
+        console.log('=== PVP Mode Target Stats ===');
+        console.log('Target HP:', targetStats.hitpoints);
+        console.log('Target Defence Level:', targetStats.defence);
+        console.log('Target Defence Bonuses:', {
+          stab: targetStats.defenceStab,
+          slash: targetStats.defenceSlash,
+          crush: targetStats.defenceCrush,
+          ranged: targetStats.defenceRanged,
+          magic: targetStats.defenceMagic
+        });
       }
 
       console.log('=== Sending to calculateDPS ===');
