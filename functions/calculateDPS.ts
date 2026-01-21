@@ -16,47 +16,26 @@ const STYLE_BONUS = {
   defensive: 0
 };
 
-// Effective Level Calculations
-function getEffectiveStrength(strengthLevel, prayerMult, styleName, potionBoost = 0) {
-  const styleBonus = STYLE_BONUS[styleName] || 0;
-  return Math.floor(strengthLevel * prayerMult) + styleBonus + 8 + potionBoost;
+// 2004 RSC formulas based on actual game code
+
+// Player effective level calculation
+function getEffectiveLevel(level, prayerMult, styleBonus, potionBoost = 0) {
+  return Math.floor(level * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
-  // +9 includes base 8 + style bonus of 1
-  return Math.floor(rangedLevel * prayerMult) + 9 + potionBoost;
+// NPC effective level calculation (no prayer, always +9 for controlled stance)
+function getNPCEffectiveLevel(level) {
+  return level + 9;
 }
 
-// Max Hit Calculations
-function getMeleeMaxHit(effectiveStr, strBonus) {
-  return Math.floor(0.5 + (effectiveStr * (strBonus + 64)) / 640);
+// Combat stat calculation: effective_level * (bonus + 64)
+function getCombatStat(effectiveLevel, bonus) {
+  return effectiveLevel * (bonus + 64);
 }
 
-function getRangedMaxHit(effectiveRanged, rangedStrBonus) {
-  const rangeStrength = effectiveRanged * (rangedStrBonus + 64);
-  return Math.floor((rangeStrength + 320) / 640);
-}
-
-function getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets = false, isBoltSpell = false) {
-  let maxHit = spellMaxHit;
-  
-  // Apply chaos gauntlets bonus for bolt spells
-  if (hasChaosGauntlets && isBoltSpell) {
-    maxHit += 3;
-  }
-  
-  // Magic damage bonus from equipment (in 2004, this is a % bonus)
-  // Each point of magic bonus adds 0.5% to damage
-  const damageMultiplier = 1 + (magicBonus * 0.005);
-  maxHit = Math.floor(maxHit * damageMultiplier);
-  
-  return maxHit;
-}
-
-// Accuracy calculations
-function getEffectiveAttack(attackLevel, prayerMult, styleName, potionBoost = 0) {
-  const styleBonus = styleName === 'accurate' ? 3 : 0;
-  return Math.floor(attackLevel * prayerMult) + styleBonus + 8 + potionBoost;
+// Max hit formula: floor(0.5 + combat_strength / 640)
+function getMaxHit(combatStrength) {
+  return Math.floor(0.5 + combatStrength / 640);
 }
 
 // Matches 2004 accuracy formula
