@@ -119,9 +119,14 @@ Deno.serve(async (req) => {
 
     console.log('=== DPS Calculation Debug ===');
     console.log('Combat Type:', combatType);
+    console.log('Attack Level:', attackLevel);
+    console.log('Strength Level:', strengthLevel);
     console.log('Ranged Level:', rangedLevel);
+    console.log('Magic Level:', magicLevel);
+    console.log('Equipment Bonus (for attack):', equipmentBonus);
+    console.log('Str Bonus:', strBonus);
     console.log('Ranged Str Bonus:', rangedStrBonus);
-    console.log('Equipment Bonus:', equipmentBonus);
+    console.log('Style Name:', styleName);
     console.log('Attack Prayer:', attackPrayer);
     console.log('Strength Prayer:', strengthPrayer);
 
@@ -142,9 +147,13 @@ Deno.serve(async (req) => {
       console.log('=== Melee Attack Roll Debug ===');
       console.log('Attack Level:', attackLevel);
       console.log('Prayer Atk Mult:', prayerAtkMult);
+      console.log('Prayer Str Mult:', prayerStrMult);
       console.log('Style Name:', styleName);
       console.log('Effective Attack:', effectiveAtk);
+      console.log('Effective Strength:', effectiveStr);
       console.log('Equipment Bonus:', equipmentBonus);
+      console.log('Str Bonus:', strBonus);
+      console.log('Calculated Max Hit:', maxHit);
 
       // Use the appropriate monster defense bonus based on attack type
       // The equipment bonus passed in already corresponds to the correct attack type (stab/slash/crush)
@@ -162,17 +171,28 @@ Deno.serve(async (req) => {
       attackRoll = effectiveAtk * (equipmentBonus + 64);
       const npcEffectiveDefence = monsterDefence + 9;
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
+      console.log('Attack Roll:', attackRoll, '=', effectiveAtk, '*', (equipmentBonus + 64));
+      console.log('NPC Defense Roll:', npcDefRoll);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
       const prayerRangedMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
       const effectiveRanged = getEffectiveRanged(rangedLevel, prayerRangedMult, styleName, potionRanged);
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
 
+      console.log('=== Ranged Attack Roll Debug ===');
+      console.log('Ranged Level:', rangedLevel);
+      console.log('Prayer Ranged Mult:', prayerRangedMult);
+      console.log('Effective Ranged:', effectiveRanged);
+      console.log('Equipment Bonus:', equipmentBonus);
+      console.log('Ranged Str Bonus:', rangedStrBonus);
+
       // Use monster's defence level with ranged defence bonus
       const monsterDefBonus = body.monsterDefenceRanged || 0;
       attackRoll = effectiveRanged * (equipmentBonus + 64);
       const npcEffectiveDefence = monsterDefence + 9;
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
+      console.log('Attack Roll:', attackRoll, '=', effectiveRanged, '*', (equipmentBonus + 64));
+      console.log('NPC Defense Roll:', npcDefRoll);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
       // Spell max hit is already calculated (base spell damage + charge boost if applicable)
