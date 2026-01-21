@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       }
 
       attackRoll = effectiveAtk * (equipmentBonus + 64);
-      const npcEffectiveDefence = monsterDefence + 9;
+      const npcEffectiveDefence = monsterDefence + 8;
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
       // Use monster's defence level with ranged defence bonus
       const monsterDefBonus = body.monsterDefenceRanged || 0;
       attackRoll = effectiveRanged * (equipmentBonus + 64);
-      const npcEffectiveDefence = monsterDefence + 9;
+      const npcEffectiveDefence = monsterDefence + 8;
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'magic') {
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
       attackRoll = effectiveMagic * (equipmentBonus + 64);
       
       // NPC magic defence roll
-      const npcEffectiveMagic = monsterMagic + 9;
+      const npcEffectiveMagic = monsterMagic + 8;
       npcDefRoll = npcEffectiveMagic * (monsterDefenceMagic + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
