@@ -3,6 +3,13 @@ import React from 'react';
 export default function ResultsPanel({ loadouts, selectedMonster, calculationMode, onModeChange }) {
   const [activeTab, setActiveTab] = React.useState('pve');
 
+  // Auto-switch to PvP tab when PvP monster is selected
+  React.useEffect(() => {
+    if (selectedMonster?.id === 'pvp') {
+      setActiveTab('pvp');
+    }
+  }, [selectedMonster]);
+
   if (!loadouts || loadouts.length === 0) {
     return (
       <div className="bg-gray-800 border-2 border-amber-900 rounded p-6 text-center">
