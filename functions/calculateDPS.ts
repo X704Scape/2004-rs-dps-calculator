@@ -139,14 +139,17 @@ Deno.serve(async (req) => {
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerAtkMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
 
-      // Determine which monster defense bonus to use based on player's attack style
+      // Use the appropriate monster defense bonus based on attack type
+      // The equipment bonus passed in already corresponds to the correct attack type (stab/slash/crush)
+      // We need to determine which defense to use based on which attack bonus is being used
       let monsterDefBonus = body.monsterDefenceStab || 0;
-      if (styleName === 'aggressive') {
+      
+      // Check which melee attack type we're using by comparing equipment bonus values
+      // The frontend should pass the correct equipmentBonus for the active attack type
+      if (body.weaponAttackType === 'slash') {
         monsterDefBonus = body.monsterDefenceSlash || 0;
-      } else if (styleName === 'accurate') {
-        monsterDefBonus = body.monsterDefenceStab || 0;
-      } else if (styleName === 'controlled') {
-        monsterDefBonus = body.monsterDefenceStab || 0;
+      } else if (body.weaponAttackType === 'crush') {
+        monsterDefBonus = body.monsterDefenceCrush || 0;
       }
 
       attackRoll = effectiveAtk * (equipmentBonus + 64);
