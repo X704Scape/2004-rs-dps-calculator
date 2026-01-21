@@ -103,46 +103,51 @@ Deno.serve(async (req) => {
     let ttk = 0;
 
     if (combatType === 'melee') {
-      const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
-      const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
-      maxHit = getMeleeMaxHit(effectiveStr, strBonus);
+      // Player melee calculation
+      const styleBonus = STYLE_BONUS[styleName] || 0;
+      const effectiveStr = getEffectiveLevel(strengthLevel, prayerMult, styleBonus, potionStr);
+      const effectiveAtk = getEffectiveLevel(attackLevel, prayerMult, styleBonus, potionAttack);
+      
+      const combatStrength = getCombatStat(effectiveStr, strBonus);
+      maxHit = getMaxHit(combatStrength);
+      attackRoll = getCombatStat(effectiveAtk, equipmentBonus);
 
-      // Determine which monster defense bonus to use based on player's attack style
-      let monsterDefBonus = body.monsterDefenceStab || 0;
+      // NPC defence: uses defence level with appropriate defence bonus
+      let monsterDefBonus = monsterDefenceStab;
       if (styleName === 'aggressive') {
-        monsterDefBonus = body.monsterDefenceSlash || 0;
-      } else if (styleName === 'accurate') {
-        monsterDefBonus = body.monsterDefenceStab || 0;
+        monsterDefBonus = monsterDefenceSlash;
       } else if (styleName === 'controlled') {
-        monsterDefBonus = body.monsterDefenceStab || 0;
+        monsterDefBonus = monsterDefenceCrush;
       }
 
-      attackRoll = effectiveAtk * (equipmentBonus + 64);
-      const npcEffectiveDefence = monsterDefence + 9;
-      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
+      const npcEffectiveDefence = getNPCEffectiveLevel(monsterDefence);
+      npcDefRoll = getCombatStat(npcEffectiveDefence, monsterDefBonus);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
+      
     } else if (combatType === 'ranged') {
-      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
-      maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
+      // Player ranged calculation (always +1 style bonus for rapid/accurate)
+      const effectiveRanged = getEffectiveLevel(rangedLevel, prayerMult, 1, potionRanged);
+      
+      const combatRanged = getCombatStat(effectiveRanged, rangedStrBonus);
+      maxHit = getMaxHit(combatRanged);
+      attackRoll = getCombatStat(effectiveRanged, equipmentBonus);
 
-      // Use monster's defence level with ranged defence bonus
-      const monsterDefBonus = body.monsterDefenceRanged || 0;
-      attackRoll = effectiveRanged * (equipmentBonus + 64);
-      const npcEffectiveDefence = monsterDefence + 9;
-      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
+      // NPC defence vs ranged
+      const npcEffectiveDefence = getNPCEffectiveLevel(monsterDefence);
+      npcDefRoll = getCombatStat(npcEffectiveDefence, monsterDefenceRanged);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
+      
     } else if (combatType === 'magic') {
-      // Spell max hit is already calculated (base spell damage + charge boost if applicable)
+      // Magic max hit is spell-defined (no formula)
       maxHit = spellMaxHit;
 
-      // Magic accuracy in 2004 - from npc_magic_attack_roll
-      // effective_magic = magic_level + 9 (style bonus of 1 = +9)
-      const effectiveMagic = magicLevel + 9;
-      attackRoll = effectiveMagic * (equipmentBonus + 64);
+      // Player magic accuracy
+      const effectiveMagic = getEffectiveLevel(magicLevel, 1.0, 1, 0); // no prayer for magic accuracy, +1 style
+      attackRoll = getCombatStat(effectiveMagic, equipmentBonus);
       
-      // NPC magic defence roll
-      const npcEffectiveMagic = monsterMagic + 9;
-      npcDefRoll = npcEffectiveMagic * (monsterDefenceMagic + 64);
+      // NPC magic defence uses magic level
+      const npcEffectiveMagic = getNPCEffectiveLevel(monsterMagic);
+      npcDefRoll = getCombatStat(npcEffectiveMagic, monsterDefenceMagic);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
