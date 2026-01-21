@@ -29,12 +29,13 @@ function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
 
 // Max Hit Calculations
 function getMeleeMaxHit(effectiveStr, strBonus) {
-  return Math.floor(0.5 + (effectiveStr * (strBonus + 64)) / 640);
+  const combatStat = effectiveStr * (strBonus + 64);
+  return Math.floor((combatStat + 320) / 640);
 }
 
 function getRangedMaxHit(effectiveRanged, rangedStrBonus) {
-  const rangeStrength = effectiveRanged * (rangedStrBonus + 64);
-  return Math.floor((rangeStrength + 320) / 640);
+  const combatStat = effectiveRanged * (rangedStrBonus + 64);
+  return Math.floor((combatStat + 320) / 640);
 }
 
 function getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets = false, isBoltSpell = false) {
