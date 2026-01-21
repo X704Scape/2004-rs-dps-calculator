@@ -225,18 +225,20 @@ export default function Calculator() {
 
       console.log('=== Sending to calculateDPS ===');
       console.log('Combat Type:', detectedCombatType);
+      console.log('Attack Level:', playerStats.attack);
+      console.log('Strength Level:', playerStats.strength);
       console.log('Ranged Level:', playerStats.ranged);
-      console.log('Ranged Str Bonus from equipment:', getTotalBonus('rangedStrBonus'));
+      console.log('Magic Level:', playerStats.magic);
       console.log('Attack Bonus:', attackBonus);
       console.log('Attack Speed Ticks:', attackSpeedTicks);
 
       return await base44.functions.invoke('calculateDPS', {
         combatType: detectedCombatType,
-        attackLevel: playerStats.boostedAttack || playerStats.attack,
-        strengthLevel: playerStats.boostedStrength || playerStats.strength,
-        rangedLevel: playerStats.boostedRanged || playerStats.ranged,
-        magicLevel: playerStats.boostedMagic || playerStats.magic,
-        defenceLevel: playerStats.boostedDefence || playerStats.defence,
+        attackLevel: playerStats.attack,
+        strengthLevel: playerStats.strength,
+        rangedLevel: playerStats.ranged,
+        magicLevel: playerStats.magic,
+        defenceLevel: playerStats.defence,
         equipmentBonus: attackBonus,
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getRangedStrBonus(),
