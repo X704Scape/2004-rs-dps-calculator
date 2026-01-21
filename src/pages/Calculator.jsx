@@ -39,14 +39,6 @@ export default function Calculator() {
   const [activeLoadoutId, setActiveLoadoutId] = useState(1);
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [calculating, setCalculating] = useState(false);
-  const [calculationMode, setCalculationMode] = useState('pvm'); // 'pvm' or 'pvp'
-
-  // Auto-switch to PvP mode when PvP monster is selected
-  React.useEffect(() => {
-    if (selectedMonster?.id === 'pvp') {
-      setCalculationMode('pvp');
-    }
-  }, [selectedMonster]);
 
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map(l => l.id)) + 1;
@@ -111,95 +103,6 @@ export default function Calculator() {
         }
         return l;
       }));
-    }
-  };
-
-  const calculatePvPDPS = async (attacker, defender) => {
-    try {
-      const getEquipmentBonus = (equipment, bonusType) => {
-        return Object.values(equipment).reduce((sum, item) => sum + (item[bonusType] || 0), 0);
-      };
-
-      const weapon = attacker.equipment.weapon;
-      let attackSpeedTicks = weapon?.attackRate || 4;
-
-      if (weapon?.speedOverrides && weapon.speedOverrides.length > 0) {
-        const override = weapon.speedOverrides.find(o => o.styleId === attacker.playerStats.style);
-        if (override) {
-          attackSpeedTicks = override.speedTicks;
-        }
-      } else if (attacker.playerStats.style === 'rapid' && weapon) {
-        attackSpeedTicks = Math.max(1, attackSpeedTicks - 1);
-      }
-
-      // Determine attack type from style
-      let attackBonus = 0;
-      const style = attacker.playerStats.style;
-      if (style === 'accurate' || style === 'aggressive' || style === 'defensive') {
-        if (weapon?.attackType === 'stab') {
-          attackBonus = getEquipmentBonus(attacker.equipment, 'stab');
-        } else if (weapon?.attackType === 'slash') {
-          attackBonus = getEquipmentBonus(attacker.equipment, 'slash');
-        } else {
-          attackBonus = getEquipmentBonus(attacker.equipment, 'crush');
-        }
-      } else if (style === 'rapid' || style === 'longrange') {
-        attackBonus = getEquipmentBonus(attacker.equipment, 'ranged');
-      }
-
-      // Determine defence type from attacker's attack style
-      let defenceBonus = 0;
-      if (style === 'accurate' || style === 'aggressive' || style === 'defensive') {
-        if (weapon?.attackType === 'stab') {
-          defenceBonus = getEquipmentBonus(defender.equipment, 'defenceStab');
-        } else if (weapon?.attackType === 'slash') {
-          defenceBonus = getEquipmentBonus(defender.equipment, 'defenceSlash');
-        } else {
-          defenceBonus = getEquipmentBonus(defender.equipment, 'defenceCrush');
-        }
-      } else if (style === 'rapid' || style === 'longrange') {
-        defenceBonus = getEquipmentBonus(defender.equipment, 'defenceRanged');
-      }
-
-      // Get prayer multipliers
-      const getPrayerMultiplier = (prayer, type) => {
-        const prayerBonuses = {
-          burst_of_strength: { strength: 1.05 },
-          superhuman_strength: { strength: 1.10 },
-          ultimate_strength: { strength: 1.15 },
-          clarity_of_thought: { attack: 1.05 },
-          improved_reflexes: { attack: 1.10 },
-          incredible_reflexes: { attack: 1.15 }
-        };
-        return prayerBonuses[prayer]?.[type] || 1.0;
-      };
-
-      // Use prayerActive from playerStats (which stores the active prayer)
-      const attackPrayer = getPrayerMultiplier(attacker.playerStats.prayerActive, 'attack') * 100;
-      const strengthPrayer = getPrayerMultiplier(attacker.playerStats.prayerActive, 'strength') * 100;
-      const defencePrayer = getPrayerMultiplier(defender.playerStats.prayerActive, 'defence') * 100;
-
-      const strengthBonus = getEquipmentBonus(attacker.equipment, 'strBonus');
-
-      return await base44.functions.invoke('calculatePvPDPS', {
-        attacker: {
-          attackLevel: attacker.playerStats.attack,
-          strengthLevel: attacker.playerStats.strength,
-          attackBonus,
-          strengthBonus,
-          attackPrayer,
-          strengthPrayer,
-          attackSpeed: attackSpeedTicks
-        },
-        defender: {
-          defenceLevel: defender.playerStats.defence,
-          defenceBonus,
-          defencePrayer
-        }
-      });
-    } catch (error) {
-      console.error('PvP calculation failed:', error);
-      return null;
     }
   };
 
@@ -370,46 +273,21 @@ export default function Calculator() {
       if (!selectedMonster) return;
       
       setCalculating(true);
-
-      // PvP mode: calculate loadout 1 vs loadout 2
-      if (calculationMode === 'pvp' && selectedMonster.id === 'pvp' && loadouts.length >= 2) {
-        const loadout1 = loadouts[0];
-        const loadout2 = loadouts[1];
-
-        // Loadout 1 attacks Loadout 2
-        const response1vs2 = await calculatePvPDPS(loadout1, loadout2);
-        // Loadout 2 attacks Loadout 1
-        const response2vs1 = await calculatePvPDPS(loadout2, loadout1);
-
-        const updatedLoadouts = loadouts.map((loadout, idx) => {
-          if (idx === 0) {
-            return { ...loadout, results: response1vs2 ? response1vs2.data : null };
-          } else if (idx === 1) {
-            return { ...loadout, results: response2vs1 ? response2vs1.data : null };
-          }
-          return loadout;
-        });
-
-        setLoadouts(updatedLoadouts);
-      } else {
-        // PvM mode: use existing calculation
-        const updatedLoadouts = await Promise.all(
-          loadouts.map(async (loadout) => {
-            const response = await calculateDPS(loadout);
-            return {
-              ...loadout,
-              results: response ? response.data : null
-            };
-          })
-        );
-        setLoadouts(updatedLoadouts);
-      }
-
+      const updatedLoadouts = await Promise.all(
+        loadouts.map(async (loadout) => {
+          const response = await calculateDPS(loadout);
+          return {
+            ...loadout,
+            results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
+          };
+        })
+      );
+      setLoadouts(updatedLoadouts);
       setCalculating(false);
     };
 
     updateAllResults();
-  }, [loadouts.map(l => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster, calculationMode]);
+  }, [loadouts.map(l => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950">
@@ -492,12 +370,7 @@ export default function Calculator() {
 
           {/* Right Column - Results */}
           <div className="lg:col-span-1">
-            <ResultsPanel 
-              loadouts={loadouts} 
-              selectedMonster={selectedMonster}
-              calculationMode={calculationMode}
-              onModeChange={setCalculationMode}
-            />
+            <ResultsPanel loadouts={loadouts} />
           </div>
         </div>
       </div>

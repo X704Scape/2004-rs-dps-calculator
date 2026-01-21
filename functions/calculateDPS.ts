@@ -16,26 +16,47 @@ const STYLE_BONUS = {
   defensive: 0
 };
 
-// 2004 RSC formulas based on actual game code
-
-// Player effective level calculation
-function getEffectiveLevel(level, prayerMult, styleBonus, potionBoost = 0) {
-  return Math.floor(level * prayerMult) + styleBonus + 8 + potionBoost;
+// Effective Level Calculations
+function getEffectiveStrength(strengthLevel, prayerMult, styleName, potionBoost = 0) {
+  const styleBonus = STYLE_BONUS[styleName] || 0;
+  return Math.floor(strengthLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
-// NPC effective level calculation (no prayer, always +9 for controlled stance)
-function getNPCEffectiveLevel(level) {
-  return level + 9;
+function getEffectiveRanged(rangedLevel, prayerMult, potionBoost = 0) {
+  // +9 includes base 8 + style bonus of 1
+  return Math.floor(rangedLevel * prayerMult) + 9 + potionBoost;
 }
 
-// Combat stat calculation: effective_level * (bonus + 64)
-function getCombatStat(effectiveLevel, bonus) {
-  return effectiveLevel * (bonus + 64);
+// Max Hit Calculations
+function getMeleeMaxHit(effectiveStr, strBonus) {
+  return Math.floor(0.5 + (effectiveStr * (strBonus + 64)) / 640);
 }
 
-// Max hit formula: floor(0.5 + combat_strength / 640)
-function getMaxHit(combatStrength) {
-  return Math.floor(0.5 + combatStrength / 640);
+function getRangedMaxHit(effectiveRanged, rangedStrBonus) {
+  const rangeStrength = effectiveRanged * (rangedStrBonus + 64);
+  return Math.floor((rangeStrength + 320) / 640);
+}
+
+function getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets = false, isBoltSpell = false) {
+  let maxHit = spellMaxHit;
+  
+  // Apply chaos gauntlets bonus for bolt spells
+  if (hasChaosGauntlets && isBoltSpell) {
+    maxHit += 3;
+  }
+  
+  // Magic damage bonus from equipment (in 2004, this is a % bonus)
+  // Each point of magic bonus adds 0.5% to damage
+  const damageMultiplier = 1 + (magicBonus * 0.005);
+  maxHit = Math.floor(maxHit * damageMultiplier);
+  
+  return maxHit;
+}
+
+// Accuracy calculations
+function getEffectiveAttack(attackLevel, prayerMult, styleName, potionBoost = 0) {
+  const styleBonus = styleName === 'accurate' ? 3 : 0;
+  return Math.floor(attackLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
 // Matches 2004 accuracy formula
@@ -103,51 +124,46 @@ Deno.serve(async (req) => {
     let ttk = 0;
 
     if (combatType === 'melee') {
-      // Player melee calculation
-      const styleBonus = STYLE_BONUS[styleName] || 0;
-      const effectiveStr = getEffectiveLevel(strengthLevel, prayerMult, styleBonus, potionStr);
-      const effectiveAtk = getEffectiveLevel(attackLevel, prayerMult, styleBonus, potionAttack);
-      
-      const combatStrength = getCombatStat(effectiveStr, strBonus);
-      maxHit = getMaxHit(combatStrength);
-      attackRoll = getCombatStat(effectiveAtk, equipmentBonus);
+      const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
+      const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
+      maxHit = getMeleeMaxHit(effectiveStr, strBonus);
 
-      // NPC defence: uses defence level with appropriate defence bonus
-      let monsterDefBonus = monsterDefenceStab;
+      // Determine which monster defense bonus to use based on player's attack style
+      let monsterDefBonus = body.monsterDefenceStab || 0;
       if (styleName === 'aggressive') {
-        monsterDefBonus = monsterDefenceSlash;
+        monsterDefBonus = body.monsterDefenceSlash || 0;
+      } else if (styleName === 'accurate') {
+        monsterDefBonus = body.monsterDefenceStab || 0;
       } else if (styleName === 'controlled') {
-        monsterDefBonus = monsterDefenceCrush;
+        monsterDefBonus = body.monsterDefenceStab || 0;
       }
 
-      const npcEffectiveDefence = getNPCEffectiveLevel(monsterDefence);
-      npcDefRoll = getCombatStat(npcEffectiveDefence, monsterDefBonus);
+      attackRoll = effectiveAtk * (equipmentBonus + 64);
+      const npcEffectiveDefence = monsterDefence + 9;
+      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
-      
     } else if (combatType === 'ranged') {
-      // Player ranged calculation (always +1 style bonus for rapid/accurate)
-      const effectiveRanged = getEffectiveLevel(rangedLevel, prayerMult, 1, potionRanged);
-      
-      const combatRanged = getCombatStat(effectiveRanged, rangedStrBonus);
-      maxHit = getMaxHit(combatRanged);
-      attackRoll = getCombatStat(effectiveRanged, equipmentBonus);
+      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, potionRanged);
+      maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
 
-      // NPC defence vs ranged
-      const npcEffectiveDefence = getNPCEffectiveLevel(monsterDefence);
-      npcDefRoll = getCombatStat(npcEffectiveDefence, monsterDefenceRanged);
+      // Use monster's defence level with ranged defence bonus
+      const monsterDefBonus = body.monsterDefenceRanged || 0;
+      attackRoll = effectiveRanged * (equipmentBonus + 64);
+      const npcEffectiveDefence = monsterDefence + 9;
+      npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
-      
     } else if (combatType === 'magic') {
-      // Magic max hit is spell-defined (no formula)
+      // Spell max hit is already calculated (base spell damage + charge boost if applicable)
       maxHit = spellMaxHit;
 
-      // Player magic accuracy
-      const effectiveMagic = getEffectiveLevel(magicLevel, 1.0, 1, 0); // no prayer for magic accuracy, +1 style
-      attackRoll = getCombatStat(effectiveMagic, equipmentBonus);
+      // Magic accuracy in 2004 - from npc_magic_attack_roll
+      // effective_magic = magic_level + 9 (style bonus of 1 = +9)
+      const effectiveMagic = magicLevel + 9;
+      attackRoll = effectiveMagic * (equipmentBonus + 64);
       
-      // NPC magic defence uses magic level
-      const npcEffectiveMagic = getNPCEffectiveLevel(monsterMagic);
-      npcDefRoll = getCombatStat(npcEffectiveMagic, monsterDefenceMagic);
+      // NPC magic defence roll
+      const npcEffectiveMagic = monsterMagic + 9;
+      npcDefRoll = npcEffectiveMagic * (monsterDefenceMagic + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     }
 
