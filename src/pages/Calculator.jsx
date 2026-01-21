@@ -190,14 +190,18 @@ export default function Calculator() {
 
       // Determine which attack bonus to use based on combat type and style
       let attackBonus = 0;
+      let weaponAttackType = 'stab'; // default
       if (detectedCombatType === 'melee') {
         // Use the appropriate melee bonus based on attack style
         if (weapon?.attackType === 'stab' || playerStats.style === 'stab') {
           attackBonus = getTotalBonus('stab');
+          weaponAttackType = 'stab';
         } else if (weapon?.attackType === 'slash' || playerStats.style === 'slash') {
           attackBonus = getTotalBonus('slash');
+          weaponAttackType = 'slash';
         } else {
           attackBonus = getTotalBonus('crush');
+          weaponAttackType = 'crush';
         }
       } else if (detectedCombatType === 'ranged') {
         attackBonus = getTotalBonus('ranged');
@@ -240,6 +244,7 @@ export default function Calculator() {
         attackPrayer: playerStats.prayerActive?.attack || 'none',
         strengthPrayer: playerStats.prayerActive?.strength || 'none',
         styleName: playerStats.style || 'aggressive',
+        weaponAttackType,
         potionStr: 0,
         potionRanged: 0,
         potionAttack: 0,
