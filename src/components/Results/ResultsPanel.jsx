@@ -1,14 +1,15 @@
 import React from 'react';
 
 export default function ResultsPanel({ loadouts, selectedMonster, calculationMode, onModeChange }) {
+  const isPvP = selectedMonster?.id === 'pvp';
   const [activeTab, setActiveTab] = React.useState('pve');
 
-  // Auto-switch to PvP tab when PvP monster is selected
+  // Keep activeTab synced with PvP mode
   React.useEffect(() => {
-    if (selectedMonster?.id === 'pvp') {
+    if (isPvP) {
       setActiveTab('pvp');
     }
-  }, [selectedMonster]);
+  }, [isPvP]);
 
   if (!loadouts || loadouts.length === 0) {
     return (
@@ -19,9 +20,8 @@ export default function ResultsPanel({ loadouts, selectedMonster, calculationMod
   }
 
   const hasResults = loadouts.some(l => l.results);
-  const isPvP = selectedMonster?.id === 'pvp';
 
-  if (!hasResults) {
+  if (!hasResults && !isPvP) {
     return (
       <div className="bg-gray-800 border-2 border-amber-900 rounded p-6 text-center">
         <p className="text-amber-700">Select a monster to calculate DPS</p>
