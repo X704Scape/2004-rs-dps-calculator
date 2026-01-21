@@ -1,11 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Prayer multipliers
-const PRAYER_MULTS = {
+const PRAYER_STR_MULTIPLIERS = {
   none: 1.0,
   burst_of_strength: 1.05,
   superhuman_strength: 1.10,
   ultimate_strength: 1.15
+};
+
+const PRAYER_ATK_MULTIPLIERS = {
+  none: 1.0,
+  clarity_of_thought: 1.05,
+  improved_reflexes: 1.10,
+  incredible_reflexes: 1.15
 };
 
 // Style bonuses for strength
@@ -89,7 +96,8 @@ Deno.serve(async (req) => {
       rangedStrBonus = 0,
       magicBonus = 0,
       attackSpeedTicks = 4,
-      prayerName = 'none',
+      attackPrayer = 'none',
+      strengthPrayer = 'none',
       styleName = 'aggressive',
       potionStr = 0,
       potionRanged = 0,
@@ -109,14 +117,13 @@ Deno.serve(async (req) => {
       isBoltSpell = false
     } = body;
 
-    const prayerMult = PRAYER_MULTS[prayerName] || 1.0;
-
     console.log('=== DPS Calculation Debug ===');
     console.log('Combat Type:', combatType);
     console.log('Ranged Level:', rangedLevel);
     console.log('Ranged Str Bonus:', rangedStrBonus);
     console.log('Equipment Bonus:', equipmentBonus);
-    console.log('Prayer Mult:', prayerMult);
+    console.log('Attack Prayer:', attackPrayer);
+    console.log('Strength Prayer:', strengthPrayer);
 
     let maxHit = 0;
     let accuracy = 0;
@@ -126,8 +133,10 @@ Deno.serve(async (req) => {
     let ttk = 0;
 
     if (combatType === 'melee') {
-      const effectiveStr = getEffectiveStrength(strengthLevel, prayerMult, styleName, potionStr);
-      const effectiveAtk = getEffectiveAttack(attackLevel, prayerMult, styleName, potionAttack);
+      const prayerStrMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
+      const prayerAtkMult = PRAYER_ATK_MULTIPLIERS[attackPrayer] || 1.0;
+      const effectiveStr = getEffectiveStrength(strengthLevel, prayerStrMult, styleName, potionStr);
+      const effectiveAtk = getEffectiveAttack(attackLevel, prayerAtkMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
 
       // Determine which monster defense bonus to use based on player's attack style
@@ -145,7 +154,8 @@ Deno.serve(async (req) => {
       npcDefRoll = npcEffectiveDefence * (monsterDefBonus + 64);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
     } else if (combatType === 'ranged') {
-      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerMult, styleName, potionRanged);
+      const prayerRangedMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
+      const effectiveRanged = getEffectiveRanged(rangedLevel, prayerRangedMult, styleName, potionRanged);
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
 
       // Use monster's defence level with ranged defence bonus
