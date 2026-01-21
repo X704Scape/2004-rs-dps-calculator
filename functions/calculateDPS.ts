@@ -138,6 +138,13 @@ Deno.serve(async (req) => {
       const effectiveStr = getEffectiveStrength(strengthLevel, prayerStrMult, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, prayerAtkMult, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
+      
+      console.log('=== Melee Attack Roll Debug ===');
+      console.log('Attack Level:', attackLevel);
+      console.log('Prayer Atk Mult:', prayerAtkMult);
+      console.log('Style Name:', styleName);
+      console.log('Effective Attack:', effectiveAtk);
+      console.log('Equipment Bonus:', equipmentBonus);
 
       // Use the appropriate monster defense bonus based on attack type
       // The equipment bonus passed in already corresponds to the correct attack type (stab/slash/crush)
