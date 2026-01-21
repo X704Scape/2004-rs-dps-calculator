@@ -106,9 +106,9 @@ export default function Calculator() {
     }
   };
 
-  const calculateDPS = async (loadout) => {
+  const calculateDPS = async (loadout, targetLoadout = null) => {
     if (!selectedMonster) return null;
-    
+
     try {
       const { equipment, playerStats } = loadout;
       // Calculate total bonuses from equipment
@@ -222,6 +222,35 @@ export default function Calculator() {
         attackSpeedTicks = Math.max(1, attackSpeedTicks - 1);
       }
 
+      // PVP Mode: Use target loadout's defense stats
+      let targetStats = {
+        hitpoints: selectedMonster.hitpoints,
+        defence: selectedMonster.defence,
+        defenceStab: selectedMonster.defenceStab,
+        defenceSlash: selectedMonster.defenceSlash,
+        defenceCrush: selectedMonster.defenceCrush,
+        defenceRanged: selectedMonster.defenceRanged,
+        defenceMagic: selectedMonster.defenceMagic
+      };
+
+      if (selectedMonster.id === 'pvp' && targetLoadout) {
+        const getTargetDefBonus = (bonusType) => {
+          return Object.values(targetLoadout.equipment).reduce((sum, item) => {
+            return sum + (item[bonusType] || 0);
+          }, 0);
+        };
+
+        targetStats = {
+          hitpoints: targetLoadout.playerStats.hitpoints,
+          defence: targetLoadout.playerStats.defence,
+          defenceStab: getTargetDefBonus('defStab'),
+          defenceSlash: getTargetDefBonus('defSlash'),
+          defenceCrush: getTargetDefBonus('defCrush'),
+          defenceRanged: getTargetDefBonus('defRanged'),
+          defenceMagic: getTargetDefBonus('defMagic')
+        };
+      }
+
       console.log('=== Sending to calculateDPS ===');
       console.log('Combat Type:', detectedCombatType);
       console.log('Attack Level:', playerStats.attack);
@@ -250,16 +279,16 @@ export default function Calculator() {
         potionRanged: 0,
         potionAttack: 0,
         attackSpeedTicks,
-        monsterHitpoints: selectedMonster.hitpoints,
+        monsterHitpoints: targetStats.hitpoints,
         monsterAttack: selectedMonster.attack,
-        monsterDefence: selectedMonster.defence,
+        monsterDefence: targetStats.defence,
         monsterRanged: selectedMonster.ranged,
         monsterMagic: selectedMonster.magic,
-        monsterDefenceStab: selectedMonster.defenceStab,
-        monsterDefenceSlash: selectedMonster.defenceSlash,
-        monsterDefenceCrush: selectedMonster.defenceCrush,
-        monsterDefenceRanged: selectedMonster.defenceRanged,
-        monsterDefenceMagic: selectedMonster.defenceMagic,
+        monsterDefenceStab: targetStats.defenceStab,
+        monsterDefenceSlash: targetStats.defenceSlash,
+        monsterDefenceCrush: targetStats.defenceCrush,
+        monsterDefenceRanged: targetStats.defenceRanged,
+        monsterDefenceMagic: targetStats.defenceMagic,
         spellMaxHit: (playerStats.selectedSpell?.requiresCharge && playerStats.chargeActive) ? 30 : (playerStats.selectedSpell?.maxHit || 0),
         hasChaosGauntlets: false,
         isBoltSpell: false
@@ -273,18 +302,47 @@ export default function Calculator() {
   React.useEffect(() => {
     const updateAllResults = async () => {
       if (!selectedMonster) return;
-      
+
       setCalculating(true);
-      const updatedLoadouts = await Promise.all(
-        loadouts.map(async (loadout) => {
-          const response = await calculateDPS(loadout);
-          return {
-            ...loadout,
-            results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
-          };
-        })
-      );
-      setLoadouts(updatedLoadouts);
+
+      // PVP Mode: Calculate both directions
+      if (selectedMonster.id === 'pvp' && loadouts.length >= 2) {
+        const loadout1 = loadouts[0];
+        const loadout2 = loadouts[1];
+
+        const response1 = await calculateDPS(loadout1, loadout2);
+        const response2 = await calculateDPS(loadout2, loadout1);
+
+        const updatedLoadouts = loadouts.map((loadout, idx) => {
+          if (idx === 0) {
+            return {
+              ...loadout,
+              results: response1 ? { ...response1.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response1.data.attackSpeedTicks ? response1.data.attackSpeedTicks - 1 : response1.data.attackSpeedTicks || 4 } : null
+            };
+          } else if (idx === 1) {
+            return {
+              ...loadout,
+              results: response2 ? { ...response2.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response2.data.attackSpeedTicks ? response2.data.attackSpeedTicks - 1 : response2.data.attackSpeedTicks || 4 } : null
+            };
+          } else {
+            return { ...loadout, results: null };
+          }
+        });
+        setLoadouts(updatedLoadouts);
+      } else {
+        // Normal PVM mode
+        const updatedLoadouts = await Promise.all(
+          loadouts.map(async (loadout) => {
+            const response = await calculateDPS(loadout);
+            return {
+              ...loadout,
+              results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
+            };
+          })
+        );
+        setLoadouts(updatedLoadouts);
+      }
+
       setCalculating(false);
     };
 

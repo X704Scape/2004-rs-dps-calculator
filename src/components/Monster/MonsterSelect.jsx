@@ -37,6 +37,30 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
     <div className="bg-gray-800 border-2 border-amber-900 rounded p-4">
       <h2 className="text-amber-600 font-bold text-lg mb-4 border-b border-amber-900 pb-2">Monster</h2>
       
+      {/* PVP Mode Button */}
+      <button
+        onClick={() => {
+          onMonsterChange({
+            id: 'pvp',
+            name: 'PVP Mode',
+            hitpoints: 99,
+            attack: 99,
+            strength: 99,
+            defence: 99,
+            ranged: 99,
+            magic: 99,
+            defenceStab: 0,
+            defenceSlash: 0,
+            defenceCrush: 0,
+            defenceRanged: 0,
+            defenceMagic: 0
+          });
+        }}
+        className="w-full mb-3 px-4 py-3 bg-red-900 hover:bg-red-800 border-2 border-red-700 rounded text-amber-100 font-bold text-sm transition"
+      >
+        ⚔️ PVP Mode (Loadout 1 vs Loadout 2)
+      </button>
+
       <div className="relative mb-4">
         <div className="flex items-center bg-gray-900 rounded px-3 py-2 border border-amber-900">
           <Search size={16} className="text-amber-700 mr-2" />
