@@ -159,12 +159,7 @@ export default function Calculator() {
         return bonus;
       };
 
-      const prayerMap = {
-        none: 'none',
-        burst_of_strength: 'burst_of_strength',
-        superhuman_strength: 'superhuman_strength',
-        ultimate_strength: 'ultimate_strength'
-      };
+      // No prayer mapping needed - pass prayers directly
 
       // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
@@ -242,7 +237,8 @@ export default function Calculator() {
         strBonus: getTotalBonus('strBonus'),
         rangedStrBonus: getRangedStrBonus(),
         magicBonus: getTotalBonus('magic'),
-        prayerName: prayerMap[playerStats.prayerActive] || 'none',
+        attackPrayer: playerStats.prayerActive?.attack || 'none',
+        strengthPrayer: playerStats.prayerActive?.strength || 'none',
         styleName: playerStats.style || 'aggressive',
         potionStr: 0,
         potionRanged: 0,
