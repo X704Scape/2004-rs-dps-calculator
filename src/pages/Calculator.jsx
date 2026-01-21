@@ -174,9 +174,10 @@ export default function Calculator() {
         return prayerBonuses[prayer]?.[type] || 1.0;
       };
 
-      const attackPrayer = getPrayerMultiplier(attacker.playerStats.attackPrayer, 'attack') * 100;
-      const strengthPrayer = getPrayerMultiplier(attacker.playerStats.strengthPrayer, 'strength') * 100;
-      const defencePrayer = getPrayerMultiplier(defender.playerStats.defencePrayer, 'defence') * 100;
+      // Use prayerActive from playerStats (which stores the active prayer)
+      const attackPrayer = getPrayerMultiplier(attacker.playerStats.prayerActive, 'attack') * 100;
+      const strengthPrayer = getPrayerMultiplier(attacker.playerStats.prayerActive, 'strength') * 100;
+      const defencePrayer = getPrayerMultiplier(defender.playerStats.prayerActive, 'defence') * 100;
 
       const strengthBonus = getEquipmentBonus(attacker.equipment, 'strBonus');
 
