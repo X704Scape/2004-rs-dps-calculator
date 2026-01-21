@@ -55,7 +55,7 @@ function getMagicMaxHit(spellMaxHit, magicBonus, hasChaosGauntlets = false, isBo
 
 // Accuracy calculations
 function getEffectiveAttack(attackLevel, prayerMult, styleName, potionBoost = 0) {
-  const styleBonus = styleName === 'accurate' ? 3 : 0;
+  const styleBonus = styleName === 'accurate' ? 3 : (styleName === 'controlled' ? 1 : 0);
   return Math.floor(attackLevel * prayerMult) + styleBonus + 8 + potionBoost;
 }
 
