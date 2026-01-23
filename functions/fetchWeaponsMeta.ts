@@ -15,13 +15,12 @@ Deno.serve(async (req) => {
     const weaponsData = await response.json();
     
     // Create a map indexed by item ID for fast lookups
+    // Note: Removing speedOverrides - rapid style is now handled by -1 fallback in Calculator.js
     const weaponsMeta = Object.fromEntries(
       weaponsData.map(weapon => [
         weapon.id,
         {
-          attackStyles: weapon.attackStyles || [],
-          speedOverrides: weapon.speedOverrides || [],
-          speedTicks: weapon.speedTicks
+          attackStyles: weapon.attackStyles || []
         }
       ])
     );

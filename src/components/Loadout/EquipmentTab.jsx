@@ -46,8 +46,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
           const meta = metaResponse.data.weaponsMeta[item.id];
           return {
             ...item,
-            attackStyles: meta?.attackStyles || item.attackStyles,
-            speedOverrides: meta?.speedOverrides || item.speedOverrides
+            attackStyles: meta?.attackStyles || item.attackStyles
           };
         });
         
