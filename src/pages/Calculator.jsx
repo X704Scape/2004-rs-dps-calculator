@@ -211,14 +211,8 @@ export default function Calculator() {
       // Get attack speed in ticks
       let attackSpeedTicks = weapon?.attackRate || 4;
       
-      // Check for speed overrides in weapon metadata
-      if (weapon?.speedOverrides && weapon.speedOverrides.length > 0) {
-        const override = weapon.speedOverrides.find(o => o.styleId === playerStats.style);
-        if (override) {
-          attackSpeedTicks = override.speedTicks;
-        }
-      } else if (detectedCombatType === 'ranged' && playerStats.style === 'rapid' && weapon) {
-        // Fallback: Apply rapid style bonus for ranged
+      // Apply rapid style bonus for ranged (-1 tick)
+      if (detectedCombatType === 'ranged' && playerStats.style === 'rapid' && weapon) {
         attackSpeedTicks = Math.max(1, attackSpeedTicks - 1);
       }
 

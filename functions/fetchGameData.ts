@@ -216,9 +216,8 @@ Deno.serve(async (req) => {
             prayer: equipData.prayerbonus || 0,
             // Attack speed (in ticks)
             attackRate: equipData.attackrate || 4,
-            // Attack styles and speed overrides from metadata
+            // Attack styles from metadata
             attackStyles: weaponsMeta[index]?.attackStyles || null,
-            speedOverrides: weaponsMeta[index]?.speedOverrides || null,
             // Requirement
             requirement: item.req || 0
             };
