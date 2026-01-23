@@ -162,10 +162,11 @@ Deno.serve(async (req) => {
       const itemData = await itemResponse.json();
       console.log('Fetched items from API:', itemData?.length);
 
-      // Weapons metadata: attack styles and speed overrides indexed by item ID
+      // Weapons metadata: attack styles indexed by item ID
+      // Note: Speed overrides are no longer needed - rapid style is now handled by -1 fallback in Calculator.js
       const weaponsMeta = {
         35: { attackStyles: [{ mode: 'accurate', id: 'accurate', type: 'slash' }, { mode: 'aggressive', id: 'aggressive', type: 'slash' }, { mode: 'controlled', id: 'controlled', type: 'stab' }, { mode: 'defensive', id: 'defensive', type: 'slash' }] },
-        767: { attackStyles: [{ mode: 'accurate', id: 'accurate', type: 'ranged' }, { mode: 'rapid', id: 'rapid', type: 'ranged' }, { mode: 'defensive', id: 'longrange', type: 'ranged' }], speedOverrides: [{ styleId: 'rapid', speedTicks: 5 }] }
+        767: { attackStyles: [{ mode: 'accurate', id: 'accurate', type: 'ranged' }, { mode: 'rapid', id: 'rapid', type: 'ranged' }, { mode: 'defensive', id: 'longrange', type: 'ranged' }] }
       };
 
       const wearableItems = itemData
