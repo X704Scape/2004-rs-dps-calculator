@@ -328,12 +328,12 @@ export default function Calculator() {
           if (idx === 0) {
             return {
               ...loadout,
-              results: response1 ? { ...response1.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response1.data.attackSpeedTicks ? response1.data.attackSpeedTicks - 1 : response1.data.attackSpeedTicks || 4 } : null
+              results: response1?.data || null
             };
           } else if (idx === 1) {
             return {
               ...loadout,
-              results: response2 ? { ...response2.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response2.data.attackSpeedTicks ? response2.data.attackSpeedTicks - 1 : response2.data.attackSpeedTicks || 4 } : null
+              results: response2?.data || null
             };
           } else {
             return { ...loadout, results: null };
@@ -347,7 +347,7 @@ export default function Calculator() {
             const response = await calculateDPS(loadout);
             return {
               ...loadout,
-              results: response ? { ...response.data, attackSpeedTicks: loadout.playerStats.style === 'rapid' && response.data.attackSpeedTicks ? response.data.attackSpeedTicks - 1 : response.data.attackSpeedTicks || 4 } : null
+              results: response?.data || null
             };
           })
         );
