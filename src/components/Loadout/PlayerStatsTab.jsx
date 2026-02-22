@@ -76,11 +76,11 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     }
 
     const currentStats = {
-      attack: stats.attack || 1,
-      strength: stats.strength || 1,
-      defence: stats.defence || 1,
-      ranged: stats.ranged || 1,
-      magic: stats.magic || 1
+      attack: baseStats.attack || 1,
+      strength: baseStats.strength || 1,
+      defence: baseStats.defence || 1,
+      ranged: baseStats.ranged || 1,
+      magic: baseStats.magic || 1
     };
 
     // Apply each boost from base stats
