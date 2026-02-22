@@ -74,14 +74,14 @@ function simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, seed) {
 
 const RUNS = 5000; // Monte Carlo runs
 
-function runMonteCarlo(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks) {
+function runMonteCarlo(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, baseSeed) {
   let sumSeconds = 0;
   let sumOverkill = 0;
   let sumDamage = 0;
   let sumTotalOverkill = 0;
 
   for (let i = 0; i < RUNS; i++) {
-    const r = simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks);
+    const r = simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, baseSeed + i);
     if (!r) return null;
     sumSeconds += parseFloat(r.totalSeconds);
     sumOverkill += parseFloat(r.avgOverkillPerKill);
