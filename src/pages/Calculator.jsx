@@ -305,53 +305,41 @@ export default function Calculator() {
   };
 
   React.useEffect(() => {
-    const updateAllResults = async () => {
-      if (!selectedMonster) return;
+    if (!selectedMonster) return;
 
+    const updateAllResults = async () => {
       setCalculating(true);
 
-      // PVP Mode: Calculate both directions
-      if (selectedMonster.id === 'pvp' && loadouts.length >= 2) {
-        const loadout1 = loadouts[0];
-        const loadout2 = loadouts[1];
+      try {
+        // PVP Mode: Calculate both directions
+        if (selectedMonster.id === 'pvp' && loadouts.length >= 2) {
+          const loadout1 = loadouts[0];
+          const loadout2 = loadouts[1];
 
-        const response1 = await calculateDPS(loadout1, loadout2);
-        const response2 = await calculateDPS(loadout2, loadout1);
+          const [response1, response2] = await Promise.all([
+            calculateDPS(loadout1, loadout2),
+            calculateDPS(loadout2, loadout1)
+          ]);
 
-        const updatedLoadouts = loadouts.map((loadout, idx) => {
-          if (idx === 0) {
-            return {
-              ...loadout,
-              results: response1?.data || null
-            };
-          } else if (idx === 1) {
-            return {
-              ...loadout,
-              results: response2?.data || null
-            };
-          } else {
-            return { ...loadout, results: null };
-          }
-        });
-        setLoadouts(updatedLoadouts);
-      } else {
-        // Normal PVM mode
-        const updatedLoadouts = await Promise.all(
-          loadouts.map(async (loadout) => {
-            const response = await calculateDPS(loadout);
-            return {
-              ...loadout,
-              results: response?.data || null
-            };
-          })
-        );
-        setLoadouts(updatedLoadouts);
+          setLoadouts(prev => prev.map((loadout, idx) => ({
+            ...loadout,
+            results: idx === 0 ? (response1?.data || null) : idx === 1 ? (response2?.data || null) : null
+          })));
+        } else {
+          // Normal PVM mode
+          const responses = await Promise.all(loadouts.map(loadout => calculateDPS(loadout)));
+          setLoadouts(prev => prev.map((loadout, idx) => ({
+            ...loadout,
+            results: responses[idx]?.data || null
+          })));
+        }
+      } finally {
+        setCalculating(false);
       }
-
-      setCalculating(false);
     };
 
-    updateAllResults();
+    const timer = setTimeout(updateAllResults, 400);
+    return () => clearTimeout(timer);
   }, [loadouts.map(l => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 
   return (
