@@ -139,7 +139,7 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
             min={1}
             max={10000}
             value={npcCount}
-            onChange={e => setNpcCount(Math.max(1, Math.min(10000, parseInt(e.target.value) || 1)))}
+            onChange={e => onNpcCountChange && onNpcCountChange(Math.max(1, Math.min(10000, parseInt(e.target.value) || 1)))}
             className="w-20 text-xs px-2 py-1 rounded border border-amber-900 bg-gray-900 text-amber-100 text-center"
           />
         </div>
