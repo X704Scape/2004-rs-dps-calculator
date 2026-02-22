@@ -40,6 +40,7 @@ export default function Calculator() {
   const [activeLoadoutId, setActiveLoadoutId] = useState(1);
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [calculating, setCalculating] = useState(false);
+  const [npcCount, setNpcCount] = useState(10);
 
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map(l => l.id)) + 1;
