@@ -58,8 +58,8 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     applyAllBoosts(selectedBoosts);
   }, [selectedBoosts]);
 
-  const applyAllBoosts = (boosts) => {
-    const boostedStats = { ...stats, selectedBoosts: boosts };
+  const applyAllBoosts = (boosts, baseStats = stats) => {
+    const boostedStats = { ...baseStats, selectedBoosts: boosts };
     
     // Always clear all boosts first
     delete boostedStats.boostedAttack;
