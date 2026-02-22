@@ -121,5 +121,6 @@ export default function ResultsPanel({ loadouts, selectedMonster }) {
         </table>
       </div>
     </div>
+    <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} />
   );
 }
