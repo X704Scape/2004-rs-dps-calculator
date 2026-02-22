@@ -17,6 +17,8 @@ function makePrng(seed) {
 function simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, seed) {
   if (!maxHit || !attackSpeedTicks || !npcHp || !npcCount) return null;
 
+  const rand = makePrng(seed != null ? seed : Math.random() * 2147483647);
+
   let totalTicks = 0;
   let totalDamage = 0;
   let totalOverkill = 0;
@@ -26,16 +28,14 @@ function simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, seed) {
 
   let currentHp = npcHp;
 
-  // We simulate tick-by-tick, attacking every attackSpeedTicks ticks
   let tick = 0;
 
   while (npcsKilled < npcCount) {
-    tick += attackSpeedTicks; // next attack lands at this tick
+    tick += attackSpeedTicks;
     totalAttacks++;
 
-    // Roll hit
-    const hit = Math.random() < accuracy
-      ? Math.floor(Math.random() * (maxHit + 1))
+    const hit = rand() < accuracy
+      ? Math.floor(rand() * (maxHit + 1))
       : 0;
 
     if (hit > 0) totalHits++;
