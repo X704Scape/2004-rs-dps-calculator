@@ -19,7 +19,8 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   const [selectedBoosts, setSelectedBoosts] = useState(stats.selectedBoosts || []);
 
   const handleStatChange = (id, value) => {
-    onStatsChange({ ...stats, [id]: parseInt(value) || 1 });
+    const newStats = { ...stats, [id]: parseInt(value) || 1 };
+    applyAllBoosts(selectedBoosts, newStats);
   };
 
   const loadFromHiscores = async () => {
