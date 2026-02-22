@@ -425,9 +425,16 @@ export default function Calculator() {
 
           {/* Right Column - Results */}
           <div className="lg:col-span-1">
-            <ResultsPanel loadouts={loadouts} selectedMonster={selectedMonster} />
+            <ResultsPanel loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={setNpcCount} />
           </div>
         </div>
+
+        {/* Bottom Row - Graph full width */}
+        {selectedMonster && selectedMonster.id !== 'pvp' && loadouts.some(l => l.results) && (
+          <div className="mt-6">
+            <KillSimulatorGraph loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} />
+          </div>
+        )}
       </div>
 
       {/* Footer */}
