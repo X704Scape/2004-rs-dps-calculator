@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Seeded PRNG (mulberry32) so identical stats produce identical results
 function makePrng(seed) {
