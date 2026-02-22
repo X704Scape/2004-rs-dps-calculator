@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Username required' }, { status: 400 });
     }
 
-    const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${username}`);
+    const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${encodeURIComponent(username)}`);
     const html = await response.text();
 
     // Parse stats from HTML table structure

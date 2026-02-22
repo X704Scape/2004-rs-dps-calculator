@@ -28,25 +28,10 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     
     setLoading(true);
     try {
-      const playerUrl = `https://2004.lostcity.rs/hiscores/player/${username}`;
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract the skill levels from this RuneScape 2004 hiscores page at ${playerUrl}. Look for the table showing skill levels and extract: Attack, Strength, Defence, Hitpoints, Ranged, Magic, Prayer. Return ONLY a JSON object with these exact keys (lowercase) and their level values as numbers.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            attack: { type: "number" },
-            strength: { type: "number" },
-            defence: { type: "number" },
-            hitpoints: { type: "number" },
-            ranged: { type: "number" },
-            magic: { type: "number" },
-            prayer: { type: "number" }
-          }
-        }
-      });
-      
-      onStatsChange({ ...stats, ...result });
+      const response = await base44.functions.invoke('fetchHiscores', { username: username.trim() });
+      if (response.data?.stats) {
+        onStatsChange({ ...stats, ...response.data.stats });
+      }
     } catch (error) {
       console.error('Lookup failed:', error);
     } finally {
