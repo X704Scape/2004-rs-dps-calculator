@@ -277,7 +277,8 @@ Deno.serve(async (req) => {
       dps: dps.toFixed(3),
       ttk: ttk.toFixed(1),
       avgHit: avgHit.toFixed(2),
-      overkill: overkill.toFixed(2)
+      overkill: overkill.toFixed(2),
+      attackSpeedTicks
     });
   } catch (error) {
     console.error('Calculation error:', error);
