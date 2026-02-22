@@ -21,6 +21,7 @@ export default function ResultsPanel({ loadouts, selectedMonster }) {
   }
 
   return (
+    <>
     <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
       <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
         <h2 className="text-amber-600 font-bold text-sm">Results</h2>
