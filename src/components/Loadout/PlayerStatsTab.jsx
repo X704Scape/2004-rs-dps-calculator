@@ -28,7 +28,7 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     
     setLoading(true);
     try {
-      const response = await base44.functions.invoke('fetchHiscores', { username: username.trim() });
+      const response = await base44.functions.invoke('fetchHiscores', { username: username.trim().replace(/ /g, '_') });
       if (response.data?.stats) {
         onStatsChange({ ...stats, ...response.data.stats });
       }
