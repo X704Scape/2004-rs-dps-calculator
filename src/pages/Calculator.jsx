@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import LoadoutPanel from '../components/Loadout/LoadoutPanel';
 import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
+import KillSimulatorGraph from '../components/Results/KillSimulatorGraph';
 
 const calculateCombatLevel = (stats) => {
   const base = 10 * (stats.defence + stats.hitpoints + Math.floor(stats.prayer / 2));
