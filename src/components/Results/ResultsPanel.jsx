@@ -1,8 +1,6 @@
 import React from 'react';
 import KillSimulator from './KillSimulator';
 
-export { default as KillSimulatorGraph } from './KillSimulatorGraph';
-
 export default function ResultsPanel({ loadouts, selectedMonster }) {
   if (!loadouts || loadouts.length === 0) {
     return (
