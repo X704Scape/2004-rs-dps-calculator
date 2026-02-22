@@ -220,6 +220,28 @@ Deno.serve(async (req) => {
       ttk = monsterHitpoints / dps;
     }
 
+    // Overkill calculation
+    // When we land a hit, average damage is maxHit/2
+    // Overkill occurs when damage > remaining HP
+    // We simulate the last hit: on average, the killing blow deals maxHit/2 damage
+    // but only (monsterHP mod avgHit) HP was remaining, so overkill = avgHit - remainder
+    // More precisely: expected overkill per kill = integral over hit distribution of (hit - hp_remaining)
+    // Simple approximation: avg overkill = (maxHit + 1) / 2 - (monsterHitpoints % Math.floor(avgHit || 1)) / 2
+    // Better formula: for uniform [0, maxHit], given the killing blow hits at least `r` (remaining HP),
+    // E[overkill] = (maxHit - r) / 2  where r = ((monsterHitpoints - 1) % (maxHit + 1)) + 1 ... but simplest:
+    // E[overkill per kill] = (maxHit / 2) - (monsterHitpoints % (maxHit + 1)) / 2 ... 
+    // Standard overkill = (maxHit - avgDmgNeeded) where avgDmgNeeded = HP mod maxHit (0 -> maxHit)
+    let overkill = 0;
+    if (maxHit > 0 && accuracy > 0) {
+      // Remaining HP just before the killing blow (on average, after floor(HP / avgHit) hits)
+      // The killing blow deals uniformly [0..maxHit], and must be >= remaining HP
+      // E[overkill | killing blow] = (maxHit - remainingHP) / 2
+      const remainingHP = monsterHitpoints % (maxHit + 1);
+      const effectiveRemaining = remainingHP === 0 ? (maxHit + 1) : remainingHP;
+      overkill = (maxHit - effectiveRemaining) / 2;
+      if (overkill < 0) overkill = 0;
+    }
+
     return Response.json({
       attackRoll,
       npcDefRoll,
@@ -227,7 +249,8 @@ Deno.serve(async (req) => {
       accuracy: (accuracy * 100).toFixed(2),
       dps: dps.toFixed(3),
       ttk: ttk.toFixed(1),
-      avgHit: avgHit.toFixed(2)
+      avgHit: avgHit.toFixed(2),
+      overkill: overkill.toFixed(2)
     });
   } catch (error) {
     console.error('Calculation error:', error);
