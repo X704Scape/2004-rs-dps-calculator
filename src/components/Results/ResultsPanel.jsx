@@ -1,7 +1,7 @@
 import React from 'react';
 import KillSimulator from './KillSimulator';
 
-export default function ResultsPanel({ loadouts, selectedMonster }) {
+export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNpcCountChange }) {
   if (!loadouts || loadouts.length === 0) {
     return (
       <div className="bg-gray-800 border-2 border-amber-900 rounded p-6 text-center">
