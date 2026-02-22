@@ -115,13 +115,17 @@ export default function KillSimulator({ loadouts, selectedMonster }) {
   const npcHp = selectedMonster.hitpoints || 1;
 
   const simResults = useMemo(() => {
+    // Use a fixed base seed so identical stats always produce identical results
+    const BASE_SEED = 42;
     return loadouts.map(loadout => {
       const r = loadout.results;
       if (!r) return null;
       const maxHit = r.maxHit;
       const accuracy = parseFloat(r.accuracy) / 100;
       const speedTicks = r.attackSpeedTicks || 4;
-      return runMonteCarlo(npcCount, npcHp, maxHit, accuracy, speedTicks);
+      // Seed derived from the actual stats so same stats → same seed → same numbers
+      const statSeed = (maxHit * 10000 + Math.round(accuracy * 10000) * 100 + speedTicks) ^ BASE_SEED;
+      return runMonteCarlo(npcCount, npcHp, maxHit, accuracy, speedTicks, statSeed);
     });
   }, [loadouts.map(l => JSON.stringify(l.results)).join(','), npcCount, npcHp]);
 
