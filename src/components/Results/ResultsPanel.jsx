@@ -100,11 +100,19 @@ export default function ResultsPanel({ loadouts }) {
                 </td>
               ))}
             </tr>
-            <tr>
+            <tr className="border-b border-amber-900">
               <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Attack speed</td>
               {loadouts.map((loadout, idx) => (
                 <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
                   {loadout.results?.attackSpeedTicks ? `${loadout.results.attackSpeedTicks} ticks (${(loadout.results.attackSpeedTicks * 0.6).toFixed(1)}s)` : '-'}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-amber-900">
+              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Overkill</td>
+              {loadouts.map((loadout, idx) => (
+                <td key={loadout.id} className={`px-4 py-2 text-purple-400 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
+                  {loadout.results?.overkill != null ? loadout.results.overkill : '-'}
                 </td>
               ))}
             </tr>
