@@ -216,6 +216,34 @@ export default function KillSimulator({ loadouts, selectedMonster }) {
           </tbody>
         </table>
       </div>
+
+      {/* Chart */}
+      <div className="p-3 border-t border-amber-900">
+        <p className="text-amber-600 text-xs font-semibold mb-3">Time to Kill All & Total Damage</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart
+            data={loadouts.map((loadout, idx) => ({
+              name: loadout.name,
+              'Time (s)': simResults[idx] ? parseFloat(simResults[idx].totalSeconds) : 0,
+              'Dmg Dealt': simResults[idx] ? parseInt(simResults[idx].avgDamage) : 0,
+            }))}
+            margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#4a3f32" />
+            <XAxis dataKey="name" tick={{ fill: '#d4c4a8', fontSize: 11 }} />
+            <YAxis yAxisId="time" orientation="left" tick={{ fill: '#4ade80', fontSize: 10 }} tickFormatter={v => `${v}s`} />
+            <YAxis yAxisId="dmg" orientation="right" tick={{ fill: '#fbbf24', fontSize: 10 }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1f1810', border: '1px solid #5c4d3d', borderRadius: 4 }}
+              labelStyle={{ color: '#d4c4a8' }}
+              itemStyle={{ color: '#d4c4a8' }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11, color: '#d4c4a8' }} />
+            <Bar yAxisId="time" dataKey="Time (s)" fill="#22c55e" radius={[2, 2, 0, 0]} />
+            <Bar yAxisId="dmg" dataKey="Dmg Dealt" fill="#daa520" radius={[2, 2, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
