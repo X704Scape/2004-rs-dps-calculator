@@ -1,16 +1,20 @@
 import React, { useState, useMemo } from 'react';
 
+// Seeded PRNG (mulberry32) so identical stats produce identical results
+function makePrng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s += 0x6D2B79F5;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /**
  * Simulates killing `npcCount` NPCs with a given weapon speed, accuracy, max hit, and NPC HP.
- * 
- * Rules:
- * - Weapon attacks on its fixed tick interval regardless of when the NPC dies.
- * - Each attack rolls a hit [0..maxHit] with given accuracy.
- * - Damage is capped to the NPC's current HP (can't overkill more than HP).
- * - Overkill = damage rolled - HP remaining (when killing blow lands).
- * - After NPC dies the player still must wait until the next tick to start attacking the new NPC.
  */
-function simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks) {
+function simulate(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, seed) {
   if (!maxHit || !attackSpeedTicks || !npcHp || !npcCount) return null;
 
   let totalTicks = 0;
