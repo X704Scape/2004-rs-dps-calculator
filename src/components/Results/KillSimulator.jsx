@@ -106,8 +106,7 @@ function runMonteCarlo(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, base
   };
 }
 
-export default function KillSimulator({ loadouts, selectedMonster }) {
-  const [npcCount, setNpcCount] = useState(10);
+export default function KillSimulator({ loadouts, selectedMonster, npcCount, onNpcCountChange }) {
 
   const hasResults = loadouts?.some(l => l.results);
   if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
