@@ -23,22 +23,29 @@ Deno.serve(async (req) => {
       prayer: 1
     };
 
-    // Extract skill rows - format: Skill | Rank | Level | XP
-    const attackMatch = html.match(/Attack.*?<td>(\d+)<\/td>/);
-    const defenceMatch = html.match(/Defence.*?<td>(\d+)<\/td>/);
-    const strengthMatch = html.match(/Strength.*?<td>(\d+)<\/td>/);
-    const hitpointsMatch = html.match(/Hitpoints.*?<td>(\d+)<\/td>/);
-    const rangedMatch = html.match(/Ranged.*?<td>(\d+)<\/td>/);
-    const prayerMatch = html.match(/Prayer.*?<td>(\d+)<\/td>/);
-    const magicMatch = html.match(/Magic.*?<td>(\d+)<\/td>/);
+    // HTML structure: skill name inside <a> tag, then rank, level, xp in <td align="right"> cells
+    // Pattern: skill name ... </td> rank </td> level </td>
+    const getSkillLevel = (skillName) => {
+      const regex = new RegExp(skillName + '[\\s\\S]*?<td align="right">\\s*[\\d,]+\\s*<\\/td>\\s*<td align="right">\\s*([\\d,]+)\\s*<\\/td>', 'i');
+      const match = html.match(regex);
+      return match ? parseInt(match[1].replace(/,/g, '')) : null;
+    };
 
-    if (attackMatch) stats.attack = parseInt(attackMatch[1]);
-    if (defenceMatch) stats.defence = parseInt(defenceMatch[1]);
-    if (strengthMatch) stats.strength = parseInt(strengthMatch[1]);
-    if (hitpointsMatch) stats.hitpoints = parseInt(hitpointsMatch[1]);
-    if (rangedMatch) stats.ranged = parseInt(rangedMatch[1]);
-    if (prayerMatch) stats.prayer = parseInt(prayerMatch[1]);
-    if (magicMatch) stats.magic = parseInt(magicMatch[1]);
+    const attack = getSkillLevel('Attack');
+    const defence = getSkillLevel('Defence');
+    const strength = getSkillLevel('Strength');
+    const hitpoints = getSkillLevel('Hitpoints');
+    const ranged = getSkillLevel('Ranged');
+    const prayer = getSkillLevel('Prayer');
+    const magic = getSkillLevel('Magic');
+
+    if (attack) stats.attack = attack;
+    if (defence) stats.defence = defence;
+    if (strength) stats.strength = strength;
+    if (hitpoints) stats.hitpoints = hitpoints;
+    if (ranged) stats.ranged = ranged;
+    if (prayer) stats.prayer = prayer;
+    if (magic) stats.magic = magic;
 
     return Response.json({ stats });
   } catch (error) {
