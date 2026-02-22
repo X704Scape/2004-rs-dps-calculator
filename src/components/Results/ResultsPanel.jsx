@@ -122,7 +122,7 @@ export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNp
         </table>
       </div>
     </div>
-    <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} />
+    <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={onNpcCountChange} />
     </>
   );
 }
