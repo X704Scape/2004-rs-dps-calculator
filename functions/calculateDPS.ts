@@ -220,26 +220,53 @@ Deno.serve(async (req) => {
       ttk = monsterHitpoints / dps;
     }
 
-    // Overkill calculation
-    // When we land a hit, average damage is maxHit/2
-    // Overkill occurs when damage > remaining HP
-    // We simulate the last hit: on average, the killing blow deals maxHit/2 damage
-    // but only (monsterHP mod avgHit) HP was remaining, so overkill = avgHit - remainder
-    // More precisely: expected overkill per kill = integral over hit distribution of (hit - hp_remaining)
-    // Simple approximation: avg overkill = (maxHit + 1) / 2 - (monsterHitpoints % Math.floor(avgHit || 1)) / 2
-    // Better formula: for uniform [0, maxHit], given the killing blow hits at least `r` (remaining HP),
-    // E[overkill] = (maxHit - r) / 2  where r = ((monsterHitpoints - 1) % (maxHit + 1)) + 1 ... but simplest:
-    // E[overkill per kill] = (maxHit / 2) - (monsterHitpoints % (maxHit + 1)) / 2 ... 
-    // Standard overkill = (maxHit - avgDmgNeeded) where avgDmgNeeded = HP mod maxHit (0 -> maxHit)
+    // Overkill calculation using HP distribution simulation.
+    // We track P(monster is at exactly r HP) before each swing, propagate through attacks,
+    // and accumulate expected overkill when a killing blow lands.
     let overkill = 0;
-    if (maxHit > 0 && accuracy > 0) {
-      // Remaining HP just before the killing blow (on average, after floor(HP / avgHit) hits)
-      // The killing blow deals uniformly [0..maxHit], and must be >= remaining HP
-      // E[overkill | killing blow] = (maxHit - remainingHP) / 2
-      const remainingHP = monsterHitpoints % (maxHit + 1);
-      const effectiveRemaining = remainingHP === 0 ? (maxHit + 1) : remainingHP;
-      overkill = (maxHit - effectiveRemaining) / 2;
-      if (overkill < 0) overkill = 0;
+    if (maxHit > 0 && accuracy > 0 && monsterHitpoints > 0) {
+      const hp = monsterHitpoints;
+      // hpDist[r] = probability monster is alive with exactly r HP remaining
+      const hpDist = new Float64Array(hp + 1);
+      hpDist[hp] = 1.0;
+
+      const hitProb = accuracy / (maxHit + 1); // prob of rolling each specific hit value h in [0..maxHit]
+      const missProb = 1 - accuracy;
+
+      let expectedOverkill = 0;
+      const maxIter = 5000;
+
+      for (let iter = 0; iter < maxIter; iter++) {
+        // Check if enough probability mass remains
+        let totalRemaining = 0;
+        for (let r = 1; r <= hp; r++) totalRemaining += hpDist[r];
+        if (totalRemaining < 1e-9) break;
+
+        const newDist = new Float64Array(hp + 1);
+
+        for (let r = 1; r <= hp; r++) {
+          const p = hpDist[r];
+          if (p < 1e-14) continue;
+
+          // Miss: stay at r
+          newDist[r] += p * missProb;
+
+          // Each hit value h from 0 to maxHit
+          for (let h = 0; h <= maxHit; h++) {
+            const remaining = r - h;
+            if (remaining <= 0) {
+              // Killing blow — overkill = h - r = -remaining
+              expectedOverkill += p * hitProb * (-remaining);
+            } else {
+              newDist[remaining] += p * hitProb;
+            }
+          }
+        }
+
+        for (let r = 0; r <= hp; r++) hpDist[r] = newDist[r];
+      }
+
+      overkill = expectedOverkill;
     }
 
     return Response.json({
