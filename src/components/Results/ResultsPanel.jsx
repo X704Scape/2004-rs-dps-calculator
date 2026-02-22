@@ -123,5 +123,6 @@ export default function ResultsPanel({ loadouts, selectedMonster }) {
       </div>
     </div>
     <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} />
+    </>
   );
 }
