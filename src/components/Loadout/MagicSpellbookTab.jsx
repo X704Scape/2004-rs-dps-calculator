@@ -9,10 +9,10 @@ const COMBAT_SPELLS = [
   { id: 'fire_strike', name: 'Fire Strike', level: 13, maxHit: 8, speedTicks: 5 },
 
   // Bolt Spells
-  { id: 'wind_bolt', name: 'Wind Bolt', level: 17, maxHit: 9, speedTicks: 5 },
-  { id: 'water_bolt', name: 'Water Bolt', level: 23, maxHit: 10, speedTicks: 5 },
-  { id: 'earth_bolt', name: 'Earth Bolt', level: 29, maxHit: 11, speedTicks: 5 },
-  { id: 'fire_bolt', name: 'Fire Bolt', level: 35, maxHit: 12, speedTicks: 5 },
+  { id: 'wind_bolt', name: 'Wind Bolt', level: 17, maxHit: 9, speedTicks: 5, isBolt: true },
+  { id: 'water_bolt', name: 'Water Bolt', level: 23, maxHit: 10, speedTicks: 5, isBolt: true },
+  { id: 'earth_bolt', name: 'Earth Bolt', level: 29, maxHit: 11, speedTicks: 5, isBolt: true },
+  { id: 'fire_bolt', name: 'Fire Bolt', level: 35, maxHit: 12, speedTicks: 5, isBolt: true },
 
   // Blast Spells
   { id: 'wind_blast', name: 'Wind Blast', level: 41, maxHit: 13, speedTicks: 5 },
