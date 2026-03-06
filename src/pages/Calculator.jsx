@@ -296,9 +296,15 @@ export default function Calculator() {
         monsterDefenceCrush: targetStats.defenceCrush,
         monsterDefenceRanged: targetStats.defenceRanged,
         monsterDefenceMagic: targetStats.defenceMagic,
-        spellMaxHit: (playerStats.selectedSpell?.requiresCharge && playerStats.chargeActive) ? 30 : (playerStats.selectedSpell?.maxHit || 0),
-        hasChaosGauntlets: false,
-        isBoltSpell: false
+        spellMaxHit: (() => {
+          const spell = playerStats.selectedSpell;
+          if (!spell) return 0;
+          if (spell.requiresCharge && playerStats.chargeActive) return 30;
+          const hasChaosGauntlets = equipment.hands?.name?.toLowerCase().includes('chaos gauntlets');
+          return spell.maxHit + (spell.isBolt && hasChaosGauntlets ? 3 : 0);
+        })(),
+        hasChaosGauntlets: equipment.hands?.name?.toLowerCase().includes('chaos gauntlets') || false,
+        isBoltSpell: playerStats.selectedSpell?.isBolt || false
       });
     } catch (error) {
       console.error('Calculation failed:', error);
