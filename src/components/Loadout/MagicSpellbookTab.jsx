@@ -35,8 +35,10 @@ const COMBAT_SPELLS = [
   { id: 'ibans_blast', name: "Iban's Blast", level: 50, maxHit: 25, speedTicks: 5, requiresStaff: true }
 ];
 
-export default function MagicSpellbookTab({ selectedSpell, onSpellChange, playerStats, chargeActive, onChargeChange }) {
+export default function MagicSpellbookTab({ selectedSpell, onSpellChange, playerStats, chargeActive, onChargeChange, equipment }) {
   const [expandedSpell, setExpandedSpell] = useState(null);
+
+  const hasChaosGauntlets = equipment?.hands?.name?.toLowerCase().includes('chaos gauntlets');
 
   const handleSpellSelect = (spell) => {
     onSpellChange(spell);
@@ -50,7 +52,9 @@ export default function MagicSpellbookTab({ selectedSpell, onSpellChange, player
     if (spell.requiresCharge && chargeActive) {
       return 30;
     }
-    return spell.maxHit;
+    let hit = spell.maxHit;
+    if (spell.isBolt && hasChaosGauntlets) hit += 3;
+    return hit;
   };
 
   return (
