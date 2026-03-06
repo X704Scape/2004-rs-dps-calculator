@@ -131,6 +131,8 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
     return baseSpeed;
   };
   
+  const SPELL_STYLE = { id: 'spell', name: 'Spell', type: 'magic', bonus: 'Spell damage' };
+
   // Use weapon category to determine styles
   let styles = DEFAULT_STYLES;
   if (weapon?.category && WEAPON_COMBAT_STYLES[weapon.category]) {
@@ -143,6 +145,11 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
       type: style.type,
       bonus: style.id === 'rapid' ? 'Faster attacks' : ''
     }));
+  }
+
+  // Always append Spell style if not already present (e.g. staff already has it)
+  if (!styles.find(s => s.id === 'spell')) {
+    styles = [...styles, SPELL_STYLE];
   }
 
   const handleStyleChange = (styleId) => {
