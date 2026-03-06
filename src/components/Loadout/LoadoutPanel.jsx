@@ -116,6 +116,7 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
             playerStats={playerStats}
             chargeActive={playerStats.chargeActive}
             onChargeChange={(charge) => onStatsChange({ ...playerStats, chargeActive: charge })}
+            equipment={equipment}
           />
         )}
       </div>
