@@ -122,6 +122,42 @@ export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNp
         </table>
       </div>
     </div>
+    <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden mt-4">
+      <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
+        <h2 className="text-amber-600 font-bold text-sm">Special attack</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-900 border-b-2 border-amber-900">
+              <th className="text-left px-4 py-2 text-amber-600 text-sm font-semibold border-r border-amber-900">Stat</th>
+              {loadouts.map((loadout, idx) => (
+                <th key={loadout.id} className={`px-4 py-2 text-amber-600 text-sm font-semibold ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
+                  {loadout.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { key: 'specAccuracy', label: 'Accuracy', format: v => `${v}%`, color: 'text-amber-100' },
+              { key: 'specOnlyDps', label: 'Spec-only DPS', format: v => v, color: 'text-green-400' },
+              { key: 'specMaxHit', label: 'Max hit', format: v => v, color: 'text-amber-100' },
+              { key: 'specExpectedHit', label: 'Expected hit', format: v => v, color: 'text-amber-100' },
+            ].map(({ key, label, format, color }) => (
+              <tr key={key} className="border-b border-amber-900">
+                <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">{label}</td>
+                {loadouts.map((loadout, idx) => (
+                  <td key={loadout.id} className={`px-4 py-2 ${color} text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
+                    {loadout.results?.[key] != null ? format(loadout.results[key]) : 'N/A'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
     <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={onNpcCountChange} />
     </>
   );
