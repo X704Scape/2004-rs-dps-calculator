@@ -1,7 +1,9 @@
 import React from 'react';
 
-// Map weapon categories to their combat styles based on 2004 formulas
-const WEAPON_COMBAT_STYLES = {
+import { WEAPON_COMBAT_STYLES } from '../weaponStyles';
+
+// (styles now imported from shared weaponStyles.js)
+const _UNUSED = {
   weapon_2h_sword: [
     { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
     { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
