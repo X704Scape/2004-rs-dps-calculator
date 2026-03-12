@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { resolveAttackType } from '../components/weaponStyles';
 import LoadoutPanel from '../components/Loadout/LoadoutPanel';
 import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
