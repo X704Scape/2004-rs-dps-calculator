@@ -304,7 +304,8 @@ export default function Calculator() {
           return spell.maxHit + (spell.isBolt && hasChaosGauntlets ? 3 : 0);
         })(),
         hasChaosGauntlets: equipment.hands?.name?.toLowerCase().includes('chaos gauntlets') || false,
-        isBoltSpell: playerStats.selectedSpell?.isBolt || false
+        isBoltSpell: playerStats.selectedSpell?.isBolt || false,
+        weaponName: equipment.weapon?.name || ''
       });
     } catch (error) {
       console.error('Calculation failed:', error);
