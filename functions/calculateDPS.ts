@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
       monsterDefenceMagic = 0,
       spellMaxHit = 0,
       hasChaosGauntlets = false,
-      isBoltSpell = false
+      isBoltSpell = false,
+      weaponName = ''
     } = body;
 
     console.log('=== DPS Calculation Debug ===');
