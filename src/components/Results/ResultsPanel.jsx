@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import KillSimulator from './KillSimulator';
 
 export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNpcCountChange }) {
-  if (!loadouts || loadouts.length === 0) {
+  const [showMore, setShowMore] = useState(false);
+
+  if (!loadouts || loadouts.length === 0 || !loadouts.some(l => l.results)) {
     return (
       <div className="bg-gray-800 border-2 border-amber-900 rounded p-6 text-center">
         <p className="text-amber-700">Select equipment and a monster to see results</p>
@@ -10,155 +12,94 @@ export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNp
     );
   }
 
-  const hasResults = loadouts.some(l => l.results);
+  const ColHeader = ({ loadout, idx }) => (
+    <th
+      key={loadout.id}
+      className={`px-4 py-2 text-white text-sm font-bold text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}
+      style={{ backgroundColor: idx === 0 ? '#b45309' : '#92400e' }}
+    >
+      {loadout.name}
+    </th>
+  );
 
-  if (!hasResults) {
-    return (
-      <div className="bg-gray-800 border-2 border-amber-900 rounded p-6 text-center">
-        <p className="text-amber-700">Select a monster to calculate DPS</p>
-      </div>
-    );
-  }
+  const DataRow = ({ label, getValue, color = 'text-amber-100', format }) => (
+    <tr className="border-b border-amber-900">
+      <td className="px-4 py-1.5 text-amber-300 text-xs border-r border-amber-900 underline decoration-dotted cursor-default">{label}</td>
+      {loadouts.map((loadout, idx) => {
+        const val = getValue(loadout);
+        return (
+          <td key={loadout.id} className={`px-4 py-1.5 ${color} text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
+            {val != null ? (format ? format(val) : val) : 'N/A'}
+          </td>
+        );
+      })}
+    </tr>
+  );
+
+  const SectionRow = ({ label }) => (
+    <tr className="border-b border-amber-900 bg-gray-900">
+      <td colSpan={loadouts.length + 1} className="px-4 py-1 text-amber-600 text-xs italic">{label}</td>
+    </tr>
+  );
 
   return (
-    <>
-    <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
-      <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
-        <h2 className="text-amber-600 font-bold text-sm">Results</h2>
+    <div className="flex flex-col gap-4">
+      <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden">
+        <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
+          <h2 className="text-amber-100 font-bold text-sm">Results</h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-amber-900">
+                <th className="text-left px-4 py-2 border-r border-amber-900 w-32"></th>
+                {loadouts.map((loadout, idx) => <ColHeader key={loadout.id} loadout={loadout} idx={idx} />)}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Always visible */}
+              <DataRow label="Max hit" getValue={l => l.results?.maxHit} />
+              <DataRow label="DPS" getValue={l => l.results?.dps} color="text-green-400" />
+              <DataRow label="Avg. TTK" getValue={l => l.results?.ttk} format={v => `${v}s`} />
+              <DataRow label="Accuracy" getValue={l => l.results?.accuracy} format={v => `${v}%`} />
+
+              {!showMore && (
+                <DataRow label="Spec expected hit" getValue={l => l.results?.specExpectedHit} />
+              )}
+
+              {showMore && (
+                <>
+                  <DataRow label="Expected hit" getValue={l => l.results?.avgHit} />
+                  <SectionRow label="Rolls" />
+                  <DataRow label="Attack roll" getValue={l => l.results?.attackRoll} />
+                  <DataRow label="NPC def roll" getValue={l => l.results?.npcDefRoll} />
+                  <SectionRow label="Special attack" />
+                  <DataRow label="Accuracy" getValue={l => l.results?.specAccuracy} format={v => `${v}%`} />
+                  <DataRow label="DPS" getValue={l => l.results?.specDps} color="text-green-400" />
+                  <DataRow label="Spec-only DPS" getValue={l => l.results?.specOnlyDps} color="text-green-400" />
+                  <DataRow label="Max hit" getValue={l => l.results?.specMaxHit} />
+                  <DataRow label="Expected hit" getValue={l => l.results?.specExpectedHit} />
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Show more/less toggle */}
+        <div className="border-t-2 border-amber-900 bg-gray-900 flex items-center justify-between px-4 py-2">
+          <span className="text-amber-600 text-sm">{showMore ? '↑' : '↓'}</span>
+          <button
+            onClick={() => setShowMore(v => !v)}
+            className="text-amber-500 hover:text-amber-300 text-sm font-semibold transition"
+          >
+            {showMore ? 'Show less' : 'Show more'}
+          </button>
+          <span className="text-amber-600 text-sm">{showMore ? '↑' : '↓'}</span>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-900 border-b-2 border-amber-900">
-              <th className="text-left px-4 py-2 text-amber-600 text-sm font-semibold border-r border-amber-900">Stat</th>
-              {loadouts.map((loadout, idx) => (
-                <th key={loadout.id} className={`px-4 py-2 text-amber-600 text-sm font-semibold ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Max hit</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.maxHit || '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Expected hit</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.avgHit || '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">DPS</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-green-400 text-sm text-center font-semibold ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.dps || '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Avg. TTK</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.ttk ? `${loadout.results.ttk}s` : '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Accuracy</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.accuracy ? `${loadout.results.accuracy}%` : '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900 bg-gray-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900 italic">Rolls</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}></td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Attack roll</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.attackRoll || '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">NPC def roll</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.npcDefRoll || '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Attack speed</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-amber-100 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.attackSpeedTicks ? `${loadout.results.attackSpeedTicks} ticks (${(loadout.results.attackSpeedTicks * 0.6).toFixed(1)}s)` : '-'}
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-amber-900">
-              <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">Overkill</td>
-              {loadouts.map((loadout, idx) => (
-                <td key={loadout.id} className={`px-4 py-2 text-purple-400 text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.results?.overkill != null ? loadout.results.overkill : '-'}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={onNpcCountChange} />
     </div>
-    <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden mt-4">
-      <div className="bg-gray-900 border-b-2 border-amber-900 p-3">
-        <h2 className="text-amber-600 font-bold text-sm">Special attack</h2>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-900 border-b-2 border-amber-900">
-              <th className="text-left px-4 py-2 text-amber-600 text-sm font-semibold border-r border-amber-900">Stat</th>
-              {loadouts.map((loadout, idx) => (
-                <th key={loadout.id} className={`px-4 py-2 text-amber-600 text-sm font-semibold ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                  {loadout.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { key: 'specAccuracy', label: 'Accuracy', format: v => `${v}%`, color: 'text-amber-100' },
-              { key: 'specOnlyDps', label: 'Spec-only DPS', format: v => v, color: 'text-green-400' },
-              { key: 'specMaxHit', label: 'Max hit', format: v => v, color: 'text-amber-100' },
-              { key: 'specExpectedHit', label: 'Expected hit', format: v => v, color: 'text-amber-100' },
-            ].map(({ key, label, format, color }) => (
-              <tr key={key} className="border-b border-amber-900">
-                <td className="px-4 py-2 text-amber-700 text-xs border-r border-amber-900">{label}</td>
-                {loadouts.map((loadout, idx) => (
-                  <td key={loadout.id} className={`px-4 py-2 ${color} text-sm text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
-                    {loadout.results?.[key] != null ? format(loadout.results[key]) : 'N/A'}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <KillSimulator loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={onNpcCountChange} />
-    </>
   );
 }
