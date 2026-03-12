@@ -195,16 +195,9 @@ export default function Calculator() {
       let attackBonus = 0;
       let weaponAttackType = 'stab'; // default
       if (detectedCombatType === 'melee') {
-        // Find the active style from weapon's attackStyles
-        const activeStyle = weapon?.attackStyles?.find(s => s.id === playerStats.style);
-        if (activeStyle) {
-          weaponAttackType = activeStyle.type; // 'stab', 'slash', or 'crush'
-          attackBonus = getTotalBonus(weaponAttackType);
-        } else {
-          // Fallback to stab if no style found
-          attackBonus = getTotalBonus('stab');
-          weaponAttackType = 'stab';
-        }
+        // Use resolveAttackType which checks category-based styles first (handles aggressive_2 etc.)
+        weaponAttackType = resolveAttackType(weapon, playerStats.style);
+        attackBonus = getTotalBonus(weaponAttackType);
       } else if (detectedCombatType === 'ranged') {
         attackBonus = getTotalBonus('ranged');
       } else if (detectedCombatType === 'magic') {
