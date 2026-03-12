@@ -76,7 +76,6 @@ export default function ResultsPanel({ loadouts, selectedMonster, npcCount, onNp
                   <DataRow label="NPC def roll" getValue={l => l.results?.npcDefRoll} />
                   <SectionRow label="Special attack" />
                   <DataRow label="Accuracy" getValue={l => l.results?.specAccuracy} format={v => `${v}%`} />
-                  <DataRow label="Spec-only DPS" getValue={l => l.results?.specOnlyDps} color="text-green-400" />
                   <DataRow label="Max hit" getValue={l => l.results?.specMaxHit} />
                   <DataRow label="Expected hit" getValue={l => l.results?.specExpectedHit} />
                 </>
