@@ -18,7 +18,12 @@ const PRAYER_ATK_MULTIPLIERS = {
 // Style bonuses for strength
 const STYLE_BONUS = {
   aggressive: 3,
+  aggressive_2: 3,
+  aggressive_3: 3,
   controlled: 1,
+  controlled_1: 1,
+  controlled_2: 1,
+  controlled_3: 1,
   accurate: 0,
   defensive: 0
 };
