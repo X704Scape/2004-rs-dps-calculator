@@ -1,100 +1,5 @@
 import React from 'react';
-
 import { WEAPON_COMBAT_STYLES } from '../weaponStyles';
-
-// (styles now imported from shared weaponStyles.js)
-const _UNUSED = {
-  weapon_2h_sword: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'aggressive_2', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
-  ],
-  weapon_axe: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'aggressive_2', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
-  ],
-  weapon_blunt: [
-    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
-  ],
-  weapon_pickaxe: [
-    { id: 'accurate', name: 'Accurate', type: 'stab', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'stab', bonus: '+3 Strength' },
-    { id: 'aggressive_2', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'stab', bonus: '+3 Defence' }
-  ],
-  weapon_scythe: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'stab', bonus: '+3 Strength' },
-    { id: 'aggressive_2', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
-  ],
-  weapon_slash: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
-  ],
-  weapon_spear: [
-    { id: 'controlled_1', name: 'Controlled', type: 'stab', bonus: '+1 All' },
-    { id: 'controlled_2', name: 'Controlled', type: 'slash', bonus: '+1 All' },
-    { id: 'controlled_3', name: 'Controlled', type: 'crush', bonus: '+1 All' },
-    { id: 'defensive', name: 'Defensive', type: 'stab', bonus: '+3 Defence' }
-  ],
-  weapon_spiked: [
-    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
-  ],
-  weapon_stab: [
-    { id: 'accurate', name: 'Accurate', type: 'stab', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'stab', bonus: '+3 Strength' },
-    { id: 'aggressive_2', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'stab', bonus: '+3 Defence' }
-  ],
-  weapon_bow: [
-    { id: 'accurate', name: 'Accurate', type: 'ranged', bonus: '+3 Attack' },
-    { id: 'rapid', name: 'Rapid', type: 'ranged', bonus: 'Faster attacks' },
-    { id: 'longrange', name: 'Longrange', type: 'ranged', bonus: '+3 Defence' }
-  ],
-  weapon_crossbow: [
-    { id: 'accurate', name: 'Accurate', type: 'ranged', bonus: '+3 Attack' },
-    { id: 'rapid', name: 'Rapid', type: 'ranged', bonus: 'Faster attacks' },
-    { id: 'longrange', name: 'Longrange', type: 'ranged', bonus: '+3 Defence' }
-  ],
-  weapon_thrown: [
-    { id: 'accurate', name: 'Accurate', type: 'ranged', bonus: '+3 Attack' },
-    { id: 'rapid', name: 'Rapid', type: 'ranged', bonus: 'Faster attacks' },
-    { id: 'longrange', name: 'Longrange', type: 'ranged', bonus: '+3 Defence' }
-  ],
-  weapon_javelin: [
-    { id: 'accurate', name: 'Accurate', type: 'ranged', bonus: '+3 Attack' },
-    { id: 'rapid', name: 'Rapid', type: 'ranged', bonus: 'Faster attacks' },
-    { id: 'longrange', name: 'Longrange', type: 'ranged', bonus: '+3 Defence' }
-  ],
-  weapon_unarmed: [
-    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
-  ],
-  weapon_staff: [
-    { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'crush', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' },
-    { id: 'spell', name: 'Spell', type: 'magic', bonus: 'Spell damage' }
-  ],
-  weapon_claws: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
-    { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
-  ]
-};
 
 const DEFAULT_STYLES = [
   { id: 'accurate', name: 'Accurate', type: 'crush', bonus: '+3 Attack' },
@@ -102,45 +7,31 @@ const DEFAULT_STYLES = [
   { id: 'defensive', name: 'Defensive', type: 'crush', bonus: '+3 Defence' }
 ];
 
+const SPELL_STYLE = { id: 'spell', name: 'Spell', type: 'magic', bonus: 'Spell damage' };
+
 export default function CombatStyleTab({ equipment, onCombatStyleChange, currentStyle }) {
   const selectedStyle = currentStyle || 'aggressive';
-
-  // Detect weapon type from equipment
   const weapon = equipment?.weapon;
-  
-  // Calculate attack speed for selected style
+
   const getAttackSpeed = () => {
     if (!weapon) return 4;
-    
-    // Use attackRate from weapon data (from config)
     let baseSpeed = weapon.attackRate || 4;
-    
-    // Check for metadata overrides
-    if (weapon.speedOverrides && weapon.speedOverrides.length > 0) {
+    if (weapon.speedOverrides?.length > 0) {
       const override = weapon.speedOverrides.find(o => o.styleId === selectedStyle);
-      if (override) {
-        baseSpeed = override.speedTicks;
-      }
+      if (override) baseSpeed = override.speedTicks;
     }
-    
-    // Apply rapid style bonus for ranged
-    if (selectedStyle === 'rapid' && weapon.category && 
-        (weapon.category.includes('bow') || weapon.category.includes('crossbow') || 
+    if (selectedStyle === 'rapid' && weapon.category &&
+        (weapon.category.includes('bow') || weapon.category.includes('crossbow') ||
          weapon.category.includes('thrown') || weapon.category.includes('javelin'))) {
       baseSpeed = Math.max(1, baseSpeed - 1);
     }
-    
     return baseSpeed;
   };
-  
-  const SPELL_STYLE = { id: 'spell', name: 'Spell', type: 'magic', bonus: 'Spell damage' };
 
-  // Use weapon category to determine styles
   let styles = DEFAULT_STYLES;
   if (weapon?.category && WEAPON_COMBAT_STYLES[weapon.category]) {
     styles = WEAPON_COMBAT_STYLES[weapon.category];
-  } else if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
-    // Fallback to metadata if available
+  } else if (weapon?.attackStyles?.length > 0) {
     styles = weapon.attackStyles.map(style => ({
       id: style.id,
       name: style.mode.charAt(0).toUpperCase() + style.mode.slice(1),
@@ -149,14 +40,9 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
     }));
   }
 
-  // Always append Spell style if not already present (e.g. staff already has it)
   if (!styles.find(s => s.id === 'spell')) {
     styles = [...styles, SPELL_STYLE];
   }
-
-  const handleStyleChange = (styleId) => {
-    onCombatStyleChange(styleId);
-  };
 
   return (
     <div>
@@ -170,7 +56,7 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
         {styles.map((style) => (
           <button
             key={style.id}
-            onClick={() => handleStyleChange(style.id)}
+            onClick={() => onCombatStyleChange(style.id)}
             className={`w-full text-left p-3 rounded border-2 transition ${
               selectedStyle === style.id
                 ? 'bg-amber-900 border-amber-700'
