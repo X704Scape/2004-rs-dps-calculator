@@ -270,6 +270,27 @@ Deno.serve(async (req) => {
       overkill = expectedOverkill;
     }
 
+    // Special attack calculations (informational only, not included in DPS/TTK)
+    let specAccuracy = null;
+    let specMaxHit = null;
+    let specExpectedHit = null;
+
+    const wepName = weaponName.toLowerCase();
+    const isDragonDagger = wepName.includes('dragon dagger');
+
+    if (isDragonDagger && combatType === 'melee') {
+      // DD spec: two hits, each with 115% attack roll and 115% max hit
+      const specAttackRoll = Math.floor(attackRoll * 1.15);
+      const specNpcDefRoll = npcDefRoll;
+      const specHitMaxHit = Math.floor(maxHit * 1.15);
+      const specHitAccuracy = getAccuracy(specAttackRoll, specNpcDefRoll);
+      // Expected damage per spec = 2 hits * avg hit per attempt
+      const specAvgHitPerHit = (specHitMaxHit / 2) * specHitAccuracy;
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = (specAvgHitPerHit * 2).toFixed(2); // total expected from both hits
+    }
+
     return Response.json({
       attackRoll,
       npcDefRoll,
@@ -279,7 +300,10 @@ Deno.serve(async (req) => {
       ttk: ttk.toFixed(1),
       avgHit: avgHit.toFixed(2),
       overkill: overkill.toFixed(2),
-      attackSpeedTicks
+      attackSpeedTicks,
+      specAccuracy,
+      specMaxHit,
+      specExpectedHit
     });
   } catch (error) {
     console.error('Calculation error:', error);
