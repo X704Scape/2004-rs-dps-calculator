@@ -282,18 +282,77 @@ Deno.serve(async (req) => {
 
     const wepName = weaponName.toLowerCase();
     const isDragonDagger = wepName.includes('dragon dagger');
+    const isDragonLongsword = wepName.includes('dragon longsword');
+    const isDragonMace = wepName.includes('dragon mace');
+    const isMagicLongbow = wepName.includes('magic longbow');
+    const isMagicShortbow = wepName.includes('magic shortbow');
+    const isRuneClaws = wepName.includes('rune claws');
+    const isRuneThrownaxe = wepName.includes('rune thrownaxe');
 
     if (isDragonDagger && combatType === 'melee') {
-      // DD spec: two hits, each with 115% attack roll and 115% max hit
+      // DD spec: 2 hits, +15% max hit, +15% attack roll, rolls vs slash def
       const specAttackRoll = Math.floor(attackRoll * 1.15);
-      const specNpcDefRoll = npcDefRoll;
       const specHitMaxHit = Math.floor(maxHit * 1.15);
-      const specHitAccuracy = getAccuracy(specAttackRoll, specNpcDefRoll);
-      // Expected damage per spec = 2 hits * avg hit per attempt
+      const specHitAccuracy = getAccuracy(specAttackRoll, npcDefRoll);
       const specAvgHitPerHit = (specHitMaxHit / 2) * specHitAccuracy;
       specAccuracy = (specHitAccuracy * 100).toFixed(2);
       specMaxHit = specHitMaxHit;
-      specExpectedHit = (specAvgHitPerHit * 2).toFixed(2); // total expected from both hits
+      specExpectedHit = (specAvgHitPerHit * 2).toFixed(2); // 2 hits total
+    } else if (isDragonLongsword && combatType === 'melee') {
+      // DLS spec: 1 hit, +25% max hit, normal accuracy, rolls vs slash def
+      const specHitMaxHit = Math.floor(maxHit * 1.25);
+      const specHitAccuracy = getAccuracy(attackRoll, npcDefRoll);
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = ((specHitMaxHit / 2) * specHitAccuracy).toFixed(2);
+    } else if (isDragonMace && combatType === 'melee') {
+      // DM spec: 1 hit, +50% max hit, +25% attack roll, rolls vs crush def
+      // npcDefRoll for crush — recalculate using crush defence
+      const crushDefBonus = body.monsterDefenceCrush || 0;
+      const npcEffectiveDefence = monsterDefence + 9;
+      const crushNpcDefRoll = npcEffectiveDefence * (crushDefBonus + 64);
+      const specAttackRoll = Math.floor(attackRoll * 1.25);
+      const specHitMaxHit = Math.floor(maxHit * 1.50);
+      const specHitAccuracy = getAccuracy(specAttackRoll, crushNpcDefRoll);
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = ((specHitMaxHit / 2) * specHitAccuracy).toFixed(2);
+    } else if (isMagicLongbow && combatType === 'ranged') {
+      // MLB spec: 1 hit, +10 ranged levels for max hit, no accuracy boost
+      const prayerRangedMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
+      const specEffectiveRanged = getEffectiveRanged(rangedLevel + 10, prayerRangedMult, styleName, potionRanged);
+      const specHitMaxHit = getRangedMaxHit(specEffectiveRanged, rangedStrBonus);
+      const specHitAccuracy = getAccuracy(attackRoll, npcDefRoll); // normal accuracy
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = ((specHitMaxHit / 2) * specHitAccuracy).toFixed(2);
+    } else if (isMagicShortbow && combatType === 'ranged') {
+      // MSB spec: 2 hits, +10 ranged levels for max hit, +43% attack roll each
+      const prayerRangedMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
+      const specEffectiveRanged = getEffectiveRanged(rangedLevel + 10, prayerRangedMult, styleName, potionRanged);
+      const specHitMaxHit = getRangedMaxHit(specEffectiveRanged, rangedStrBonus);
+      const specAttackRoll = Math.floor(attackRoll * (10 / 7)); // scale(10,7,...) = ~143%
+      const specHitAccuracy = getAccuracy(specAttackRoll, npcDefRoll);
+      const specAvgHitPerHit = (specHitMaxHit / 2) * specHitAccuracy;
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = (specAvgHitPerHit * 2).toFixed(2); // 2 hits total
+    } else if (isRuneClaws && combatType === 'melee') {
+      // Rune claws spec: 1 hit, +10% max hit, normal accuracy
+      const specHitMaxHit = Math.floor(maxHit * 1.10);
+      const specHitAccuracy = getAccuracy(attackRoll, npcDefRoll);
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = ((specHitMaxHit / 2) * specHitAccuracy).toFixed(2);
+    } else if (isRuneThrownaxe && combatType === 'ranged') {
+      // Rune thrownaxe spec: chains up to 5 targets — show single-target stats (+10 ranged levels, normal accuracy)
+      const prayerRangedMult = PRAYER_STR_MULTIPLIERS[strengthPrayer] || 1.0;
+      const specEffectiveRanged = getEffectiveRanged(rangedLevel + 10, prayerRangedMult, styleName, potionRanged);
+      const specHitMaxHit = getRangedMaxHit(specEffectiveRanged, rangedStrBonus);
+      const specHitAccuracy = getAccuracy(attackRoll, npcDefRoll);
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specHitMaxHit;
+      specExpectedHit = ((specHitMaxHit / 2) * specHitAccuracy).toFixed(2);
     }
 
     return Response.json({
