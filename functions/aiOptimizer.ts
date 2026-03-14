@@ -112,10 +112,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing playerStats or monster' }, { status: 400 });
     }
 
-    // Fetch all game items
-    const itemsResp = await base44.functions.invoke('fetchGameData', {});
-    const gameData = itemsResp?.data || itemsResp;
-    const allItems = gameData?.items || [];
+    // Fetch all game items via fetchGameData function
+    const itemsResp = await base44.asServiceRole.functions.invoke('fetchGameData', { type: 'items' });
+    const allItems = itemsResp?.items || [];
 
     if (!allItems.length) {
       return Response.json({ error: 'Could not load item database' }, { status: 500 });
