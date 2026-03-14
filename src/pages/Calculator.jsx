@@ -43,6 +43,7 @@ export default function Calculator() {
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [npcCount, setNpcCount] = useState(10);
+  const [showOptimizer, setShowOptimizer] = useState(false);
 
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map(l => l.id)) + 1;
