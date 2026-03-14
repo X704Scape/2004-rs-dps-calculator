@@ -457,6 +457,16 @@ export default function Calculator() {
         )}
       </div>
 
+      {/* AI Optimizer Modal */}
+      {showOptimizer && (
+        <OptimizerModal
+          playerStats={loadouts.find(l => l.id === activeLoadoutId)?.playerStats}
+          monster={selectedMonster}
+          onApplyLoadout={applyOptimizerResult}
+          onClose={() => setShowOptimizer(false)}
+        />
+      )}
+
       {/* Footer */}
       <div className="text-center py-6 mt-12 border-t border-amber-900">
         <p className="text-amber-700 text-xs">2004 RuneScape DPS Calculator • Data from LostHQ</p>
