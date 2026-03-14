@@ -358,8 +358,18 @@ export default function Calculator() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950">
       {/* Header */}
       <div className="bg-gray-950 border-b-2 border-amber-900 py-4 px-6">
-        <h1 className="text-3xl font-bold text-amber-600">2004 RuneScape DPS Calculator</h1>
-        <p className="text-amber-100 text-sm mt-1">Authentic 2004 formulas</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-amber-600">2004 RuneScape DPS Calculator</h1>
+            <p className="text-amber-100 text-sm mt-1">Authentic 2004 formulas</p>
+          </div>
+          <button
+            onClick={() => setShowOptimizer(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 border border-amber-600 rounded text-amber-100 font-semibold text-sm transition"
+          >
+            ✨ AI Optimizer
+          </button>
+        </div>
       </div>
 
       {/* Main Layout */}
