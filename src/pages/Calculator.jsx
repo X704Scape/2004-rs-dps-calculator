@@ -95,6 +95,13 @@ export default function Calculator() {
     }));
   };
 
+  const applyOptimizerResult = (equipment, combatType, style) => {
+    const activeLoadout = loadouts.find(l => l.id === activeLoadoutId);
+    if (!activeLoadout) return;
+    updateLoadout(activeLoadoutId, 'equipment', equipment);
+    updateLoadout(activeLoadoutId, 'playerStats', { ...activeLoadout.playerStats, style });
+  };
+
   const copyLoadout = (toId, fromId) => {
     const fromLoadout = loadouts.find(l => l.id === fromId);
     if (fromLoadout) {
