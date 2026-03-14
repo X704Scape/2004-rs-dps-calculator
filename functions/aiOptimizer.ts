@@ -159,7 +159,13 @@ Deno.serve(async (req) => {
           price: item.cost || 0
         };
       })
-      .filter(Boolean);
+      .filter(item => {
+        if (!item) return false;
+        // Filter out items with suspiciously max'd out stats (corrupted data)
+        const maxStat = Math.max(item.stab, item.slash, item.crush, item.strBonus, item.ranged, item.rangedStrBonus);
+        if (maxStat > 150) return false;
+        return true;
+      });
 
     if (!allItems.length) {
       return Response.json({ error: 'Could not load item database' }, { status: 500 });
