@@ -276,6 +276,19 @@ Deno.serve(async (req) => {
               best = item;
             }
           }
+          // If no offensive bonus found, fall back to best defensive bonus
+          if (bestScore <= 0) {
+            let bestDefScore = -Infinity;
+            for (const item of candidates) {
+              let defScore = 0;
+              if (cType === 'melee') {
+                defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
+              } else {
+                defScore = (item.defenceRanged || 0) + (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
+              }
+              if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+            }
+          }
           if (best) equipment[slot] = best;
         }
 
