@@ -29,11 +29,24 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange, onMons
     loadMonsters();
   }, []);
 
-  const filteredMonsters = monsters.filter(m => {
-    const nameMatch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const idMatch = String(m.id).toLowerCase().includes(searchTerm.toLowerCase());
-    return nameMatch || idMatch;
-  });
+  const filteredMonsters = monsters
+    .filter(m => {
+      const nameMatch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const idMatch = String(m.id).toLowerCase().includes(searchTerm.toLowerCase());
+      return nameMatch || idMatch;
+    })
+    .sort((a, b) => {
+      const term = searchTerm.toLowerCase();
+      const aExact = a.name.toLowerCase() === term;
+      const bExact = b.name.toLowerCase() === term;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      const aStarts = a.name.toLowerCase().startsWith(term);
+      const bStarts = b.name.toLowerCase().startsWith(term);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   return (
     <div className="bg-gray-800 border-2 border-amber-900 rounded p-4">
