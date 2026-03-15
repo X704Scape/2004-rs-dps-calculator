@@ -316,30 +316,28 @@ Deno.serve(async (req) => {
 
         // For ranged, we need ammo that matches the weapon
         if (cType === 'ranged') {
-          const weaponName = weapon.name?.toLowerCase() || '';
-          const ammoOptions = bySlot['ammo'] || [];
-          let bestAmmo = null;
-          let bestAmmoBonus = -1;
-          for (const ammo of ammoOptions) {
-            const ammoName = ammo.name?.toLowerCase() || '';
-            const ammoCategory = ammo.category?.toLowerCase() || '';
-            const isArrow = ammoCategory === 'arrows' || ammoName.includes('arrow');
-            const isBolt = ammoCategory === 'bolts' || ammoName.includes('bolt');
-            const isBow = (weaponName.includes('bow') && !weaponName.includes('crossbow'));
-            const isCrossbow = weaponName.includes('crossbow');
-            const isThrown = !isBow && !isCrossbow;
-
-            if (isThrown) break; // thrown weapons don't use ammo slot for damage
-
-            if ((isBow && isArrow) || (isCrossbow && isBolt)) {
+          const wn = weapon.name?.toLowerCase() || '';
+          const isBow = wn.includes('bow') && !wn.includes('crossbow');
+          const isCrossbow = wn.includes('crossbow');
+          const isThrown = !isBow && !isCrossbow;
+          if (!isThrown) {
+            const maxArrowBonus = isBow ? getBowMaxArrowStrBonus(weapon.name) : Infinity;
+            const ammoOptions = bySlot['ammo'] || [];
+            let bestAmmo = null, bestAmmoBonus = -1;
+            for (const ammo of ammoOptions) {
+              const an = ammo.name?.toLowerCase() || '';
+              const ac = ammo.category?.toLowerCase() || '';
+              const isArrow = ac === 'arrows' || an.includes('arrow');
+              const isBolt = ac === 'bolts' || an.includes('bolt');
               const bonus = ammo.rangedStrBonus || 0;
-              if (bonus > bestAmmoBonus) {
-                bestAmmoBonus = bonus;
-                bestAmmo = ammo;
+              if (isBow && isArrow && bonus <= maxArrowBonus && bonus > bestAmmoBonus) {
+                bestAmmoBonus = bonus; bestAmmo = ammo;
+              } else if (isCrossbow && isBolt && bonus > bestAmmoBonus) {
+                bestAmmoBonus = bonus; bestAmmo = ammo;
               }
             }
+            if (bestAmmo) equipment.ammo = bestAmmo;
           }
-          if (bestAmmo) equipment.ammo = bestAmmo;
         }
 
         // Add best items for each other slot (maximize relevant bonus)
