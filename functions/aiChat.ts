@@ -449,7 +449,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
         optimizerResults = { monster: foundMonster, loadouts: [] };
 
         for (const cType of (action.combatStyles || ['melee'])) {
-          const cStyle = cType === 'ranged' ? 'rapid' : 'aggressive';
+          const cStyle = cType === 'ranged' ? 'rapid' : cType === 'magic' ? 'spell' : 'aggressive';
           const result = buildBestLoadout({
             allItems,
             combatType: cType,
