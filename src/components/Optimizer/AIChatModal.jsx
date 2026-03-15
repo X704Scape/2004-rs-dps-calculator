@@ -134,6 +134,38 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
+  // Username / stats lookup
+  const [usernameInput, setUsernameInput] = useState('');
+  const [fetchedStats, setFetchedStats] = useState(null);
+  const [fetchedUsername, setFetchedUsername] = useState('');
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
+  const [usernameDismissed, setUsernameDismissed] = useState(false);
+
+  const handleLookupStats = async () => {
+    if (!usernameInput.trim()) return;
+    setStatsLoading(true);
+    setStatsError('');
+    try {
+      const resp = await base44.functions.invoke('fetchHiscores', { username: usernameInput.trim() });
+      if (resp.data?.stats) {
+        setFetchedStats(resp.data.stats);
+        setFetchedUsername(usernameInput.trim());
+      } else {
+        setStatsError('Player not found.');
+      }
+    } catch (e) {
+      setStatsError('Could not fetch stats. Try again.');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // Merge fetched stats with playerStats (fetched takes priority for levels)
+  const effectiveStats = fetchedStats
+    ? { ...playerStats, ...fetchedStats }
+    : playerStats;
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
