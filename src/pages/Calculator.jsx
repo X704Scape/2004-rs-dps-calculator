@@ -472,6 +472,7 @@ export default function Calculator() {
           loadouts={loadouts}
           onApplyLoadout={applyOptimizerResult}
           onSetMonster={setSelectedMonster}
+          onCreateLoadout={addLoadout}
           onClose={() => setShowOptimizer(false)}
         />
       )}
