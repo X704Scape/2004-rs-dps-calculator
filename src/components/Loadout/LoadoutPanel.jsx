@@ -70,12 +70,12 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 p-3 border-r border-amber-900 last:border-r-0 hover:bg-gray-800 transition ${
-                activeTab === tab.id ? 'bg-gray-700' : ''
+              className={`flex-1 p-2 border-r border-amber-900 last:border-r-0 hover:bg-gray-800 transition flex items-center justify-center ${
+                activeTab === tab.id ? 'bg-gray-700' : 'opacity-60'
               }`}
               title={tab.label}
             >
-              <Icon size={20} className={activeTab === tab.id ? 'text-amber-500' : 'text-amber-700'} />
+              <img src={tab.img} alt={tab.label} className="w-7 h-7 object-contain" />
             </button>
           );
         })}
