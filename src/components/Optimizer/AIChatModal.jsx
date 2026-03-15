@@ -242,7 +242,8 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
           messages: [
             ...newMessages.filter(m => !m.styleChoices && !m.optimizerResults).map(m => ({ role: m.role, content: m.content })),
           ],
-          playerStats,
+          playerStats: effectiveStats,
+          playerLevels: fetchedStats || null,
           availableMonsters: availableMonsters || [],
         });
 
