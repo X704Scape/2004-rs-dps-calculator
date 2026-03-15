@@ -292,6 +292,9 @@ Deno.serve(async (req) => {
     if (combatStyle === 'all' || combatStyle === 'ranged') {
       stylesToTry.push({ type: 'ranged', style: 'rapid' });
     }
+    if (combatStyle === 'all' || combatStyle === 'magic') {
+      stylesToTry.push({ type: 'magic', style: 'spell' });
+    }
 
     // For each combat style, find the best weapon first then optimize other slots
     const results = [];
