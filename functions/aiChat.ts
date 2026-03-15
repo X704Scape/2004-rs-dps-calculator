@@ -33,8 +33,24 @@ function getRangedMaxHit(effRng, rngStrBonus) {
   return Math.floor((effRng * (rngStrBonus + 64) + 320) / 640);
 }
 
+// Standard spellbook spells: [name, maxHit, magicLevelReq]
+const COMBAT_SPELLS = [
+  ['Wind Strike', 2, 1], ['Water Strike', 4, 5], ['Earth Strike', 6, 9], ['Fire Strike', 8, 13],
+  ['Wind Bolt', 9, 17], ['Water Bolt', 10, 23], ['Earth Bolt', 11, 29], ['Fire Bolt', 12, 35],
+  ['Wind Blast', 13, 41], ['Water Blast', 14, 47], ['Earth Blast', 15, 53], ['Fire Blast', 16, 59],
+  ['Wind Wave', 17, 62], ['Water Wave', 18, 65], ['Earth Wave', 19, 70], ['Fire Wave', 20, 75],
+];
+
+function getBestSpell(magicLevel) {
+  let best = COMBAT_SPELLS[0];
+  for (const spell of COMBAT_SPELLS) {
+    if (magicLevel >= spell[2]) best = spell;
+  }
+  return best;
+}
+
 function calcDPS({ combatType, playerStats, equipment, monster }) {
-  const { attack, strength, ranged, prayerActive, style } = playerStats;
+  const { attack, strength, ranged, magic, prayerActive, style } = playerStats;
   const atkPrayer = PRAYER_ATK_MULTIPLIERS[prayerActive?.attack || 'none'] || 1.0;
   const strPrayer = PRAYER_STR_MULTIPLIERS[prayerActive?.strength || 'none'] || 1.0;
   const getBonus = (key) => Object.values(equipment).reduce((s, i) => s + (i?.[key] || 0), 0);
@@ -59,12 +75,20 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
     maxHit = getRangedMaxHit(effRng, rngStr);
     attackRoll = effRng * (rngAtk + 64);
     npcDefRoll = (monster.defence + 9) * ((monster.defenceRanged || 0) + 64);
+  } else if (combatType === 'magic') {
+    const magicLvl = magic || 1;
+    const spell = getBestSpell(magicLvl);
+    maxHit = spell[1];
+    const magicAtk = getBonus('magic');
+    const effMagic = magicLvl + 9; // simplified effective magic
+    attackRoll = effMagic * (magicAtk + 64);
+    npcDefRoll = (monster.defence + 9) * ((monster.defenceMagic || 0) + 64);
   } else {
     return 0;
   }
   const accuracy = getAccuracy(attackRoll, npcDefRoll);
   const weapon = equipment.weapon;
-  let speedTicks = weapon?.attackRate || 4;
+  let speedTicks = combatType === 'magic' ? 5 : (weapon?.attackRate || 4);
   if (combatType === 'ranged' && style === 'rapid') speedTicks = Math.max(1, speedTicks - 1);
   const avgHit = (maxHit / 2) * accuracy;
   return avgHit / (speedTicks * 0.6);
