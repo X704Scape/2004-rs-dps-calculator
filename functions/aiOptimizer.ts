@@ -256,10 +256,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Could not load item database' }, { status: 500 });
     }
 
-    // Filter equippable items, optionally by budget
+    // Filter equippable items, optionally by budget and player level requirements
     const usableItems = allItems.filter(item => {
       if (!item.equipable && !item.slot) return false;
       if (budgetGp !== null && item.price && item.price > budgetGp) return false;
+      if (!meetsRequirements(item, playerLevels)) return false;
       return true;
     });
 
