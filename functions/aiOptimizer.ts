@@ -78,7 +78,7 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
 
   const accuracy = getAccuracy(attackRoll, npcDefRoll);
   const weapon = equipment.weapon;
-  let speedTicks = weapon?.attackRate || 4;
+  let speedTicks = combatType === 'magic' ? 5 : (weapon?.attackRate || 4);
   if (combatType === 'ranged' && style === 'rapid') speedTicks = Math.max(1, speedTicks - 1);
   const avgHit = (maxHit / 2) * accuracy;
   return avgHit / (speedTicks * 0.6);
