@@ -99,8 +99,14 @@ export default function Calculator() {
   const applyOptimizerResult = (equipment, combatType, style) => {
     const activeLoadout = loadouts.find(l => l.id === activeLoadoutId);
     if (!activeLoadout) return;
-    updateLoadout(activeLoadoutId, 'equipment', equipment);
-    updateLoadout(activeLoadoutId, 'playerStats', { ...activeLoadout.playerStats, style });
+    setLoadouts(prev => prev.map(l => {
+      if (l.id !== activeLoadoutId) return l;
+      return {
+        ...l,
+        equipment,
+        playerStats: { ...l.playerStats, style, combatType }
+      };
+    }));
   };
 
   const copyLoadout = (toId, fromId) => {
