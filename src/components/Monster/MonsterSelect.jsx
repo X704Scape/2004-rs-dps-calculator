@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
-export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
+export default function MonsterSelect({ selectedMonster, onMonsterChange, onMonstersLoaded }) {
   const [monsters, setMonsters] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -16,7 +16,9 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange }) {
         console.log('Response data:', response.data);
         console.log('Monsters array:', response.data?.monsters);
         console.log('Monsters count:', response.data?.monsters?.length);
-        setMonsters(response.data?.monsters || []);
+        const loaded = response.data?.monsters || [];
+        setMonsters(loaded);
+        if (onMonstersLoaded) onMonstersLoaded(loaded);
       } catch (error) {
         console.error('Failed to load monsters:', error);
         console.error('Error details:', error);
