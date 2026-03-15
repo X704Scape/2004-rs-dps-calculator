@@ -134,7 +134,7 @@ const STYLE_CHOICES = [
   { label: '⚔️🏹 Both', value: 'both' },
 ];
 
-export default function AIChatModal({ playerStats, monster, availableMonsters, loadouts, onApplyLoadout, onSetMonster, onClose }) {
+export default function AIChatModal({ playerStats, monster, availableMonsters, loadouts, onApplyLoadout, onSetMonster, onCreateLoadout, onClose }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
