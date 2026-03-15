@@ -441,7 +441,7 @@ export default function Calculator() {
 
           {/* Middle Column - Monster */}
           <div className="lg:col-span-1">
-            <MonsterSelect selectedMonster={selectedMonster} onMonsterChange={setSelectedMonster} />
+            <MonsterSelect selectedMonster={selectedMonster} onMonsterChange={setSelectedMonster} onMonstersLoaded={setAvailableMonsters} />
           </div>
 
           {/* Right Column - Results */}
