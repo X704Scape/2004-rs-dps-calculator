@@ -144,6 +144,18 @@ const MAGIC_REQS = [
   { pattern: /\bapprentice wand\b/i, level: 40 },
 ];
 
+function getBowMaxArrowStrBonus(weaponName) {
+  const wn = weaponName.toLowerCase();
+  if (wn.includes('crossbow')) return Infinity;
+  if (wn.includes('magic')) return 49;
+  if (wn.includes('yew')) return 49;
+  if (wn.includes('maple')) return 31;
+  if (wn.includes('willow')) return 22;
+  if (wn.includes('oak')) return 10;
+  if (wn.includes('bow')) return 10;
+  return Infinity;
+}
+
 function meetsRequirements(item, playerLevels) {
   if (!playerLevels) return true;
   const name = item.name;
