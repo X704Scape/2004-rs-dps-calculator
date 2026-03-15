@@ -89,11 +89,30 @@ function detectCombatType(weapon, style) {
   if (style === 'spell') return 'magic';
   const cat = weapon.category?.toLowerCase() || '';
   const name = weapon.name?.toLowerCase() || '';
+  if (cat.includes('staff') || name.includes('staff') || name.includes('wand') || name.includes("iban's")) {
+    return 'magic';
+  }
   if (cat.includes('bow') || cat.includes('thrown') || cat.includes('crossbow') || cat.includes('javelin') ||
       name.includes('bow') || name.includes('dart') || name.includes('knife') || name.includes('javelin') || name.includes('thrownaxe')) {
     return 'ranged';
   }
   return 'melee';
+}
+
+// Standard spellbook combat spells: [name, maxHit, magicLevelReq]
+const COMBAT_SPELLS = [
+  ['Wind Strike', 2, 1], ['Water Strike', 4, 5], ['Earth Strike', 6, 9], ['Fire Strike', 8, 13],
+  ['Wind Bolt', 9, 17], ['Water Bolt', 10, 23], ['Earth Bolt', 11, 29], ['Fire Bolt', 12, 35],
+  ['Wind Blast', 13, 41], ['Water Blast', 14, 47], ['Earth Blast', 15, 53], ['Fire Blast', 16, 59],
+  ['Wind Wave', 17, 62], ['Water Wave', 18, 65], ['Earth Wave', 19, 70], ['Fire Wave', 20, 75],
+];
+
+function getBestSpell(magicLevel) {
+  let best = COMBAT_SPELLS[0];
+  for (const spell of COMBAT_SPELLS) {
+    if (magicLevel >= spell[2]) best = spell;
+  }
+  return best;
 }
 
 // Item level requirements inferred from name patterns
