@@ -5,7 +5,7 @@ import LoadoutPanel from '../components/Loadout/LoadoutPanel';
 import MonsterSelect from '../components/Monster/MonsterSelect';
 import ResultsPanel from '../components/Results/ResultsPanel';
 import KillSimulatorGraph from '../components/Results/KillSimulatorGraph';
-import OptimizerModal from '../components/Optimizer/OptimizerModal';
+import AIChatModal from '../components/Optimizer/AIChatModal';
 
 const calculateCombatLevel = (stats) => {
   const base = 10 * (stats.defence + stats.hitpoints + Math.floor(stats.prayer / 2));
