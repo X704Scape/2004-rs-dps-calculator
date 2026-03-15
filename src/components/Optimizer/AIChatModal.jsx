@@ -37,20 +37,34 @@ function GearList({ equipment }) {
   );
 }
 
-function LoadoutCard({ loadout, onApply }) {
+function LoadoutCard({ loadout, onApply, availableLoadouts }) {
+  const [selectedSlot, setSelectedSlot] = useState(availableLoadouts?.[0]?.id ?? 1);
   return (
     <div className="bg-gray-950 border border-amber-800 rounded p-3 mt-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <span className="text-amber-300 font-bold text-sm capitalize">{loadout.combatType}</span>
           <span className="ml-2 text-green-400 font-semibold text-sm">{loadout.dps} DPS</span>
         </div>
-        <button
-          onClick={() => onApply(loadout)}
-          className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs rounded font-semibold transition"
-        >
-          Apply Loadout
-        </button>
+        <div className="flex items-center gap-1">
+          {availableLoadouts && availableLoadouts.length > 1 && (
+            <select
+              value={selectedSlot}
+              onChange={e => setSelectedSlot(Number(e.target.value))}
+              className="bg-gray-800 border border-amber-800 rounded px-1 py-1 text-amber-100 text-xs"
+            >
+              {availableLoadouts.map((l, idx) => (
+                <option key={l.id} value={l.id}>Loadout {idx + 1}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => onApply(loadout, selectedSlot)}
+            className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs rounded font-semibold transition"
+          >
+            Apply
+          </button>
+        </div>
       </div>
       <div className="text-amber-600 text-xs mt-1">
         {loadout.equipment?.weapon?.name || 'No weapon'}
