@@ -499,9 +499,14 @@ Deno.serve(async (req) => {
             const candidates = tierBySlot[slot] || [];
             let best = null, bestScore = -Infinity;
             for (const item of candidates) {
-              let score = topResult.combatType === 'melee'
-                ? (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0)
-                : (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
+              let score = 0;
+              if (topResult.combatType === 'melee') {
+                score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
+              } else if (topResult.combatType === 'ranged') {
+                score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
+              } else if (topResult.combatType === 'magic') {
+                score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
+              }
               if (score > bestScore) { bestScore = score; best = item; }
             }
             // For melee only: if no item gives any offensive bonus, pick best melee defence instead
