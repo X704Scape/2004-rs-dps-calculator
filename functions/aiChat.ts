@@ -190,7 +190,13 @@ function buildBestLoadout({ allItems, combatType, style, playerStats, monster, b
       if (bestAmmo) equipment.ammo = bestAmmo;
     }
 
-    const is2H = weapon.name?.toLowerCase().includes('2h') || weapon.name?.toLowerCase().includes('godsword');
+    const wn2 = weapon.name?.toLowerCase() || '';
+    const wcat2 = weapon.category?.toLowerCase() || '';
+    const is2H = wn2.includes('2h') || wn2.includes('godsword') ||
+      wcat2.includes('bow') || wcat2.includes('crossbow') || wcat2.includes('thrown') ||
+      wn2.includes('bow') || wn2.includes('crossbow') || wn2.includes('dart') ||
+      wn2.includes('knife') || wn2.includes('javelin') || wn2.includes('thrownaxe') ||
+      wn2.includes('blowpipe') || combatType === 'ranged';
     const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
     for (const slot of slots) {
       if (slot === 'shield' && is2H) continue;
