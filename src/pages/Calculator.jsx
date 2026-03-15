@@ -469,6 +469,7 @@ export default function Calculator() {
           playerStats={loadouts.find(l => l.id === activeLoadoutId)?.playerStats}
           monster={selectedMonster}
           availableMonsters={availableMonsters}
+          loadouts={loadouts}
           onApplyLoadout={applyOptimizerResult}
           onSetMonster={setSelectedMonster}
           onClose={() => setShowOptimizer(false)}
