@@ -41,6 +41,7 @@ export default function Calculator() {
   ]);
   const [activeLoadoutId, setActiveLoadoutId] = useState(1);
   const [selectedMonster, setSelectedMonster] = useState(null);
+  const [availableMonsters, setAvailableMonsters] = useState([]);
   const [calculating, setCalculating] = useState(false);
   const [npcCount, setNpcCount] = useState(10);
   const [showOptimizer, setShowOptimizer] = useState(false);
