@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Swords, User, Shield, Sparkles, BookOpen } from 'lucide-react';
 import CombatStyleTab from './CombatStyleTab';
 import PlayerStatsTab from './PlayerStatsTab';
 import EquipmentTab from './EquipmentTab';
@@ -7,11 +6,11 @@ import PrayerTab from './PrayerTab';
 import MagicSpellbookTab from './MagicSpellbookTab';
 
 const TABS = [
-  { id: 'combat', icon: Swords, label: 'Combat' },
-  { id: 'stats', icon: User, label: 'Stats' },
-  { id: 'equipment', icon: Shield, label: 'Equipment' },
-  { id: 'prayer', icon: Sparkles, label: 'Prayer' },
-  { id: 'magic', icon: BookOpen, label: 'Magic' }
+  { id: 'combat', img: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2b24d5d0a_image.png', label: 'Combat' },
+  { id: 'stats', img: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/c216f05be_image.png', label: 'Stats' },
+  { id: 'equipment', img: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/378c4b569_image.png', label: 'Equipment' },
+  { id: 'prayer', img: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/14deb7466_image.png', label: 'Prayer' },
+  { id: 'magic', img: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/719d3253e_image.png', label: 'Magic' }
 ];
 
 export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange, playerStats, onStatsChange, onCombatStyleChange, onPrayerChange, otherLoadouts, onCopyFrom }) {
