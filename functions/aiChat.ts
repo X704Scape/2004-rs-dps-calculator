@@ -348,8 +348,11 @@ function buildBestLoadout({ allItems, combatType, style, playerStats, monster, b
         let score = 0;
         if (combatType === 'melee') {
           score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
-        } else {
+        } else if (combatType === 'ranged') {
           score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
+        } else if (combatType === 'magic') {
+          // Primary: magic attack bonus, secondary: magic defence bonus
+          score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
         }
         if (score > bestScore) { bestScore = score; best = item; }
       }
