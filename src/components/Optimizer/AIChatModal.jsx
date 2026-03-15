@@ -105,7 +105,12 @@ function ChatMessage({ msg, onApply, availableLoadouts }) {
 
         {/* Optimizer results */}
         {msg.optimizerResults?.loadouts?.map((loadout, i) => (
-          <LoadoutCard key={i} loadout={loadout} onApply={(l) => onApply({ type: 'applyLoadout', loadout: l, monster: msg.optimizerResults.monster })} />
+          <LoadoutCard
+            key={i}
+            loadout={loadout}
+            availableLoadouts={availableLoadouts}
+            onApply={(l, targetId) => onApply({ type: 'applyLoadout', loadout: l, monster: msg.optimizerResults.monster, targetLoadoutId: targetId })}
+          />
         ))}
       </div>
     </div>
