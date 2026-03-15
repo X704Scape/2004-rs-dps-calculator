@@ -96,15 +96,14 @@ export default function Calculator() {
     }));
   };
 
-  const applyOptimizerResult = (equipment, combatType, style, targetLoadoutId) => {
+  const applyOptimizerResult = (equipment, combatType, style, targetLoadoutId, playerStatsOverride) => {
     const targetId = targetLoadoutId ?? activeLoadoutId;
     setLoadouts(prev => prev.map(l => {
       if (l.id !== targetId) return l;
-      return {
-        ...l,
-        equipment,
-        playerStats: { ...l.playerStats, style, combatType }
-      };
+      const mergedStats = playerStatsOverride
+        ? { ...l.playerStats, ...playerStatsOverride, style, combatType }
+        : { ...l.playerStats, style, combatType };
+      return { ...l, equipment, playerStats: mergedStats };
     }));
   };
 
