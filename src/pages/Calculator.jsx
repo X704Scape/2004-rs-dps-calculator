@@ -458,12 +458,14 @@ export default function Calculator() {
         )}
       </div>
 
-      {/* AI Optimizer Modal */}
+      {/* AI Chat Modal */}
       {showOptimizer && (
-        <OptimizerModal
+        <AIChatModal
           playerStats={loadouts.find(l => l.id === activeLoadoutId)?.playerStats}
           monster={selectedMonster}
+          availableMonsters={availableMonsters}
           onApplyLoadout={applyOptimizerResult}
+          onSetMonster={setSelectedMonster}
           onClose={() => setShowOptimizer(false)}
         />
       )}
