@@ -161,9 +161,12 @@ Deno.serve(async (req) => {
       })
       .filter(item => {
         if (!item) return false;
-        // Filter out items with suspiciously max'd out stats (corrupted data)
+        // Filter out corrupted/mod items
         const maxStat = Math.max(item.stab, item.slash, item.crush, item.strBonus, item.ranged, item.rangedStrBonus);
         if (maxStat > 150) return false;
+        const lower = item.name.toLowerCase();
+        const banned = ['(p)', 'poisoned', 'mod ', 'gm ', 'dev ', 'debug', 'null', 'placeholder'];
+        if (banned.some(b => lower.includes(b))) return false;
         return true;
       });
 
