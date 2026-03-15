@@ -98,6 +98,9 @@ function detectCombatType(weapon) {
   if (!weapon) return 'melee';
   const cat = weapon.category?.toLowerCase() || '';
   const name = weapon.name?.toLowerCase() || '';
+  if (cat.includes('staff') || name.includes('staff') || name.includes('wand') || name.includes("iban's")) {
+    return 'magic';
+  }
   if (cat.includes('bow') || cat.includes('thrown') || cat.includes('crossbow') ||
       name.includes('bow') || name.includes('dart') || name.includes('knife') ||
       name.includes('javelin') || name.includes('thrownaxe')) {
