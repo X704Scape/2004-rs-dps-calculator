@@ -252,8 +252,8 @@ function getBowMaxArrowStrBonus(weaponName) {
   if (wn.includes('maple')) return 31;
   // Willow bow can use mithril arrows (22)
   if (wn.includes('willow')) return 22;
-  // Oak bow can use iron arrows (10)
-  if (wn.includes('oak')) return 10;
+  // Oak bow can use steel arrows (14)
+  if (wn.includes('oak')) return 14;
   // Shortbow / longbow (no wood prefix) = bronze/iron arrows (10)
   if (wn.includes('bow')) return 10;
   return Infinity;
