@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { messages, playerStats, availableMonsters } = body;
+    const { messages, playerStats, playerLevels, availableMonsters } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return Response.json({ error: 'Missing messages array' }, { status: 400 });
