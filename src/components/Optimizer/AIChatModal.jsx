@@ -37,8 +37,19 @@ function GearList({ equipment }) {
   );
 }
 
-function LoadoutCard({ loadout, onApply, availableLoadouts }) {
-  const [selectedSlot, setSelectedSlot] = useState(availableLoadouts?.[0]?.id ?? 1);
+const NEW_LOADOUT_SENTINEL = '__new__';
+
+function LoadoutCard({ loadout, onApply, availableLoadouts, onCreateAndApply }) {
+  const [selectedSlot, setSelectedSlot] = useState(String(availableLoadouts?.[0]?.id ?? 1));
+
+  const handleApply = () => {
+    if (selectedSlot === NEW_LOADOUT_SENTINEL) {
+      onCreateAndApply(loadout);
+    } else {
+      onApply(loadout, Number(selectedSlot));
+    }
+  };
+
   return (
     <div className="bg-gray-950 border border-amber-800 rounded p-3 mt-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -47,19 +58,18 @@ function LoadoutCard({ loadout, onApply, availableLoadouts }) {
           <span className="ml-2 text-green-400 font-semibold text-sm">{loadout.dps} DPS</span>
         </div>
         <div className="flex items-center gap-1">
-          {availableLoadouts && availableLoadouts.length > 1 && (
-            <select
-              value={selectedSlot}
-              onChange={e => setSelectedSlot(Number(e.target.value))}
-              className="bg-gray-800 border border-amber-800 rounded px-1 py-1 text-amber-100 text-xs"
-            >
-              {availableLoadouts.map((l, idx) => (
-                <option key={l.id} value={l.id}>Loadout {idx + 1}</option>
-              ))}
-            </select>
-          )}
+          <select
+            value={selectedSlot}
+            onChange={e => setSelectedSlot(e.target.value)}
+            className="bg-gray-800 border border-amber-800 rounded px-1 py-1 text-amber-100 text-xs"
+          >
+            {availableLoadouts.map((l, idx) => (
+              <option key={l.id} value={String(l.id)}>Loadout {idx + 1}</option>
+            ))}
+            <option value={NEW_LOADOUT_SENTINEL}>+ Create New Loadout</option>
+          </select>
           <button
-            onClick={() => onApply(loadout, selectedSlot)}
+            onClick={handleApply}
             className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-amber-100 text-xs rounded font-semibold transition"
           >
             Apply
