@@ -270,7 +270,7 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4">
           {messages.map((msg, i) => (
-            <ChatMessage key={i} msg={msg} onApply={handleInteraction} />
+            <ChatMessage key={i} msg={msg} onApply={handleInteraction} availableLoadouts={loadouts} />
           ))}
           {loading && (
             <div className="flex justify-start mb-3">
