@@ -281,19 +281,23 @@ function buildBestLoadout({ allItems, combatType, style, playerStats, monster, b
     if (combatType === 'ranged') {
       const ammoOptions = bySlot['ammo'] || [];
       let bestAmmo = null, bestBonus = -1;
-      for (const ammo of ammoOptions) {
-        const wn = weapon.name?.toLowerCase() || '';
-        const an = ammo.name?.toLowerCase() || '';
-        const ac = ammo.category?.toLowerCase() || '';
-        const isArrow = ac === 'arrows' || an.includes('arrow');
-        const isBolt = ac === 'bolts' || an.includes('bolt');
-        const isBow = wn.includes('bow') && !wn.includes('crossbow');
-        const isCrossbow = wn.includes('crossbow');
-        const isThrown = !isBow && !isCrossbow;
-        if (isThrown) break;
-        if ((isBow && isArrow) || (isCrossbow && isBolt)) {
-          if ((ammo.rangedStrBonus || 0) > bestBonus) {
-            bestBonus = ammo.rangedStrBonus || 0;
+      const wn = weapon.name?.toLowerCase() || '';
+      const isBow = wn.includes('bow') && !wn.includes('crossbow');
+      const isCrossbow = wn.includes('crossbow');
+      const isThrown = !isBow && !isCrossbow;
+      if (!isThrown) {
+        const maxArrowBonus = isBow ? getBowMaxArrowStrBonus(weapon.name) : Infinity;
+        for (const ammo of ammoOptions) {
+          const an = ammo.name?.toLowerCase() || '';
+          const ac = ammo.category?.toLowerCase() || '';
+          const isArrow = ac === 'arrows' || an.includes('arrow');
+          const isBolt = ac === 'bolts' || an.includes('bolt');
+          const ammoBonus = ammo.rangedStrBonus || 0;
+          if (isBow && isArrow && ammoBonus <= maxArrowBonus && ammoBonus > bestBonus) {
+            bestBonus = ammoBonus;
+            bestAmmo = ammo;
+          } else if (isCrossbow && isBolt && ammoBonus > bestBonus) {
+            bestBonus = ammoBonus;
             bestAmmo = ammo;
           }
         }
