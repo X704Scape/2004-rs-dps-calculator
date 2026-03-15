@@ -438,24 +438,28 @@ Deno.serve(async (req) => {
         for (const weapon of tierWeapons) {
           const equipment = { weapon };
           if (topResult.combatType === 'ranged') {
-            const ammoOptions = tierBySlot['ammo'] || [];
-            let bestAmmo = null, bestBonus = -1;
-            for (const ammo of ammoOptions) {
-              const wn = weapon.name?.toLowerCase() || '';
-              const an = ammo.name?.toLowerCase() || '';
-              const ac = ammo.category?.toLowerCase() || '';
-              const isArrow = ac === 'arrows' || an.includes('arrow');
-              const isBolt = ac === 'bolts' || an.includes('bolt');
-              const isBow = wn.includes('bow') && !wn.includes('crossbow');
-              const isCrossbow = wn.includes('crossbow');
-              if ((isBow && isArrow) || (isCrossbow && isBolt)) {
-                if ((ammo.rangedStrBonus || 0) > bestBonus) {
-                  bestBonus = ammo.rangedStrBonus || 0;
-                  bestAmmo = ammo;
+            const wn = weapon.name?.toLowerCase() || '';
+            const isBow = wn.includes('bow') && !wn.includes('crossbow');
+            const isCrossbow = wn.includes('crossbow');
+            const isThrown = !isBow && !isCrossbow;
+            if (!isThrown) {
+              const maxArrowBonus = isBow ? getBowMaxArrowStrBonus(weapon.name) : Infinity;
+              const ammoOptions = tierBySlot['ammo'] || [];
+              let bestAmmo = null, bestBonus = -1;
+              for (const ammo of ammoOptions) {
+                const an = ammo.name?.toLowerCase() || '';
+                const ac = ammo.category?.toLowerCase() || '';
+                const isArrow = ac === 'arrows' || an.includes('arrow');
+                const isBolt = ac === 'bolts' || an.includes('bolt');
+                const bonus = ammo.rangedStrBonus || 0;
+                if (isBow && isArrow && bonus <= maxArrowBonus && bonus > bestBonus) {
+                  bestBonus = bonus; bestAmmo = ammo;
+                } else if (isCrossbow && isBolt && bonus > bestBonus) {
+                  bestBonus = bonus; bestAmmo = ammo;
                 }
               }
+              if (bestAmmo) equipment.ammo = bestAmmo;
             }
-            if (bestAmmo) equipment.ammo = bestAmmo;
           }
 
           const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
