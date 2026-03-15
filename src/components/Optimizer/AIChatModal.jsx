@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Wand2, Loader2, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Wand2, Loader2, Send, ChevronDown, ChevronUp, User, Check } from 'lucide-react';
 
 function GearList({ equipment }) {
   const [expanded, setExpanded] = useState(false);
