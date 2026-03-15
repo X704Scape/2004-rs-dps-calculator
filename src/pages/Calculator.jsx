@@ -96,11 +96,10 @@ export default function Calculator() {
     }));
   };
 
-  const applyOptimizerResult = (equipment, combatType, style) => {
-    const activeLoadout = loadouts.find(l => l.id === activeLoadoutId);
-    if (!activeLoadout) return;
+  const applyOptimizerResult = (equipment, combatType, style, targetLoadoutId) => {
+    const targetId = targetLoadoutId ?? activeLoadoutId;
     setLoadouts(prev => prev.map(l => {
-      if (l.id !== activeLoadoutId) return l;
+      if (l.id !== targetId) return l;
       return {
         ...l,
         equipment,
