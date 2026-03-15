@@ -405,7 +405,8 @@ Available monsters the user can search for: ${availableMonsters ? availableMonst
             style: cStyle,
             playerStats,
             monster: foundMonster,
-            budgetGp: null
+            budgetGp: null,
+            playerLevels: playerLevels || null
           });
           if (result) {
             optimizerResults.loadouts.push({
