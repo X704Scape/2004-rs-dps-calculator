@@ -407,6 +407,7 @@ Deno.serve(async (req) => {
         const tierItems = allItems.filter(item => {
           if (!item.equipable && !item.slot) return false;
           if (tier.gp !== null && item.price && item.price > tier.gp) return false;
+          if (!meetsRequirements(item, playerLevels)) return false;
           return true;
         });
 
