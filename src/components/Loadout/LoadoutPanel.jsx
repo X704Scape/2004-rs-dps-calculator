@@ -65,7 +65,6 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
       {/* Tab Buttons */}
       <div className="flex border-b-2 border-amber-900 bg-gray-900">
         {TABS.map((tab) => {
-          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
