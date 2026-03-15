@@ -239,6 +239,26 @@ async function fetchAllItems() {
     });
 }
 
+// Returns the max arrow strength bonus a bow can use, based on bow tier
+function getBowMaxArrowStrBonus(weaponName) {
+  const wn = weaponName.toLowerCase();
+  // Crossbows use bolts — no restriction needed here (handled separately)
+  if (wn.includes('crossbow')) return Infinity;
+  // Magic bow can use rune arrows (rangedStrBonus 49)
+  if (wn.includes('magic')) return 49;
+  // Yew bow can use rune arrows (49)
+  if (wn.includes('yew')) return 49;
+  // Maple bow can use adamant arrows (31)
+  if (wn.includes('maple')) return 31;
+  // Willow bow can use mithril arrows (22)
+  if (wn.includes('willow')) return 22;
+  // Oak bow can use iron arrows (10)
+  if (wn.includes('oak')) return 10;
+  // Shortbow / longbow (no wood prefix) = bronze/iron arrows (10)
+  if (wn.includes('bow')) return 10;
+  return Infinity;
+}
+
 function buildBestLoadout({ allItems, combatType, style, playerStats, monster, budgetGp, playerLevels }) {
   const usable = allItems.filter(item => {
     if (budgetGp !== null && item.price && item.price > budgetGp) return false;
