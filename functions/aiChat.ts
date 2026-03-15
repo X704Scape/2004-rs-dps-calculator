@@ -211,16 +211,11 @@ function buildBestLoadout({ allItems, combatType, style, playerStats, monster, b
         }
         if (score > bestScore) { bestScore = score; best = item; }
       }
-      // If no offensive bonus found, fall back to best defensive bonus for that combat type
-      if (bestScore <= 0) {
+      // For melee: if no item in this slot gives any offensive bonus, pick best melee defence instead
+      if (combatType === 'melee' && bestScore === 0) {
         let bestDefScore = -Infinity;
         for (const item of candidates) {
-          let defScore = 0;
-          if (combatType === 'melee') {
-            defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
-          } else {
-            defScore = (item.defenceRanged || 0) + (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
-          }
+          const defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
           if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
         }
       }
