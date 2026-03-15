@@ -96,6 +96,87 @@ function detectCombatType(weapon, style) {
   return 'melee';
 }
 
+// Item level requirements inferred from name patterns
+const RANGED_REQS = [
+  { pattern: /\bblack d'?hide\b|\bblack dragonhide\b/i, level: 70 },
+  { pattern: /\bred d'?hide\b|\bred dragonhide\b/i, level: 60 },
+  { pattern: /\bblue d'?hide\b|\bblue dragonhide\b/i, level: 50 },
+  { pattern: /\bgreen d'?hide\b|\bgreen dragonhide\b/i, level: 40 },
+  { pattern: /\bmagic shortbow\b/i, level: 50 },
+  { pattern: /\bmagic longbow\b/i, level: 50 },
+  { pattern: /\byew shortbow\b/i, level: 40 },
+  { pattern: /\byew longbow\b/i, level: 40 },
+  { pattern: /\bmaple shortbow\b/i, level: 30 },
+  { pattern: /\bmaple longbow\b/i, level: 30 },
+  { pattern: /\bwillow shortbow\b/i, level: 20 },
+  { pattern: /\bwillow longbow\b/i, level: 20 },
+  { pattern: /\brune arrow\b/i, level: 40 },
+  { pattern: /\bkaril\b/i, level: 70 },
+];
+const ATTACK_REQS = [
+  { pattern: /\bdragon\b/i, level: 60 },
+  { pattern: /\brune\b/i, level: 40 },
+  { pattern: /\badamant\b/i, level: 30 },
+  { pattern: /\bmithril\b/i, level: 20 },
+  { pattern: /\bblack\b/i, level: 10 },
+  { pattern: /\bsteel\b/i, level: 5 },
+  { pattern: /\btorag\b|\bverac\b|\bguthan\b|\bkaril\b|\bahrims\b/i, level: 70 },
+];
+const DEFENCE_REQS = [
+  { pattern: /\bdragon (platelegs|plateskirt|chainbody|med helm|sq shield|full helm|square shield)\b/i, level: 60 },
+  { pattern: /\brune (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 40 },
+  { pattern: /\badamant (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 30 },
+  { pattern: /\bmithril (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 20 },
+  { pattern: /\bblack (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 10 },
+  { pattern: /\bsteel (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 5 },
+  { pattern: /\btorag\b|\bverac\b|\bguthan\b/i, level: 70 },
+  { pattern: /\bblack d'?hide (body|chaps|vamb)\b|\bblack dragonhide (body|chaps)\b/i, level: 70 },
+  { pattern: /\bred d'?hide (body|chaps|vamb)\b|\bred dragonhide (body|chaps)\b/i, level: 60 },
+  { pattern: /\bblue d'?hide (body|chaps|vamb)\b|\bblue dragonhide (body|chaps)\b/i, level: 50 },
+  { pattern: /\bgreen d'?hide (body|chaps|vamb)\b|\bgreen dragonhide (body|chaps)\b/i, level: 40 },
+];
+const MAGIC_REQS = [
+  { pattern: /\bahrims?\b/i, level: 70 },
+  { pattern: /\biban\b/i, level: 50 },
+  { pattern: /\bmaster wand\b/i, level: 60 },
+  { pattern: /\bteacher wand\b/i, level: 55 },
+  { pattern: /\bpupil wand\b/i, level: 50 },
+  { pattern: /\bapprentice wand\b/i, level: 40 },
+];
+
+function meetsRequirements(item, playerLevels) {
+  if (!playerLevels) return true;
+  const name = item.name;
+  const slot = item.slot;
+  for (const req of RANGED_REQS) {
+    if (req.pattern.test(name)) {
+      if ((playerLevels.ranged || 1) < req.level) return false;
+      break;
+    }
+  }
+  if (slot === 'weapon') {
+    for (const req of ATTACK_REQS) {
+      if (req.pattern.test(name)) {
+        if ((playerLevels.attack || 1) < req.level) return false;
+        break;
+      }
+    }
+  }
+  for (const req of DEFENCE_REQS) {
+    if (req.pattern.test(name)) {
+      if ((playerLevels.defence || 1) < req.level) return false;
+      break;
+    }
+  }
+  for (const req of MAGIC_REQS) {
+    if (req.pattern.test(name)) {
+      if ((playerLevels.magic || 1) < req.level) return false;
+      break;
+    }
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -105,7 +186,8 @@ Deno.serve(async (req) => {
       playerStats,   // { attack, strength, ranged, magic, defence, prayer, prayerActive, style }
       monster,       // full monster object
       budgetGp = null, // null = no limit, number = gp cap
-      combatStyle = 'all' // 'melee', 'ranged', 'magic', 'all'
+      combatStyle = 'all', // 'melee', 'ranged', 'magic', 'all'
+      playerLevels = null  // optional: fetched hiscores levels for requirement filtering
     } = body;
 
     if (!playerStats || !monster) {
