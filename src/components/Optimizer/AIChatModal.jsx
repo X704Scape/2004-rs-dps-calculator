@@ -85,7 +85,7 @@ function LoadoutCard({ loadout, onApply, availableLoadouts, onCreateAndApply }) 
   );
 }
 
-function ChatMessage({ msg, onApply, availableLoadouts }) {
+function ChatMessage({ msg, onApply, onCreateAndApply, availableLoadouts }) {
   const isUser = msg.role === 'user';
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
