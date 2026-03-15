@@ -48,7 +48,7 @@ export default function Calculator() {
 
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map(l => l.id)) + 1;
-    setLoadouts([...loadouts, {
+    setLoadouts(prev => [...prev, {
       id: newId,
       name: `Loadout ${newId}`,
       equipment: {},
@@ -69,6 +69,7 @@ export default function Calculator() {
       },
       results: null
     }]);
+    return newId;
   };
 
   const removeLoadout = (id) => {
