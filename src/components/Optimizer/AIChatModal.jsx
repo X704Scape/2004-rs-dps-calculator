@@ -234,8 +234,7 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
       if (interaction.monster && onSetMonster) {
         onSetMonster(interaction.monster);
       }
-      onApplyLoadout(interaction.loadout.equipment, interaction.loadout.combatType, interaction.loadout.style);
-      onClose();
+      onApplyLoadout(interaction.loadout.equipment, interaction.loadout.combatType, interaction.loadout.style, interaction.targetLoadoutId);
     }
   };
 
