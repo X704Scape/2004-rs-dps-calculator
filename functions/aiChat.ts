@@ -239,9 +239,10 @@ async function fetchAllItems() {
     });
 }
 
-function buildBestLoadout({ allItems, combatType, style, playerStats, monster, budgetGp }) {
+function buildBestLoadout({ allItems, combatType, style, playerStats, monster, budgetGp, playerLevels }) {
   const usable = allItems.filter(item => {
     if (budgetGp !== null && item.price && item.price > budgetGp) return false;
+    if (!meetsRequirements(item, playerLevels)) return false;
     return true;
   });
   const bySlot = {};
