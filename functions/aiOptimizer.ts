@@ -151,7 +151,7 @@ function getBowMaxArrowStrBonus(weaponName) {
   if (wn.includes('yew')) return 49;
   if (wn.includes('maple')) return 31;
   if (wn.includes('willow')) return 22;
-  if (wn.includes('oak')) return 10;
+  if (wn.includes('oak')) return 14;
   if (wn.includes('bow')) return 10;
   return Infinity;
 }
