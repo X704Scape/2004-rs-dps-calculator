@@ -379,6 +379,16 @@ Deno.serve(async (req) => {
                 : (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
               if (score > bestScore) { bestScore = score; best = item; }
             }
+            // Fall back to best defensive bonus if no offensive bonus
+            if (bestScore <= 0) {
+              let bestDefScore = -Infinity;
+              for (const item of candidates) {
+                let defScore = topResult.combatType === 'melee'
+                  ? (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0)
+                  : (item.defenceRanged || 0) + (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
+                if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+              }
+            }
             if (best) equipment[slot] = best;
           }
 
