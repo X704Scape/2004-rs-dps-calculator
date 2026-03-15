@@ -289,6 +289,15 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
     }
   };
 
+  const handleCreateAndApply = ({ loadout, monster }) => {
+    if (monster && onSetMonster) onSetMonster(monster);
+    // Create new loadout then apply to it — parent provides onCreateLoadout that returns the new id
+    const newId = onCreateLoadout?.();
+    if (newId != null) {
+      onApplyLoadout(loadout.equipment, loadout.combatType, loadout.style, newId, fetchedStats || null);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
