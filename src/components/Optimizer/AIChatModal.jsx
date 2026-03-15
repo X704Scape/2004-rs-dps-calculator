@@ -120,6 +120,7 @@ function ChatMessage({ msg, onApply, onCreateAndApply, availableLoadouts }) {
             loadout={loadout}
             availableLoadouts={availableLoadouts}
             onApply={(l, targetId) => onApply({ type: 'applyLoadout', loadout: l, monster: msg.optimizerResults.monster, targetLoadoutId: targetId })}
+            onCreateAndApply={(l) => onCreateAndApply({ loadout: l, monster: msg.optimizerResults.monster })}
           />
         ))}
       </div>
