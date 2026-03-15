@@ -184,7 +184,8 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
           role: m.role,
           content: m.content
         })),
-        playerStats,
+        playerStats: effectiveStats,
+        playerLevels: fetchedStats || null,
         availableMonsters: availableMonsters || [],
       });
 
