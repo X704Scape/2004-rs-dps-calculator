@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
     for (const { type: cType, style: cStyle } of stylesToTry) {
       // Get candidate weapons
       const weapons = (bySlot['weapon'] || []).filter(w => {
-        const detected = detectCombatType(w, cStyle);
+        const detected = detectCombatType(w, cType === 'magic' ? 'spell' : cStyle);
         return detected === cType;
       });
 
