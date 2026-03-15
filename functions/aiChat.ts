@@ -257,9 +257,11 @@ Keep responses concise and in a 2004 RuneScape theme. Use terms like "gp", "pray
 Available monsters the user can search for: ${availableMonsters ? availableMonsters.slice(0, 50).map(m => m.name).join(', ') : 'various monsters'}`;
 
     // Call LLM
+    const conversationText = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+    const fullPrompt = `${systemPrompt}\n\n--- CONVERSATION ---\n${conversationText}\nAssistant:`;
+
     const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n') + '\nAssistant:',
-      response_json_schema: null // plain text response
+      prompt: fullPrompt
     });
 
     const aiText = typeof llmResp === 'string' ? llmResp : (llmResp?.text || llmResp?.content || JSON.stringify(llmResp));
