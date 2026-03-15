@@ -64,8 +64,16 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
     maxHit = getRangedMaxHit(effRng, rngStr);
     attackRoll = effRng * (rngAtk + 64);
     npcDefRoll = (monster.defence + 9) * ((monster.defenceRanged || 0) + 64);
+  } else if (combatType === 'magic') {
+    const magicLvl = magic || 1;
+    const spell = getBestSpell(magicLvl);
+    maxHit = spell[1];
+    const magicAtk = getBonus('magic');
+    const effMagic = magicLvl + 9;
+    attackRoll = effMagic * (magicAtk + 64);
+    npcDefRoll = (monster.defence + 9) * ((monster.defenceMagic || 0) + 64);
   } else {
-    return 0; // skip magic for now
+    return 0;
   }
 
   const accuracy = getAccuracy(attackRoll, npcDefRoll);
