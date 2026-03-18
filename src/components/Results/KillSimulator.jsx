@@ -256,6 +256,51 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
         </table>
       </div>
 
+      {showComparison && comparisonData && (
+        <div className="border-t-2 border-amber-900">
+          <div className="bg-gray-900 px-4 py-2 text-amber-600 text-xs font-bold border-b border-amber-900">
+            Scale Comparison — Best loadout at each NPC count (by total time)
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-gray-900 border-b border-amber-900">
+                  <th className="text-left px-4 py-2 text-amber-600 font-semibold border-r border-amber-900">NPC Count</th>
+                  {loadouts.map((l, idx) => (
+                    <th key={l.id} className={`px-4 py-2 text-amber-600 font-semibold text-center ${idx < loadouts.length - 1 ? 'border-r border-amber-900' : ''}`}>
+                      {l.name}
+                    </th>
+                  ))}
+                  <th className="px-4 py-2 text-amber-600 font-semibold text-center">Winner</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonData.map(({ count, results, bestIdx }) => (
+                  <tr key={count} className="border-b border-amber-900/50">
+                    <td className="px-4 py-2 text-amber-400 font-semibold border-r border-amber-900">{count.toLocaleString()}×</td>
+                    {results.map((sim, idx) => (
+                      <td
+                        key={idx}
+                        className={`px-4 py-2 text-center font-mono ${idx === bestIdx ? 'text-green-400 font-bold' : 'text-amber-200'} ${idx < results.length - 1 ? 'border-r border-amber-900' : ''}`}
+                      >
+                        {sim ? `${sim.totalSeconds}s` : '-'}
+                        {idx === bestIdx && sim && <span className="ml-1 text-green-500">✓</span>}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2 text-center text-green-400 font-semibold">
+                      {bestIdx >= 0 ? loadouts[bestIdx]?.name : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-2 text-amber-800 text-xs bg-gray-900/50">
+            Lower time = better. A faster weapon per-hit may lose at low HP targets due to higher overkill damage waste.
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
