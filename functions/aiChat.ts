@@ -23,8 +23,7 @@ You MUST always respond with a JSON object with these fields:
 - "combatStyles": array of styles like ["melee"], ["ranged"], ["melee","ranged"] — required if actionType is optimize or optimize_weapon_only
 - "opponentName": opponent username if actionType is stake, else ""
 - "weaponOnly": true if the user specifies only a specific weapon with no other gear (e.g. "only dragon longswords", "just dlong", "weapon only"), else false
-- "forcedWeapon": if the user names a specific weapon (e.g. "magic short bow", "dragon longsword", "dlong"), put its full item name here. Empty string if not specified.
-- "forcedAmmo": if the user names specific ammo (e.g. "rune arrows", "broad bolts"), put its full item name here. Empty string if not specified.
+- "forcedItems": list every specific item the user names (weapons, armour, ammo, shields — anything). E.g. if they say "rune scimitar and rune kiteshield", set forcedItems=["Rune scimitar","Rune kiteshield"]. If they say "iron knives", set forcedItems=["Iron knife"]. Empty array if no specific items named.
 
 WHEN TO SET actionType:
 - "optimize": user wants gear for a monster AND you know which monster AND which combat style(s). Set monsterName and combatStyles.
@@ -64,8 +63,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
           combatStyles: { type: 'array', items: { type: 'string' }, description: 'e.g. ["melee"] or ["ranged"] or ["melee","ranged"]' },
           opponentName: { type: 'string', description: 'Opponent username if actionType is stake, else empty string' },
           weaponOnly: { type: 'boolean', description: 'true if user wants weapon-only (no armour), false otherwise' },
-          forcedWeapon: { type: 'string', description: 'Exact weapon name to lock in (e.g. "Magic shortbow", "Dragon longsword") if user specifies a particular weapon. Empty string otherwise.' },
-          forcedAmmo: { type: 'string', description: 'Exact ammo name to lock in (e.g. "Rune arrow") if user specifies particular ammo. Empty string otherwise.' },
+          forcedItems: { type: 'array', items: { type: 'string' }, description: 'List of specific item names the user wants locked in (e.g. ["Magic shortbow", "Rune arrow", "Rune kiteshield", "Rune scimitar"]). Include ALL items the user explicitly names. Empty array if none specified.' },
         },
         required: ['message', 'actionType']
       }
