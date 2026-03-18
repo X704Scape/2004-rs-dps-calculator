@@ -384,20 +384,12 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
         type: 'object',
         properties: {
           message: { type: 'string', description: 'The conversational reply to show the user' },
-          action: {
-            type: 'object',
-            nullable: true,
-            description: 'Null if no action needed, otherwise an action object',
-            properties: {
-              type: { type: 'string', enum: ['optimize', 'optimize_weapon_only', 'stake'] },
-              monsterName: { type: 'string', nullable: true },
-              combatStyles: { type: 'array', items: { type: 'string' }, nullable: true },
-              opponentName: { type: 'string', nullable: true },
-            },
-            required: ['type']
-          }
+          actionType: { type: 'string', description: 'One of: optimize, optimize_weapon_only, stake, or empty string if no action' },
+          monsterName: { type: 'string', description: 'Monster name if actionType is optimize or optimize_weapon_only, else empty string' },
+          combatStyles: { type: 'array', items: { type: 'string' }, description: 'e.g. ["melee"] or ["ranged"] or ["melee","ranged"]' },
+          opponentName: { type: 'string', description: 'Opponent username if actionType is stake, else empty string' },
         },
-        required: ['message']
+        required: ['message', 'actionType']
       }
     });
 
