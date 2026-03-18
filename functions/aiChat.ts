@@ -389,88 +389,15 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
 
     let optimizerResults = null;
 
-    // Standard optimize
-    if (action?.type === 'optimize' && playerStats && availableMonsters?.length) {
-      const monsterName = action.monsterName?.toLowerCase() || '';
-      const foundMonster = availableMonsters.find(m =>
-        m.name?.toLowerCase() === monsterName ||
-        m.name?.toLowerCase().includes(monsterName) ||
-        monsterName.includes(m.name?.toLowerCase())
-      );
-      if (foundMonster) {
-        const allItems = await fetchAllItems();
-        optimizerResults = { monster: foundMonster, loadouts: [] };
-        for (const cType of (action.combatStyles || ['melee'])) {
-          const cStyle = cType === 'ranged' ? 'rapid' : cType === 'magic' ? 'spell' : 'aggressive';
-          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: foundMonster, budgetGp: null, playerLevels: playerLevels || null });
-          if (result) optimizerResults.loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
-        }
-        optimizerResults.loadouts.sort((a, b) => b.dps - a.dps);
-      }
-    }
-
-    // Weapon-only optimize
-    if (action?.type === 'optimize_weapon_only' && playerStats && availableMonsters?.length) {
-      const monsterName = action.monsterName?.toLowerCase() || '';
-      const foundMonster = availableMonsters.find(m =>
-        m.name?.toLowerCase() === monsterName ||
-        m.name?.toLowerCase().includes(monsterName) ||
-        monsterName.includes(m.name?.toLowerCase())
-      );
-      if (foundMonster) {
-        const allItems = await fetchAllItems();
-        optimizerResults = { monster: foundMonster, loadouts: [], weaponOnly: true };
-        for (const cType of (action.combatStyles || ['melee'])) {
-          const cStyle = cType === 'ranged' ? 'rapid' : cType === 'magic' ? 'spell' : 'aggressive';
-          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: foundMonster, budgetGp: null, playerLevels: playerLevels || null, weaponOnly: true });
-          if (result) optimizerResults.loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
-        }
-        optimizerResults.loadouts.sort((a, b) => b.dps - a.dps);
-      }
-    }
-
-    // Stake / PVP
-    if (action?.type === 'stake' && playerStats) {
+    // For stake with no opponent stats yet — flag for frontend
+    if (action?.type === 'stake' && !opponentStats) {
       const oppName = action.opponentName || bodyOpponentName || null;
-
-      if (opponentStats) {
-        // We have opponent stats — run PVP optimizer
-        const pvpMonster = createPvpMonster(opponentStats, oppName || 'Opponent');
-        const allItems = await fetchAllItems();
-        const loadouts = [];
-
-        // Our best melee + ranged vs opponent's defence
-        for (const cType of ['melee', 'ranged']) {
-          const cStyle = cType === 'ranged' ? 'rapid' : 'aggressive';
-          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: pvpMonster, budgetGp: null, playerLevels: playerLevels || null });
-          if (result) loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
-        }
-        loadouts.sort((a, b) => b.dps - a.dps);
-
-        // Opponent's estimated best melee DPS vs our defence
-        const myPvpMonster = createPvpMonster(playerStats, 'You');
-        const opponentAsPlayer = {
-          attack: opponentStats.attack || 1, strength: opponentStats.strength || 1,
-          ranged: opponentStats.ranged || 1, magic: opponentStats.magic || 1,
-          defence: opponentStats.defence || 1,
-          prayerActive: { attack: 'none', strength: 'none' }
-        };
-        const oppResult = buildBestLoadout({ allItems, combatType: 'melee', style: 'aggressive', playerStats: opponentAsPlayer, monster: myPvpMonster, budgetGp: null, playerLevels: opponentStats });
-
-        optimizerResults = {
-          monster: pvpMonster,
-          loadouts,
-          stakeMode: true,
-          opponentName: oppName || 'Opponent',
-          opponentDps: oppResult ? parseFloat(oppResult.dps.toFixed(3)) : null,
-          opponentStats
-        };
-      } else {
-        // No opponent stats yet — flag to frontend that we need a lookup
-        action.needsOpponentLookup = true;
-        action.opponentName = oppName;
-      }
+      action.needsOpponentLookup = true;
+      action.opponentName = oppName;
     }
+
+    // NOTE: All optimization (optimize, optimize_weapon_only, stake) is now handled
+    // on the frontend by calling aiOptimizer separately. This keeps aiChat fast.
 
     const cleanText = aiText.replace(/```action[\s\S]*?```/g, '').trim();
 
