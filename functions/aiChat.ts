@@ -394,12 +394,23 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
     });
 
     const message = llmResp?.message || 'Sorry, something went wrong.';
-    let action = llmResp?.action || null;
+    const actionType = llmResp?.actionType || '';
+    let action = null;
 
-    // For stake with no opponent stats yet — flag for frontend
-    if (action?.type === 'stake' && !opponentStats) {
-      action.needsOpponentLookup = true;
-      action.opponentName = action.opponentName || bodyOpponentName || null;
+    if (actionType === 'optimize' || actionType === 'optimize_weapon_only') {
+      action = {
+        type: actionType,
+        monsterName: llmResp?.monsterName || '',
+        combatStyles: llmResp?.combatStyles?.length ? llmResp.combatStyles : ['melee'],
+      };
+    } else if (actionType === 'stake') {
+      action = {
+        type: 'stake',
+        opponentName: llmResp?.opponentName || bodyOpponentName || null,
+      };
+      if (!opponentStats) {
+        action.needsOpponentLookup = true;
+      }
     }
 
     return Response.json({ message, action, optimizerResults: null });
