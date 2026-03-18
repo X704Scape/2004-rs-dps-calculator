@@ -378,30 +378,39 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
     const conversationText = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
     const fullPrompt = `${systemPrompt}\n\n--- CONVERSATION ---\n${conversationText}\nAssistant:`;
 
-    const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt: fullPrompt });
-    const aiText = typeof llmResp === 'string' ? llmResp : (llmResp?.text || llmResp?.content || JSON.stringify(llmResp));
+    const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: fullPrompt,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', description: 'The conversational reply to show the user' },
+          action: {
+            type: 'object',
+            nullable: true,
+            description: 'Null if no action needed, otherwise an action object',
+            properties: {
+              type: { type: 'string', enum: ['optimize', 'optimize_weapon_only', 'stake'] },
+              monsterName: { type: 'string', nullable: true },
+              combatStyles: { type: 'array', items: { type: 'string' }, nullable: true },
+              opponentName: { type: 'string', nullable: true },
+            },
+            required: ['type']
+          }
+        },
+        required: ['message']
+      }
+    });
 
-    const actionMatch = aiText.match(/```action\s*([\s\S]*?)```/);
-    let action = null;
-    if (actionMatch) {
-      try { action = JSON.parse(actionMatch[1].trim()); } catch (e) {}
-    }
-
-    let optimizerResults = null;
+    const message = llmResp?.message || 'Sorry, something went wrong.';
+    let action = llmResp?.action || null;
 
     // For stake with no opponent stats yet — flag for frontend
     if (action?.type === 'stake' && !opponentStats) {
-      const oppName = action.opponentName || bodyOpponentName || null;
       action.needsOpponentLookup = true;
-      action.opponentName = oppName;
+      action.opponentName = action.opponentName || bodyOpponentName || null;
     }
 
-    // NOTE: All optimization (optimize, optimize_weapon_only, stake) is now handled
-    // on the frontend by calling aiOptimizer separately. This keeps aiChat fast.
-
-    const cleanText = aiText.replace(/```action[\s\S]*?```/g, '').trim();
-
-    return Response.json({ message: cleanText, action, optimizerResults });
+    return Response.json({ message, action, optimizerResults: null });
 
   } catch (error) {
     console.error('AI Chat error:', error);
