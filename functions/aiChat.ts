@@ -417,7 +417,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
     return Response.json({ message, action, optimizerResults: null });
 
   } catch (error) {
-    console.error('AI Chat error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('AI Chat error:', error?.message, error?.stack);
+    return Response.json({ message: `Error: ${error.message}`, action: null, optimizerResults: null });
   }
 });
