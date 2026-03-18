@@ -78,16 +78,14 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
         type: actionType,
         monsterName: llmResp?.monsterName || '',
         combatStyles: llmResp?.combatStyles?.length ? llmResp.combatStyles : ['melee'],
-        forcedWeapon: llmResp?.forcedWeapon || '',
-        forcedAmmo: llmResp?.forcedAmmo || '',
+        forcedItems: llmResp?.forcedItems || [],
       };
     } else if (actionType === 'stake') {
       action = {
         type: 'stake',
         opponentName: llmResp?.opponentName || bodyOpponentName || null,
         weaponOnly: llmResp?.weaponOnly || false,
-        forcedWeapon: llmResp?.forcedWeapon || '',
-        forcedAmmo: llmResp?.forcedAmmo || '',
+        forcedItems: llmResp?.forcedItems || [],
       };
       if (!opponentStats) {
         action.needsOpponentLookup = true;
