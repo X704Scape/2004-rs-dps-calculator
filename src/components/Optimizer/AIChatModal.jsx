@@ -410,23 +410,34 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
   const handleInteraction = async (interaction) => {
     if (interaction.type === 'styleChoice') {
       const styleLabel = interaction.value === 'both' ? 'melee and ranged' : interaction.value;
-      const userMsg = { role: 'user', content: `${styleLabel}` };
+      const combatStyles = interaction.value === 'both' ? ['melee', 'ranged'] : [interaction.value];
+      const userMsg = { role: 'user', content: styleLabel };
       const newMessages = [...messages, userMsg];
       setMessages(newMessages);
       setLoading(true);
       try {
-        const resp = await base44.functions.invoke('aiChat', {
-          messages: newMessages.filter(m => !m.styleChoices && !m.optimizerResults).map(m => ({ role: m.role, content: m.content })),
-          playerStats: effectiveStats,
-          playerLevels: fetchedStats || null,
-          availableMonsters: availableMonsters || [],
-          opponentStats: stakeOpponentStats || null,
-          opponentName: stakeOpponentName || null,
-        });
-        const data = resp.data;
-        const aiMsg = { role: 'assistant', content: data.message || `Here are the best ${styleLabel} loadouts!`, optimizerResults: data.optimizerResults || null };
-        if (data.optimizerResults?.monster && onSetMonster) onSetMonster(data.optimizerResults.monster);
+        const aiMsg = { role: 'assistant', content: `Running optimizer for ${styleLabel}...`, optimizerResults: null };
         setMessages(prev => [...prev, aiMsg]);
+
+        const optimizerResults = await runOptimizer(
+          { type: 'optimize', monsterName: interaction.monsterName, combatStyles },
+          null, null
+        );
+
+        setMessages(prev => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (updated[lastIdx]?.role === 'assistant') {
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              content: optimizerResults ? `Here are the best ${styleLabel} loadouts!` : `Couldn't find that monster. Try a different name?`,
+              optimizerResults: optimizerResults || null,
+            };
+          }
+          return updated;
+        });
+
+        if (optimizerResults?.monster && onSetMonster) onSetMonster(optimizerResults.monster);
       } catch (e) {
         setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
       } finally {
