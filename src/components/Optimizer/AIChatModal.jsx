@@ -257,6 +257,65 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const runOptimizer = async (action, oppStats, oppName) => {
+    const monsterName = action.monsterName?.toLowerCase() || '';
+    const foundMonster = availableMonsters?.find(m =>
+      m.name?.toLowerCase() === monsterName ||
+      m.name?.toLowerCase().includes(monsterName) ||
+      monsterName.includes(m.name?.toLowerCase())
+    );
+
+    if (action.type === 'stake' && oppStats) {
+      // PVP stake mode — use aiOptimizer with PVP monster (0 bonuses, use opponent defence level)
+      const pvpMonster = {
+        name: oppName || 'Opponent',
+        defence: oppStats.defence || 1,
+        defenceStab: 0, defenceSlash: 0, defenceCrush: 0,
+        defenceRanged: 0, defenceMagic: 0,
+        hitpoints: oppStats.hitpoints || 99
+      };
+      const myPvpMonster = {
+        name: 'You', defence: effectiveStats.defence || 1,
+        defenceStab: 0, defenceSlash: 0, defenceCrush: 0, defenceRanged: 0, defenceMagic: 0,
+        hitpoints: effectiveStats.hitpoints || 99
+      };
+
+      const [myResp, oppResp] = await Promise.all([
+        base44.functions.invoke('aiOptimizer', { playerStats: effectiveStats, monster: pvpMonster, combatStyle: 'melee', playerLevels: fetchedStats || null }),
+        base44.functions.invoke('aiOptimizer', { playerStats: { attack: oppStats.attack || 1, strength: oppStats.strength || 1, ranged: oppStats.ranged || 1, magic: oppStats.magic || 1, defence: oppStats.defence || 1, prayerActive: { attack: 'none', strength: 'none' }, style: 'aggressive' }, monster: myPvpMonster, combatStyle: 'melee', playerLevels: oppStats }),
+      ]);
+
+      const myLoadouts = myResp.data?.results || [];
+      const oppLoadouts = oppResp.data?.results || [];
+
+      return {
+        monster: pvpMonster,
+        loadouts: myLoadouts,
+        stakeMode: true,
+        opponentName: oppName || 'Opponent',
+        opponentDps: oppLoadouts[0]?.dps || null,
+        opponentStats: oppStats
+      };
+    }
+
+    if (!foundMonster) return null;
+
+    const combatStyles = action.combatStyles || ['melee'];
+    const weaponOnly = action.type === 'optimize_weapon_only';
+    const styleStr = combatStyles.length > 1 ? 'all' : combatStyles[0];
+
+    const resp = await base44.functions.invoke('aiOptimizer', {
+      playerStats: effectiveStats,
+      monster: foundMonster,
+      combatStyle: styleStr,
+      playerLevels: fetchedStats || null,
+      weaponOnly: weaponOnly || false,
+    });
+
+    const results = resp.data?.results || [];
+    return { monster: foundMonster, loadouts: results, weaponOnly };
+  };
+
   const sendMessage = async (userText, extraPayload = {}) => {
     if (!userText.trim()) return;
     const userMsg = { role: 'user', content: userText };
@@ -266,6 +325,7 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
     setLoading(true);
 
     try {
+      // Step 1: fast LLM chat call
       const resp = await base44.functions.invoke('aiChat', {
         messages: newMessages.filter(m => !m.styleChoices && !m.optimizerResults).map(m => ({
           role: m.role,
@@ -279,32 +339,64 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
       });
 
       const data = resp.data;
+      const action = data.action;
+
       const aiMsg = {
         role: 'assistant',
         content: data.message || 'Sorry, something went wrong.',
-        optimizerResults: data.optimizerResults || null,
+        optimizerResults: null,
       };
 
-      // Stake action with no opponent yet — show lookup banner
-      if (data.action?.type === 'stake' && data.action?.needsOpponentLookup) {
+      // Stake with no opponent — show lookup banner
+      if (action?.type === 'stake' && action?.needsOpponentLookup) {
         setPendingStake(true);
-        if (data.action.opponentName) {
-          setStakeOpponentInput(data.action.opponentName);
+        if (action.opponentName) setStakeOpponentInput(action.opponentName);
+        setMessages(prev => [...prev, aiMsg]);
+        setLoading(false);
+        return;
+      }
+
+      // Show the AI text immediately, then run optimizer in background
+      setMessages(prev => [...prev, aiMsg]);
+
+      const needsOptimizer = action?.type === 'optimize' || action?.type === 'optimize_weapon_only' ||
+        (action?.type === 'stake' && (extraPayload.opponentStats || stakeOpponentStats));
+
+      if (needsOptimizer) {
+        setLoading(true);
+        try {
+          const optimizerResults = await runOptimizer(
+            action,
+            extraPayload.opponentStats || stakeOpponentStats,
+            extraPayload.opponentName || stakeOpponentName
+          );
+
+          if (optimizerResults) {
+            if (optimizerResults.monster && onSetMonster) onSetMonster(optimizerResults.monster);
+            // Update the last assistant message with results
+            setMessages(prev => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (updated[lastIdx]?.role === 'assistant') {
+                updated[lastIdx] = { ...updated[lastIdx], optimizerResults };
+              }
+              return updated;
+            });
+          } else if (action?.type === 'optimize') {
+            // Monster not found — offer style choices
+            setMessages(prev => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (updated[lastIdx]?.role === 'assistant') {
+                updated[lastIdx] = { ...updated[lastIdx], styleChoices: STYLE_CHOICES, monsterName: action.monsterName };
+              }
+              return updated;
+            });
+          }
+        } catch (e) {
+          console.error('Optimizer error:', e);
         }
       }
-
-      // If action is normal optimize but monster wasn't found, offer style choices
-      if (data.action?.type === 'optimize' && !data.optimizerResults) {
-        aiMsg.content = data.message || `I found "${data.action.monsterName}" — which combat style?`;
-        aiMsg.styleChoices = STYLE_CHOICES;
-        aiMsg.monsterName = data.action.monsterName;
-      }
-
-      if (data.optimizerResults?.monster && onSetMonster) {
-        onSetMonster(data.optimizerResults.monster);
-      }
-
-      setMessages(prev => [...prev, aiMsg]);
     } catch (e) {
       setMessages(prev => [...prev, {
         role: 'assistant',
