@@ -373,7 +373,10 @@ Deno.serve(async (req) => {
 
         // Add best items for each other slot (maximize relevant bonus)
         const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
-        
+
+        if (weaponOnly) {
+          // Skip all armour slots — weapon + ammo only
+        } else {
         // Skip shield if weapon is 2h
         const is2H = weapon.slot === 'weapon_2h' || weapon.is2h || 
                      (weapon.attackStyles && weapon.category === 'weapon_2h_sword') ||
