@@ -181,9 +181,14 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
         </div>
       </div>
 
-      <div className="p-3 text-xs text-amber-700 border-b border-amber-900 bg-gray-900/50">
-        Simulates killing {npcCount}× <span className="text-amber-400 font-semibold">{selectedMonster.name}</span> ({npcHp} HP).
-        Weapon attack rate is fixed — no speed bonus between kills. Results averaged over {RUNS.toLocaleString()} runs.
+      <div className="p-3 text-xs text-amber-700 border-b border-amber-900 bg-gray-900/50 flex items-center justify-between flex-wrap gap-2">
+        <span>Simulates killing {npcCount.toLocaleString()}× <span className="text-amber-400 font-semibold">{selectedMonster.name}</span> ({npcHp} HP). Averaged over {RUNS.toLocaleString()} runs.</span>
+        <button
+          onClick={() => setShowComparison(v => !v)}
+          className="px-2 py-1 rounded border border-amber-800 bg-gray-800 text-amber-500 hover:text-amber-300 hover:border-amber-600 text-xs transition"
+        >
+          {showComparison ? 'Hide' : 'Show'} Scale Comparison
+        </button>
       </div>
 
       <div className="overflow-x-auto">
