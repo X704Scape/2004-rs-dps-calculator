@@ -222,11 +222,12 @@ Deno.serve(async (req) => {
     const body = await req.json();
 
     const {
-      playerStats,   // { attack, strength, ranged, magic, defence, prayer, prayerActive, style }
-      monster,       // full monster object
-      budgetGp = null, // null = no limit, number = gp cap
-      combatStyle = 'all', // 'melee', 'ranged', 'magic', 'all'
-      playerLevels = null  // optional: fetched hiscores levels for requirement filtering
+      playerStats,
+      monster,
+      budgetGp = null,
+      combatStyle = 'all',
+      playerLevels = null,
+      weaponOnly = false,
     } = body;
 
     if (!playerStats || !monster) {
