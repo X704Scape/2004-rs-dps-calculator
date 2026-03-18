@@ -371,8 +371,8 @@ Deno.serve(async (req) => {
 
         // For ranged, we need ammo that matches the weapon
         if (cType === 'ranged') {
-          if (lockedAmmo) {
-            equipment.ammo = lockedAmmo;
+          if (lockedBySlot['ammo']) {
+            equipment.ammo = lockedBySlot['ammo'];
           } else {
             const wn = weapon.name?.toLowerCase() || '';
             const isBow = wn.includes('bow') && !wn.includes('crossbow');
@@ -403,14 +403,15 @@ Deno.serve(async (req) => {
         const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
 
         if (!weaponOnly) {
-          // Skip shield if weapon is 2h
-          const is2H = weapon.slot === 'weapon_2h' || weapon.is2h || 
+          const is2H = weapon.slot === 'weapon_2h' || weapon.is2h ||
                        (weapon.attackStyles && weapon.category === 'weapon_2h_sword') ||
                        weapon.name?.toLowerCase().includes('godsword') ||
                        weapon.name?.toLowerCase().includes('2h');
 
           for (const slot of slots) {
             if (slot === 'shield' && is2H) continue;
+            // If user forced this slot, use their item
+            if (lockedBySlot[slot]) { equipment[slot] = lockedBySlot[slot]; continue; }
             const candidates = bySlot[slot] || [];
             if (!candidates.length) continue;
 
@@ -435,6 +436,11 @@ Deno.serve(async (req) => {
               }
             }
             if (best) equipment[slot] = best;
+          }
+        } else {
+          // weaponOnly: still apply any forced non-weapon slots
+          for (const [slot, item] of Object.entries(lockedBySlot)) {
+            if (slot !== 'weapon') equipment[slot] = item;
           }
         }
 
