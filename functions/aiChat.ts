@@ -22,6 +22,7 @@ You MUST always respond with a JSON object with these fields:
 - "monsterName": the monster name (string) if actionType is optimize or optimize_weapon_only, else ""
 - "combatStyles": array of styles like ["melee"], ["ranged"], ["melee","ranged"] — required if actionType is optimize or optimize_weapon_only
 - "opponentName": opponent username if actionType is stake, else ""
+- "weaponOnly": true if the user specifies only a specific weapon with no other gear (e.g. "only dragon longswords", "just dlong", "weapon only"), else false
 
 WHEN TO SET actionType:
 - "optimize": user wants gear for a monster AND you know which monster AND which combat style(s). Set monsterName and combatStyles.
@@ -60,6 +61,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
           monsterName: { type: 'string', description: 'Monster name if actionType is optimize or optimize_weapon_only, else empty string' },
           combatStyles: { type: 'array', items: { type: 'string' }, description: 'e.g. ["melee"] or ["ranged"] or ["melee","ranged"]' },
           opponentName: { type: 'string', description: 'Opponent username if actionType is stake, else empty string' },
+          weaponOnly: { type: 'boolean', description: 'true if user wants weapon-only (no armour), false otherwise' },
         },
         required: ['message', 'actionType']
       }
@@ -79,6 +81,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
       action = {
         type: 'stake',
         opponentName: llmResp?.opponentName || bodyOpponentName || null,
+        weaponOnly: llmResp?.weaponOnly || false,
       };
       if (!opponentStats) {
         action.needsOpponentLookup = true;
