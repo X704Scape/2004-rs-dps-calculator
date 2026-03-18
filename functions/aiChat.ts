@@ -378,7 +378,9 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
     const conversationText = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
     const fullPrompt = `${systemPrompt}\n\n--- CONVERSATION ---\n${conversationText}\nAssistant:`;
 
-    const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    let llmResp;
+    try {
+      llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: fullPrompt,
       response_json_schema: {
         type: 'object',
