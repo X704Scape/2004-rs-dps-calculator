@@ -281,9 +281,11 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
       };
 
       const weaponOnly = action.weaponOnly || false;
+      const forcedWeapon = action.forcedWeapon || '';
+      const forcedAmmo = action.forcedAmmo || '';
       const [myResp, oppResp] = await Promise.all([
-        base44.functions.invoke('aiOptimizer', { playerStats: effectiveStats, monster: pvpMonster, combatStyle: 'melee', playerLevels: fetchedStats || null, weaponOnly }),
-        base44.functions.invoke('aiOptimizer', { playerStats: { attack: oppStats.attack || 1, strength: oppStats.strength || 1, ranged: oppStats.ranged || 1, magic: oppStats.magic || 1, defence: oppStats.defence || 1, prayerActive: { attack: 'none', strength: 'none' }, style: 'aggressive' }, monster: myPvpMonster, combatStyle: 'melee', playerLevels: oppStats, weaponOnly }),
+        base44.functions.invoke('aiOptimizer', { playerStats: effectiveStats, monster: pvpMonster, combatStyle: 'melee', playerLevels: fetchedStats || null, weaponOnly, forcedWeapon, forcedAmmo }),
+        base44.functions.invoke('aiOptimizer', { playerStats: { attack: oppStats.attack || 1, strength: oppStats.strength || 1, ranged: oppStats.ranged || 1, magic: oppStats.magic || 1, defence: oppStats.defence || 1, prayerActive: { attack: 'none', strength: 'none' }, style: 'aggressive' }, monster: myPvpMonster, combatStyle: 'melee', playerLevels: oppStats, weaponOnly, forcedWeapon, forcedAmmo }),
       ]);
 
       const myLoadouts = myResp.data?.results || [];

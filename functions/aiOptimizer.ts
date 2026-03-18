@@ -370,27 +370,31 @@ Deno.serve(async (req) => {
 
         // For ranged, we need ammo that matches the weapon
         if (cType === 'ranged') {
-          const wn = weapon.name?.toLowerCase() || '';
-          const isBow = wn.includes('bow') && !wn.includes('crossbow');
-          const isCrossbow = wn.includes('crossbow');
-          const isThrown = !isBow && !isCrossbow;
-          if (!isThrown) {
-            const maxArrowBonus = isBow ? getBowMaxArrowStrBonus(weapon.name) : Infinity;
-            const ammoOptions = bySlot['ammo'] || [];
-            let bestAmmo = null, bestAmmoBonus = -1;
-            for (const ammo of ammoOptions) {
-              const an = ammo.name?.toLowerCase() || '';
-              const ac = ammo.category?.toLowerCase() || '';
-              const isArrow = ac === 'arrows' || an.includes('arrow');
-              const isBolt = ac === 'bolts' || an.includes('bolt');
-              const bonus = ammo.rangedStrBonus || 0;
-              if (isBow && isArrow && bonus <= maxArrowBonus && bonus > bestAmmoBonus) {
-                bestAmmoBonus = bonus; bestAmmo = ammo;
-              } else if (isCrossbow && isBolt && bonus > bestAmmoBonus) {
-                bestAmmoBonus = bonus; bestAmmo = ammo;
+          if (lockedAmmo) {
+            equipment.ammo = lockedAmmo;
+          } else {
+            const wn = weapon.name?.toLowerCase() || '';
+            const isBow = wn.includes('bow') && !wn.includes('crossbow');
+            const isCrossbow = wn.includes('crossbow');
+            const isThrown = !isBow && !isCrossbow;
+            if (!isThrown) {
+              const maxArrowBonus = isBow ? getBowMaxArrowStrBonus(weapon.name) : Infinity;
+              const ammoOptions = bySlot['ammo'] || [];
+              let bestAmmo = null, bestAmmoBonus = -1;
+              for (const ammo of ammoOptions) {
+                const an = ammo.name?.toLowerCase() || '';
+                const ac = ammo.category?.toLowerCase() || '';
+                const isArrow = ac === 'arrows' || an.includes('arrow');
+                const isBolt = ac === 'bolts' || an.includes('bolt');
+                const bonus = ammo.rangedStrBonus || 0;
+                if (isBow && isArrow && bonus <= maxArrowBonus && bonus > bestAmmoBonus) {
+                  bestAmmoBonus = bonus; bestAmmo = ammo;
+                } else if (isCrossbow && isBolt && bonus > bestAmmoBonus) {
+                  bestAmmoBonus = bonus; bestAmmo = ammo;
+                }
               }
+              if (bestAmmo) equipment.ammo = bestAmmo;
             }
-            if (bestAmmo) equipment.ammo = bestAmmo;
           }
         }
 
