@@ -393,6 +393,7 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
       }
     });
 
+    console.log('llmResp raw:', JSON.stringify(llmResp));
     const message = llmResp?.message || 'Sorry, something went wrong.';
     const actionType = llmResp?.actionType || '';
     let action = null;
