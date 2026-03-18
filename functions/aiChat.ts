@@ -26,14 +26,24 @@ You MUST always respond with a JSON object with these fields:
 WHEN TO SET actionType:
 - "optimize": user wants gear for a monster AND you know which monster AND which combat style(s). Set monsterName and combatStyles.
 - "optimize_weapon_only": user wants only the best weapon (no full setup) for a monster. Set monsterName and combatStyles.
-- "stake": user mentions staking/pvp/dueling. Set opponentName if mentioned.
+- "stake": user mentions staking/pvp/dueling against a specific player. Set opponentName if mentioned. ALWAYS trigger immediately — never ask for clarification on stake requests.
 - "": any other case (asking questions, clarifying, general chat)
 
 FLOW:
+- Be aggressive about recognising intent. When in doubt, trigger the action rather than asking.
 - If combat style is clear (e.g. "best melee for dragons") — set actionType immediately.
 - If ambiguous, ask ONE casual question like "Want melee, ranged, magic, or a mix?" and set actionType to "".
 - If the user answers a style question (e.g. "melee", "ranged"), look at the conversation history to find the monster name and set actionType = "optimize" with that monsterName.
 - If no monster is mentioned, ask which monster and set actionType to "".
+
+STAKE RECOGNITION — be smart:
+- Any message like "stake X", "pk X", "fight X", "vs X", "1v1 X" where X is a username — set actionType = "stake", opponentName = X. Do NOT ask for clarification.
+- If the message mentions "only [weapon]" or "with [weapon]" during a stake — still set actionType = "stake". The weapon constraint is noted in your message but the optimizer handles gear selection.
+- Examples that should ALL immediately trigger stake:
+  - "stake x7 with dragon longswords" → actionType=stake, opponentName=x7
+  - "can you x7 stake pk with only dragon longswords" → actionType=stake, opponentName=x7
+  - "1v1 zezima" → actionType=stake, opponentName=zezima
+  - "pk fight vs noob123" → actionType=stake, opponentName=noob123
 
 Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m => m.name).join(', ') : 'various monsters'}`;
 
