@@ -228,6 +228,8 @@ Deno.serve(async (req) => {
       combatStyle = 'all',
       playerLevels = null,
       weaponOnly = false,
+      forcedWeapon = '',
+      forcedAmmo = '',
     } = body;
 
     if (!playerStats || !monster) {
@@ -312,27 +314,48 @@ Deno.serve(async (req) => {
       bySlot[slot].push(item);
     }
 
+    // If a forced weapon is specified, find it and lock combat style to match
+    let lockedWeapon = null;
+    let lockedAmmo = null;
+    if (forcedWeapon) {
+      const fw = forcedWeapon.toLowerCase();
+      lockedWeapon = (bySlot['weapon'] || []).find(w => w.name.toLowerCase().includes(fw)) || null;
+    }
+    if (forcedAmmo) {
+      const fa = forcedAmmo.toLowerCase();
+      lockedAmmo = (bySlot['ammo'] || []).find(a => a.name.toLowerCase().includes(fa)) || null;
+    }
+
     // Determine which combat styles to try
     const stylesToTry = [];
-    if (combatStyle === 'all' || combatStyle === 'melee') {
-      stylesToTry.push({ type: 'melee', style: 'aggressive' });
-    }
-    if (combatStyle === 'all' || combatStyle === 'ranged') {
-      stylesToTry.push({ type: 'ranged', style: 'rapid' });
-    }
-    if (combatStyle === 'all' || combatStyle === 'magic') {
-      stylesToTry.push({ type: 'magic', style: 'spell' });
+    if (lockedWeapon) {
+      // Derive combat type from the locked weapon
+      const detectedType = detectCombatType(lockedWeapon, 'aggressive');
+      const styleForType = detectedType === 'ranged' ? 'rapid' : detectedType === 'magic' ? 'spell' : 'aggressive';
+      stylesToTry.push({ type: detectedType, style: styleForType });
+    } else {
+      if (combatStyle === 'all' || combatStyle === 'melee') {
+        stylesToTry.push({ type: 'melee', style: 'aggressive' });
+      }
+      if (combatStyle === 'all' || combatStyle === 'ranged') {
+        stylesToTry.push({ type: 'ranged', style: 'rapid' });
+      }
+      if (combatStyle === 'all' || combatStyle === 'magic') {
+        stylesToTry.push({ type: 'magic', style: 'spell' });
+      }
     }
 
     // For each combat style, find the best weapon first then optimize other slots
     const results = [];
 
     for (const { type: cType, style: cStyle } of stylesToTry) {
-      // Get candidate weapons
-      const weapons = (bySlot['weapon'] || []).filter(w => {
-        const detected = detectCombatType(w, cType === 'magic' ? 'spell' : cStyle);
-        return detected === cType;
-      });
+      // Get candidate weapons — if locked, only use that one
+      const weapons = lockedWeapon
+        ? [lockedWeapon]
+        : (bySlot['weapon'] || []).filter(w => {
+            const detected = detectCombatType(w, cType === 'magic' ? 'spell' : cStyle);
+            return detected === cType;
+          });
 
       if (!weapons.length) continue;
 
