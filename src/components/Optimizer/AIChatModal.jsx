@@ -313,6 +313,8 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
       combatStyle: styleStr,
       playerLevels: fetchedStats || null,
       weaponOnly: weaponOnly || false,
+      forcedWeapon: action.forcedWeapon || '',
+      forcedAmmo: action.forcedAmmo || '',
     });
 
     const results = resp.data?.results || [];

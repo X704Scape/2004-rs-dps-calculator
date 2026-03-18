@@ -80,6 +80,8 @@ Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m =
         type: actionType,
         monsterName: llmResp?.monsterName || '',
         combatStyles: llmResp?.combatStyles?.length ? llmResp.combatStyles : ['melee'],
+        forcedWeapon: llmResp?.forcedWeapon || '',
+        forcedAmmo: llmResp?.forcedAmmo || '',
       };
     } else if (actionType === 'stake') {
       action = {
