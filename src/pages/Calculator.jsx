@@ -177,8 +177,6 @@ export default function Calculator() {
         return bonus;
       };
 
-      // No prayer mapping needed - pass prayers directly
-
       // Auto-detect combat type from equipped weapon and combat style
       const weapon = equipment.weapon;
       const weaponName = weapon?.name?.toLowerCase() || '';
@@ -239,42 +237,22 @@ export default function Calculator() {
       };
 
       if (targetLoadout) {
-        const getTargetDefBonus = (bonusType) => {
-          return Object.values(targetLoadout.equipment).reduce((sum, item) => {
-            return sum + (item[bonusType] || 0);
-          }, 0);
-        };
+      const getTargetDefBonus = (bonusType) => {
+        return Object.values(targetLoadout.equipment).reduce((sum, item) => {
+          return sum + (item[bonusType] || 0);
+        }, 0);
+      };
 
-        targetStats = {
-          hitpoints: targetLoadout.playerStats.hitpoints,
-          defence: targetLoadout.playerStats.defence,
-          defenceStab: getTargetDefBonus('defStab'),
-          defenceSlash: getTargetDefBonus('defSlash'),
-          defenceCrush: getTargetDefBonus('defCrush'),
-          defenceRanged: getTargetDefBonus('defRanged'),
-          defenceMagic: getTargetDefBonus('defMagic')
-        };
-
-        console.log('=== PVP Mode Target Stats ===');
-        console.log('Target HP:', targetStats.hitpoints);
-        console.log('Target Defence Level:', targetStats.defence);
-        console.log('Target Defence Bonuses:', {
-          stab: targetStats.defenceStab,
-          slash: targetStats.defenceSlash,
-          crush: targetStats.defenceCrush,
-          ranged: targetStats.defenceRanged,
-          magic: targetStats.defenceMagic
-        });
+      targetStats = {
+        hitpoints: targetLoadout.playerStats.hitpoints,
+        defence: targetLoadout.playerStats.defence,
+        defenceStab: getTargetDefBonus('defStab'),
+        defenceSlash: getTargetDefBonus('defSlash'),
+        defenceCrush: getTargetDefBonus('defCrush'),
+        defenceRanged: getTargetDefBonus('defRanged'),
+        defenceMagic: getTargetDefBonus('defMagic')
+      };
       }
-
-      console.log('=== Sending to calculateDPS ===');
-      console.log('Combat Type:', detectedCombatType);
-      console.log('Attack Level:', playerStats.attack);
-      console.log('Strength Level:', playerStats.strength);
-      console.log('Ranged Level:', playerStats.ranged);
-      console.log('Magic Level:', playerStats.magic);
-      console.log('Attack Bonus:', attackBonus);
-      console.log('Attack Speed Ticks:', attackSpeedTicks);
 
       return await base44.functions.invoke('calculateDPS', {
         combatType: detectedCombatType,
@@ -419,7 +397,6 @@ export default function Calculator() {
 
             {/* Active Loadout */}
             {loadouts.filter(l => l.id === activeLoadoutId).map((loadout) => {
-              const activeIndex = loadouts.findIndex(l => l.id === activeLoadoutId);
               const otherLoadoutsWithNumbers = loadouts
                 .filter(l => l.id !== loadout.id)
                 .map((l, idx) => {
