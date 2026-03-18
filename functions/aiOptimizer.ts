@@ -228,8 +228,7 @@ Deno.serve(async (req) => {
       combatStyle = 'all',
       playerLevels = null,
       weaponOnly = false,
-      forcedWeapon = '',
-      forcedAmmo = '',
+      forcedItems = [],
     } = body;
 
     if (!playerStats || !monster) {
@@ -314,22 +313,24 @@ Deno.serve(async (req) => {
       bySlot[slot].push(item);
     }
 
-    // If a forced weapon is specified, find it and lock combat style to match
-    let lockedWeapon = null;
-    let lockedAmmo = null;
-    if (forcedWeapon) {
-      const fw = forcedWeapon.toLowerCase();
-      lockedWeapon = (bySlot['weapon'] || []).find(w => w.name.toLowerCase().includes(fw)) || null;
+    // Resolve forced items by name — match each to a real item in the database
+    const lockedBySlot = {}; // slot -> item
+    if (forcedItems && forcedItems.length > 0) {
+      for (const forcedName of forcedItems) {
+        const fn = forcedName.toLowerCase();
+        // Search all items for the best name match
+        const match = usableItems.find(i => i.name.toLowerCase() === fn) ||
+                      usableItems.find(i => i.name.toLowerCase().includes(fn)) ||
+                      allItems.find(i => i.name.toLowerCase() === fn) ||
+                      allItems.find(i => i.name.toLowerCase().includes(fn));
+        if (match) lockedBySlot[match.slot] = match;
+      }
     }
-    if (forcedAmmo) {
-      const fa = forcedAmmo.toLowerCase();
-      lockedAmmo = (bySlot['ammo'] || []).find(a => a.name.toLowerCase().includes(fa)) || null;
-    }
+    const lockedWeapon = lockedBySlot['weapon'] || null;
 
     // Determine which combat styles to try
     const stylesToTry = [];
     if (lockedWeapon) {
-      // Derive combat type from the locked weapon
       const detectedType = detectCombatType(lockedWeapon, 'aggressive');
       const styleForType = detectedType === 'ranged' ? 'rapid' : detectedType === 'magic' ? 'spell' : 'aggressive';
       stylesToTry.push({ type: detectedType, style: styleForType });
