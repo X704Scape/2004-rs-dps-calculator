@@ -403,10 +403,16 @@ Deno.serve(async (req) => {
         const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
 
         if (!weaponOnly) {
+          const wname2H = weapon.name?.toLowerCase() || '';
           const is2H = weapon.slot === 'weapon_2h' || weapon.is2h ||
                        (weapon.attackStyles && weapon.category === 'weapon_2h_sword') ||
-                       weapon.name?.toLowerCase().includes('godsword') ||
-                       weapon.name?.toLowerCase().includes('2h');
+                       wname2H.includes('godsword') ||
+                       wname2H.includes('2h') ||
+                       wname2H.includes('bow') ||
+                       wname2H.includes('halberd') ||
+                       wname2H.includes('spear') ||
+                       wname2H.includes('staff') ||
+                       wname2H.includes('maul');
 
           for (const slot of slots) {
             if (slot === 'shield' && is2H) continue;
@@ -526,8 +532,15 @@ Deno.serve(async (req) => {
             }
           }
 
+          const tierWname = weapon.name?.toLowerCase() || '';
+          const tierIs2H = weapon.slot === 'weapon_2h' || weapon.is2h ||
+                           tierWname.includes('godsword') || tierWname.includes('2h') ||
+                           tierWname.includes('bow') || tierWname.includes('halberd') ||
+                           tierWname.includes('spear') || tierWname.includes('staff') ||
+                           tierWname.includes('maul');
           const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
           for (const slot of slots) {
+            if (slot === 'shield' && tierIs2H) continue;
             const candidates = tierBySlot[slot] || [];
             let best = null, bestScore = -Infinity;
             for (const item of candidates) {
