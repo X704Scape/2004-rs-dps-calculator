@@ -374,46 +374,40 @@ Deno.serve(async (req) => {
         // Add best items for each other slot (maximize relevant bonus)
         const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
 
-        if (weaponOnly) {
-          // Skip all armour slots — weapon + ammo only
-        } else {
-        // Skip shield if weapon is 2h
-        const is2H = weapon.slot === 'weapon_2h' || weapon.is2h || 
-                     (weapon.attackStyles && weapon.category === 'weapon_2h_sword') ||
-                     weapon.name?.toLowerCase().includes('godsword') ||
-                     weapon.name?.toLowerCase().includes('2h');
+        if (!weaponOnly) {
+          // Skip shield if weapon is 2h
+          const is2H = weapon.slot === 'weapon_2h' || weapon.is2h || 
+                       (weapon.attackStyles && weapon.category === 'weapon_2h_sword') ||
+                       weapon.name?.toLowerCase().includes('godsword') ||
+                       weapon.name?.toLowerCase().includes('2h');
 
-        for (const slot of slots) {
-          if (slot === 'shield' && is2H) continue;
-          const candidates = bySlot[slot] || [];
-          if (!candidates.length) continue;
+          for (const slot of slots) {
+            if (slot === 'shield' && is2H) continue;
+            const candidates = bySlot[slot] || [];
+            if (!candidates.length) continue;
 
-          // Pick item that maximizes DPS bonus for this combat type
-          let best = null;
-          let bestScore = -Infinity;
-          for (const item of candidates) {
-            let score = 0;
-            if (cType === 'melee') {
-              score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
-            } else if (cType === 'ranged') {
-              score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
-            } else if (cType === 'magic') {
-              score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
-            }
-            if (score > bestScore) {
-              bestScore = score;
-              best = item;
-            }
-          }
-          // For melee only: if no item gives any offensive bonus, pick best melee defence instead
-          if (cType === 'melee' && bestScore === 0) {
-            let bestDefScore = -Infinity;
+            let best = null;
+            let bestScore = -Infinity;
             for (const item of candidates) {
-              const defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
-              if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+              let score = 0;
+              if (cType === 'melee') {
+                score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
+              } else if (cType === 'ranged') {
+                score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
+              } else if (cType === 'magic') {
+                score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
+              }
+              if (score > bestScore) { bestScore = score; best = item; }
             }
+            if (cType === 'melee' && bestScore === 0) {
+              let bestDefScore = -Infinity;
+              for (const item of candidates) {
+                const defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
+                if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+              }
+            }
+            if (best) equipment[slot] = best;
           }
-          if (best) equipment[slot] = best;
         }
 
         const dps = calcDPS({ combatType: cType, playerStats: { ...playerStats, style: cStyle }, equipment, monster });
