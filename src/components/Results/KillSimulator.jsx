@@ -106,7 +106,6 @@ function runMonteCarlo(npcCount, npcHp, maxHit, accuracy, attackSpeedTicks, base
   };
 }
 
-const PRESET_COUNTS = [1, 10, 100, 1000, 10000];
 
 export default function KillSimulator({ loadouts, selectedMonster, npcCount, onNpcCountChange }) {
   const [showComparison, setShowComparison] = useState(false);
