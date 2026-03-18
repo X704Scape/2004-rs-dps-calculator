@@ -33,7 +33,6 @@ function getRangedMaxHit(effRng, rngStrBonus) {
   return Math.floor((effRng * (rngStrBonus + 64) + 320) / 640);
 }
 
-// Standard spellbook spells: [name, maxHit, magicLevelReq]
 const COMBAT_SPELLS = [
   ['Wind Strike', 2, 1], ['Water Strike', 4, 5], ['Earth Strike', 6, 9], ['Fire Strike', 8, 13],
   ['Wind Bolt', 9, 17], ['Water Bolt', 10, 23], ['Earth Bolt', 11, 29], ['Fire Bolt', 12, 35],
@@ -80,7 +79,7 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
     const spell = getBestSpell(magicLvl);
     maxHit = spell[1];
     const magicAtk = getBonus('magic');
-    const effMagic = magicLvl + 9; // simplified effective magic
+    const effMagic = magicLvl + 9;
     attackRoll = effMagic * (magicAtk + 64);
     npcDefRoll = (monster.defence + 9) * ((monster.defenceMagic || 0) + 64);
   } else {
@@ -98,66 +97,56 @@ function detectCombatType(weapon) {
   if (!weapon) return 'melee';
   const cat = weapon.category?.toLowerCase() || '';
   const name = weapon.name?.toLowerCase() || '';
-  if (cat.includes('staff') || name.includes('staff') || name.includes('wand') || name.includes("iban's")) {
-    return 'magic';
-  }
+  if (cat.includes('staff') || name.includes('staff') || name.includes('wand') || name.includes("iban's")) return 'magic';
   if (cat.includes('bow') || cat.includes('thrown') || cat.includes('crossbow') ||
       name.includes('bow') || name.includes('dart') || name.includes('knife') ||
-      name.includes('javelin') || name.includes('thrownaxe')) {
-    return 'ranged';
-  }
+      name.includes('javelin') || name.includes('thrownaxe')) return 'ranged';
   return 'melee';
 }
 
-// Banned items (mod items, unobtainable, etc.)
-const BANNED_SUBSTRINGS = [
-  '(p)', 'poisoned', 'mod ', 'gm ', 'dev ', 'debug', 'null', 'placeholder',
-  'staff of light', // future item
-];
+// Build a PVP "monster" from opponent's stats (without knowing their gear — assumes 0 bonus)
+function createPvpMonster(stats, name) {
+  return {
+    name: name || 'Opponent',
+    defence: stats.defence || 1,
+    defenceStab: 0, defenceSlash: 0, defenceCrush: 0,
+    defenceRanged: 0, defenceMagic: 0,
+    hitpoints: stats.hitpoints || 99
+  };
+}
 
+const BANNED_SUBSTRINGS = ['(p)', 'poisoned', 'mod ', 'gm ', 'dev ', 'debug', 'null', 'placeholder', 'staff of light'];
 function isBannedItem(name) {
   const lower = name.toLowerCase();
   return BANNED_SUBSTRINGS.some(b => lower.includes(b));
 }
 
-// Item level requirements inferred from name patterns
 const RANGED_REQS = [
   { pattern: /\bblack d'?hide\b|\bblack dragonhide\b/i, level: 70 },
   { pattern: /\bred d'?hide\b|\bred dragonhide\b/i, level: 60 },
   { pattern: /\bblue d'?hide\b|\bblue dragonhide\b/i, level: 50 },
   { pattern: /\bgreen d'?hide\b|\bgreen dragonhide\b/i, level: 40 },
-  { pattern: /\bunholy book\b|\bholy book\b|\bbook of \b/i, level: 0 },
-  { pattern: /\bmithril arrow\b/i, level: 0 },
-  { pattern: /\badamant arrow\b/i, level: 0 },
   { pattern: /\brune arrow\b/i, level: 40 },
-  { pattern: /\bmagic shortbow\b/i, level: 50 },
-  { pattern: /\bmagic longbow\b/i, level: 50 },
-  { pattern: /\byew shortbow\b/i, level: 40 },
-  { pattern: /\byew longbow\b/i, level: 40 },
-  { pattern: /\bmaple shortbow\b/i, level: 30 },
-  { pattern: /\bmaple longbow\b/i, level: 30 },
-  { pattern: /\bwillow shortbow\b/i, level: 20 },
-  { pattern: /\bwillow longbow\b/i, level: 20 },
+  { pattern: /\bmagic shortbow\b/i, level: 50 }, { pattern: /\bmagic longbow\b/i, level: 50 },
+  { pattern: /\byew shortbow\b/i, level: 40 }, { pattern: /\byew longbow\b/i, level: 40 },
+  { pattern: /\bmaple shortbow\b/i, level: 30 }, { pattern: /\bmaple longbow\b/i, level: 30 },
+  { pattern: /\bwillow shortbow\b/i, level: 20 }, { pattern: /\bwillow longbow\b/i, level: 20 },
   { pattern: /\bkaril\b/i, level: 70 },
 ];
 const ATTACK_REQS = [
-  { pattern: /\brune\b/i, level: 40 },
-  { pattern: /\badamant\b/i, level: 30 },
-  { pattern: /\bmithril\b/i, level: 20 },
-  { pattern: /\bblack\b/i, level: 10 },
-  { pattern: /\bsteel\b/i, level: 5 },
-  { pattern: /\bdragon\b/i, level: 60 },
+  { pattern: /\brune\b/i, level: 40 }, { pattern: /\badamant\b/i, level: 30 },
+  { pattern: /\bmithril\b/i, level: 20 }, { pattern: /\bblack\b/i, level: 10 },
+  { pattern: /\bsteel\b/i, level: 5 }, { pattern: /\bdragon\b/i, level: 60 },
   { pattern: /\btorag\b|\bverac\b|\bguthan\b|\bdhara\b|\bkaril\b|\bahrims\b/i, level: 70 },
 ];
 const DEFENCE_REQS = [
-  { pattern: /\bdragon (platelegs|plateskirt|chainbody|med helm|sq shield|full helm|sq shield|square shield)\b/i, level: 60 },
+  { pattern: /\bdragon (platelegs|plateskirt|chainbody|med helm|sq shield|full helm|square shield)\b/i, level: 60 },
   { pattern: /\brune (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 40 },
   { pattern: /\badamant (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 30 },
   { pattern: /\bmithril (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 20 },
   { pattern: /\bblack (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 10 },
   { pattern: /\bsteel (platebody|platelegs|plateskirt|full helm|kiteshield|sq shield|chainbody|med helm)\b/i, level: 5 },
   { pattern: /\btorag\b|\bverac\b|\bguthan\b|\bdhara\b/i, level: 70 },
-  // d'hide bodies/chaps
   { pattern: /\bblack d'?hide (body|chaps|vamb)\b|\bblack dragonhide (body|chaps)\b/i, level: 70 },
   { pattern: /\bred d'?hide (body|chaps|vamb)\b|\bred dragonhide (body|chaps)\b/i, level: 60 },
   { pattern: /\bblue d'?hide (body|chaps|vamb)\b|\bblue dragonhide (body|chaps)\b/i, level: 50 },
@@ -166,46 +155,27 @@ const DEFENCE_REQS = [
 const MAGIC_REQS = [
   { pattern: /\bahrims?\b/i, level: 70 },
   { pattern: /\bstaff of iban\b|\biban's staff\b/i, level: 50 },
-  { pattern: /\bmaster wand\b/i, level: 60 },
-  { pattern: /\bteacher wand\b/i, level: 55 },
-  { pattern: /\bpupil wand\b/i, level: 50 },
-  { pattern: /\bapprentice wand\b/i, level: 40 },
+  { pattern: /\bmaster wand\b/i, level: 60 }, { pattern: /\bteacher wand\b/i, level: 55 },
+  { pattern: /\bpupil wand\b/i, level: 50 }, { pattern: /\bapprentice wand\b/i, level: 40 },
 ];
 
 function meetsRequirements(item, playerLevels) {
   if (!playerLevels) return true;
   const name = item.name;
   const slot = item.slot;
-
-  // Ranged level checks (weapons + armour)
   for (const req of RANGED_REQS) {
-    if (req.pattern.test(name)) {
-      if ((playerLevels.ranged || 1) < req.level) return false;
-      break;
-    }
+    if (req.pattern.test(name)) { if ((playerLevels.ranged || 1) < req.level) return false; break; }
   }
-  // Attack level checks (weapons)
   if (slot === 'weapon') {
     for (const req of ATTACK_REQS) {
-      if (req.pattern.test(name)) {
-        if ((playerLevels.attack || 1) < req.level) return false;
-        break;
-      }
+      if (req.pattern.test(name)) { if ((playerLevels.attack || 1) < req.level) return false; break; }
     }
   }
-  // Defence level checks (armour)
   for (const req of DEFENCE_REQS) {
-    if (req.pattern.test(name)) {
-      if ((playerLevels.defence || 1) < req.level) return false;
-      break;
-    }
+    if (req.pattern.test(name)) { if ((playerLevels.defence || 1) < req.level) return false; break; }
   }
-  // Magic level checks
   for (const req of MAGIC_REQS) {
-    if (req.pattern.test(name)) {
-      if ((playerLevels.magic || 1) < req.level) return false;
-      break;
-    }
+    if (req.pattern.test(name)) { if ((playerLevels.magic || 1) < req.level) return false; break; }
   }
   return true;
 }
@@ -218,10 +188,8 @@ async function fetchAllItems() {
     'neck': 'neck', 'ammo': 'ammo', 'ring': 'ring', 'ammunition': 'ammo',
     'quiver': 'ammo', 'righthand': 'weapon', 'lefthand': 'shield'
   };
-
   const itemResp = await fetch(ITEM_URL);
   const itemData = await itemResp.json();
-
   return itemData
     .map((item, index) => {
       const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
@@ -266,27 +234,20 @@ async function fetchAllItems() {
     });
 }
 
-// Returns the max arrow strength bonus a bow can use, based on bow tier
 function getBowMaxArrowStrBonus(weaponName) {
   const wn = weaponName.toLowerCase();
-  // Crossbows use bolts — no restriction needed here (handled separately)
   if (wn.includes('crossbow')) return Infinity;
-  // Magic bow can use rune arrows (rangedStrBonus 49)
   if (wn.includes('magic')) return 49;
-  // Yew bow can use rune arrows (49)
   if (wn.includes('yew')) return 49;
-  // Maple bow can use adamant arrows (31)
   if (wn.includes('maple')) return 31;
-  // Willow bow can use mithril arrows (22)
   if (wn.includes('willow')) return 22;
-  // Oak bow can use steel arrows (14)
   if (wn.includes('oak')) return 14;
-  // Shortbow / longbow (no wood prefix) = bronze/iron arrows (10)
   if (wn.includes('bow')) return 10;
   return Infinity;
 }
 
-function buildBestLoadout({ allItems, combatType, style, playerStats, monster, budgetGp, playerLevels }) {
+// weaponOnly: if true, only include weapon (and ammo for ranged) — no armour
+function buildBestLoadout({ allItems, combatType, style, playerStats, monster, budgetGp, playerLevels, weaponOnly = false }) {
   const usable = allItems.filter(item => {
     if (budgetGp !== null && item.price && item.price > budgetGp) return false;
     if (!meetsRequirements(item, playerLevels)) return false;
@@ -321,50 +282,45 @@ function buildBestLoadout({ allItems, combatType, style, playerStats, monster, b
           const isBolt = ac === 'bolts' || an.includes('bolt');
           const ammoBonus = ammo.rangedStrBonus || 0;
           if (isBow && isArrow && ammoBonus <= maxArrowBonus && ammoBonus > bestBonus) {
-            bestBonus = ammoBonus;
-            bestAmmo = ammo;
+            bestBonus = ammoBonus; bestAmmo = ammo;
           } else if (isCrossbow && isBolt && ammoBonus > bestBonus) {
-            bestBonus = ammoBonus;
-            bestAmmo = ammo;
+            bestBonus = ammoBonus; bestAmmo = ammo;
           }
         }
       }
       if (bestAmmo) equipment.ammo = bestAmmo;
     }
 
-    const wn2 = weapon.name?.toLowerCase() || '';
-    const wcat2 = weapon.category?.toLowerCase() || '';
-    const is2H = wn2.includes('2h') || wn2.includes('godsword') ||
-      wcat2.includes('bow') || wcat2.includes('crossbow') || wcat2.includes('thrown') ||
-      wn2.includes('bow') || wn2.includes('crossbow') || wn2.includes('dart') ||
-      wn2.includes('knife') || wn2.includes('javelin') || wn2.includes('thrownaxe') ||
-      wn2.includes('blowpipe') || combatType === 'ranged';
-    const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
-    for (const slot of slots) {
-      if (slot === 'shield' && is2H) continue;
-      const candidates = bySlot[slot] || [];
-      let best = null, bestScore = -Infinity;
-      for (const item of candidates) {
-        let score = 0;
-        if (combatType === 'melee') {
-          score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
-        } else if (combatType === 'ranged') {
-          score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
-        } else if (combatType === 'magic') {
-          // Primary: magic attack bonus, secondary: magic defence bonus
-          score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
-        }
-        if (score > bestScore) { bestScore = score; best = item; }
-      }
-      // For melee: if no item in this slot gives any offensive bonus, pick best melee defence instead
-      if (combatType === 'melee' && bestScore === 0) {
-        let bestDefScore = -Infinity;
+    // Skip armour slots if weapon-only
+    if (!weaponOnly) {
+      const wn2 = weapon.name?.toLowerCase() || '';
+      const wcat2 = weapon.category?.toLowerCase() || '';
+      const is2H = wn2.includes('2h') || wn2.includes('godsword') ||
+        wcat2.includes('bow') || wcat2.includes('crossbow') || wcat2.includes('thrown') ||
+        wn2.includes('bow') || wn2.includes('crossbow') || wn2.includes('dart') ||
+        wn2.includes('knife') || wn2.includes('javelin') || wn2.includes('thrownaxe') ||
+        wn2.includes('blowpipe') || combatType === 'ranged';
+      const slots = ['head', 'cape', 'neck', 'body', 'shield', 'legs', 'hands', 'feet', 'ring'];
+      for (const slot of slots) {
+        if (slot === 'shield' && is2H) continue;
+        const candidates = bySlot[slot] || [];
+        let best = null, bestScore = -Infinity;
         for (const item of candidates) {
-          const defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
-          if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+          let score = 0;
+          if (combatType === 'melee') score = (item.strBonus || 0) * 2 + (item.slash || 0) + (item.stab || 0) + (item.crush || 0);
+          else if (combatType === 'ranged') score = (item.rangedStrBonus || 0) * 2 + (item.ranged || 0);
+          else if (combatType === 'magic') score = (item.magic || 0) * 3 + (item.defenceMagic || 0);
+          if (score > bestScore) { bestScore = score; best = item; }
         }
+        if (combatType === 'melee' && bestScore === 0) {
+          let bestDefScore = -Infinity;
+          for (const item of candidates) {
+            const defScore = (item.defenceStab || 0) + (item.defenceSlash || 0) + (item.defenceCrush || 0);
+            if (defScore > bestDefScore) { bestDefScore = defScore; best = item; }
+          }
+        }
+        if (best) equipment[slot] = best;
       }
-      if (best) equipment[slot] = best;
     }
 
     const dps = calcDPS({ combatType, playerStats: { ...playerStats, style }, equipment, monster });
@@ -379,115 +335,146 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { messages, playerStats, playerLevels, availableMonsters } = body;
+    const { messages, playerStats, playerLevels, availableMonsters, opponentStats, opponentName: bodyOpponentName } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return Response.json({ error: 'Missing messages array' }, { status: 400 });
     }
 
-    // Build context for the LLM
     const systemPrompt = `You are a chill, knowledgeable 2004 RuneScape veteran helping a friend optimise their gear on a specific 2004-era private server. Talk like a real player — casual, helpful, a bit of banter. No bullet point lists, no robotic formatting, just friendly chat. Keep replies short and punchy unless asked for detail.
-
-You can calculate the best gear loadouts for melee, ranged, and magic combat.
 
 CRITICAL RULE — GEAR RECOMMENDATIONS:
 - NEVER name specific items, weapons, armour, or gear in your text responses. You do not have knowledge of what items exist on this server.
-- ALL gear recommendations MUST come from the optimizer results (the action block below). The optimizer reads directly from the server's item database and is the only source of truth for what gear exists and what's best.
-- If someone asks "what gear should I use" or "what's the best weapon", DO NOT answer with item names. Instead, trigger the optimizer and let the results show the actual gear.
-- You may discuss general concepts (e.g. "melee is strong here because of low slash defence") but never say things like "use a rune scimitar" or "wear black d'hide" — the optimizer will handle that.
+- ALL gear recommendations MUST come from the optimizer results. The optimizer reads directly from the server's item database and is the only source of truth.
+- You may discuss general concepts (e.g. "melee is strong here") but never say item names.
 
-FLOW when someone asks about a monster or gear:
-- If their message clearly implies a combat style already (e.g. "best melee for dragons", "ranged setup for giants", "mage setup for") — skip asking and immediately fire the action block.
-- If the style is ambiguous, ask casually in ONE short sentence: "Want melee, ranged, magic, or a mix?"
-- Never ask more than one question at a time. Never list steps.
+RECOGNISING SPECIAL REQUESTS:
 
-When you're ready to optimise, output a JSON action block at the END of your message (after your chat text):
+1. WEAPON-ONLY: If the user says things like "just give me a weapon", "weapon only", "no armour", "only show the weapon", "best weapon for X" (implying no full setup) — trigger:
 \`\`\`action
-{
-  "type": "optimize",
-  "monsterName": "<monster name>",
-  "combatStyles": ["melee"] or ["ranged"] or ["magic"] or ["melee", "ranged"] or ["melee", "ranged", "magic"]
-}
+{"type":"optimize_weapon_only","monsterName":"<monster>","combatStyles":["melee"]}
 \`\`\`
 
-Rules:
-- If no monster is mentioned, ask them which monster they're hunting.
-- For general questions (prayer, monster mechanics, combat tips) you may answer normally — no action block needed — but still never name specific gear items.
-- Never mention "JSON", "action block", "structured format", or any technical terms to the user.
-- Sound like a player, not a bot. Vary your language naturally.
+2. STAKING / PVP / DUELING: If user mentions "stake", "staking", "pvp", "1v1", "duel", "fight [player]", "vs [player]" — trigger:
+\`\`\`action
+{"type":"stake","opponentName":"<opponent username if mentioned, else null>"}
+\`\`\`
+Don't ask for style — staking always calculates melee + ranged. If no opponent is mentioned, just trigger the action anyway and the system will prompt for one.
+
+3. NORMAL OPTIMIZE: For all other gear/monster questions:
+\`\`\`action
+{"type":"optimize","monsterName":"<monster>","combatStyles":["melee"]}
+\`\`\`
+
+FLOW:
+- If combat style is implied (e.g. "best melee for dragons") — skip asking and fire the action immediately.
+- If ambiguous, ask casually in ONE sentence: "Want melee, ranged, magic, or a mix?"
+- Never ask more than one question at a time.
+- If no monster is mentioned for non-stake queries, ask which monster.
+- Never mention "JSON", "action block", or technical terms to the user.
 
 Available monsters: ${availableMonsters ? availableMonsters.slice(0, 80).map(m => m.name).join(', ') : 'various monsters'}`;
 
-    // Call LLM
     const conversationText = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
     const fullPrompt = `${systemPrompt}\n\n--- CONVERSATION ---\n${conversationText}\nAssistant:`;
 
-    const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: fullPrompt
-    });
-
+    const llmResp = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt: fullPrompt });
     const aiText = typeof llmResp === 'string' ? llmResp : (llmResp?.text || llmResp?.content || JSON.stringify(llmResp));
 
-    // Parse action block if present
     const actionMatch = aiText.match(/```action\s*([\s\S]*?)```/);
     let action = null;
     if (actionMatch) {
-      try {
-        action = JSON.parse(actionMatch[1].trim());
-      } catch (e) {
-        // ignore parse error
-      }
+      try { action = JSON.parse(actionMatch[1].trim()); } catch (e) {}
     }
 
-    // If there's an optimize action and we have playerStats + monsters, run optimizer
     let optimizerResults = null;
+
+    // Standard optimize
     if (action?.type === 'optimize' && playerStats && availableMonsters?.length) {
-      // Find the monster
       const monsterName = action.monsterName?.toLowerCase() || '';
       const foundMonster = availableMonsters.find(m =>
         m.name?.toLowerCase() === monsterName ||
         m.name?.toLowerCase().includes(monsterName) ||
         monsterName.includes(m.name?.toLowerCase())
       );
-
       if (foundMonster) {
         const allItems = await fetchAllItems();
         optimizerResults = { monster: foundMonster, loadouts: [] };
-
         for (const cType of (action.combatStyles || ['melee'])) {
           const cStyle = cType === 'ranged' ? 'rapid' : cType === 'magic' ? 'spell' : 'aggressive';
-          const result = buildBestLoadout({
-            allItems,
-            combatType: cType,
-            style: cStyle,
-            playerStats,
-            monster: foundMonster,
-            budgetGp: null,
-            playerLevels: playerLevels || null
-          });
-          if (result) {
-            optimizerResults.loadouts.push({
-              combatType: cType,
-              style: cStyle,
-              dps: result.dps,
-              equipment: result.equipment
-            });
-          }
+          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: foundMonster, budgetGp: null, playerLevels: playerLevels || null });
+          if (result) optimizerResults.loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
         }
-
-        // Sort by DPS
         optimizerResults.loadouts.sort((a, b) => b.dps - a.dps);
       }
     }
 
-    // Clean the message text (remove action block)
+    // Weapon-only optimize
+    if (action?.type === 'optimize_weapon_only' && playerStats && availableMonsters?.length) {
+      const monsterName = action.monsterName?.toLowerCase() || '';
+      const foundMonster = availableMonsters.find(m =>
+        m.name?.toLowerCase() === monsterName ||
+        m.name?.toLowerCase().includes(monsterName) ||
+        monsterName.includes(m.name?.toLowerCase())
+      );
+      if (foundMonster) {
+        const allItems = await fetchAllItems();
+        optimizerResults = { monster: foundMonster, loadouts: [], weaponOnly: true };
+        for (const cType of (action.combatStyles || ['melee'])) {
+          const cStyle = cType === 'ranged' ? 'rapid' : cType === 'magic' ? 'spell' : 'aggressive';
+          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: foundMonster, budgetGp: null, playerLevels: playerLevels || null, weaponOnly: true });
+          if (result) optimizerResults.loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
+        }
+        optimizerResults.loadouts.sort((a, b) => b.dps - a.dps);
+      }
+    }
+
+    // Stake / PVP
+    if (action?.type === 'stake' && playerStats) {
+      const oppName = action.opponentName || bodyOpponentName || null;
+
+      if (opponentStats) {
+        // We have opponent stats — run PVP optimizer
+        const pvpMonster = createPvpMonster(opponentStats, oppName || 'Opponent');
+        const allItems = await fetchAllItems();
+        const loadouts = [];
+
+        // Our best melee + ranged vs opponent's defence
+        for (const cType of ['melee', 'ranged']) {
+          const cStyle = cType === 'ranged' ? 'rapid' : 'aggressive';
+          const result = buildBestLoadout({ allItems, combatType: cType, style: cStyle, playerStats, monster: pvpMonster, budgetGp: null, playerLevels: playerLevels || null });
+          if (result) loadouts.push({ combatType: cType, style: cStyle, dps: result.dps, equipment: result.equipment });
+        }
+        loadouts.sort((a, b) => b.dps - a.dps);
+
+        // Opponent's estimated best melee DPS vs our defence
+        const myPvpMonster = createPvpMonster(playerStats, 'You');
+        const opponentAsPlayer = {
+          attack: opponentStats.attack || 1, strength: opponentStats.strength || 1,
+          ranged: opponentStats.ranged || 1, magic: opponentStats.magic || 1,
+          defence: opponentStats.defence || 1,
+          prayerActive: { attack: 'none', strength: 'none' }
+        };
+        const oppResult = buildBestLoadout({ allItems, combatType: 'melee', style: 'aggressive', playerStats: opponentAsPlayer, monster: myPvpMonster, budgetGp: null, playerLevels: opponentStats });
+
+        optimizerResults = {
+          monster: pvpMonster,
+          loadouts,
+          stakeMode: true,
+          opponentName: oppName || 'Opponent',
+          opponentDps: oppResult ? parseFloat(oppResult.dps.toFixed(3)) : null,
+          opponentStats
+        };
+      } else {
+        // No opponent stats yet — flag to frontend that we need a lookup
+        action.needsOpponentLookup = true;
+        action.opponentName = oppName;
+      }
+    }
+
     const cleanText = aiText.replace(/```action[\s\S]*?```/g, '').trim();
 
-    return Response.json({
-      message: cleanText,
-      action,
-      optimizerResults
-    });
+    return Response.json({ message: cleanText, action, optimizerResults });
 
   } catch (error) {
     console.error('AI Chat error:', error);

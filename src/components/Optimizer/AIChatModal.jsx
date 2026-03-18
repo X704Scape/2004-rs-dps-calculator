@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X, Wand2, Loader2, Send, ChevronDown, ChevronUp, User, Check } from 'lucide-react';
+import { X, Wand2, Loader2, Send, ChevronDown, ChevronUp, User, Check, Swords } from 'lucide-react';
 
 function GearList({ equipment }) {
   const [expanded, setExpanded] = useState(false);
@@ -85,6 +85,42 @@ function LoadoutCard({ loadout, onApply, availableLoadouts, onCreateAndApply }) 
   );
 }
 
+function StakeResults({ optimizerResults }) {
+  const myBestDps = optimizerResults.loadouts[0]?.dps || 0;
+  const oppDps = optimizerResults.opponentDps || 0;
+  const myWins = myBestDps > oppDps;
+  const tie = myBestDps === oppDps;
+
+  return (
+    <div className="mt-3 border border-amber-700 rounded overflow-hidden">
+      <div className="bg-amber-900/40 px-3 py-2 text-xs font-bold text-amber-300 flex items-center gap-2">
+        <Swords className="w-3 h-3" />
+        Stake Analysis vs {optimizerResults.opponentName}
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-amber-900/50">
+        <div className="p-3 text-center">
+          <div className="text-amber-500 text-xs mb-1">Your best DPS</div>
+          <div className="text-green-400 font-bold text-lg">{myBestDps}</div>
+          <div className="text-amber-700 text-xs capitalize">{optimizerResults.loadouts[0]?.combatType}</div>
+        </div>
+        <div className="p-3 text-center">
+          <div className="text-amber-500 text-xs mb-1">{optimizerResults.opponentName}'s est. DPS</div>
+          <div className="text-red-400 font-bold text-lg">{oppDps || '?'}</div>
+          <div className="text-amber-700 text-xs">melee (gear unknown)</div>
+        </div>
+      </div>
+      {(myBestDps > 0 || oppDps > 0) && (
+        <div className={`px-3 py-2 text-center text-xs font-bold ${tie ? 'text-amber-400 bg-amber-900/20' : myWins ? 'text-green-400 bg-green-900/20' : 'text-red-400 bg-red-900/20'}`}>
+          {tie ? '🤝 Roughly even' : myWins ? `✅ You win (${((myBestDps / (oppDps || 1) - 1) * 100).toFixed(0)}% more DPS)` : `⚠️ They out-DPS you — change your setup!`}
+        </div>
+      )}
+      <div className="px-3 py-1 text-amber-800 text-xs bg-gray-950">
+        Note: opponent DPS is estimated without knowing their gear.
+      </div>
+    </div>
+  );
+}
+
 function ChatMessage({ msg, onApply, onCreateAndApply, availableLoadouts }) {
   const isUser = msg.role === 'user';
   return (
@@ -113,6 +149,16 @@ function ChatMessage({ msg, onApply, onCreateAndApply, availableLoadouts }) {
           </div>
         )}
 
+        {/* Stake results summary */}
+        {msg.optimizerResults?.stakeMode && (
+          <StakeResults optimizerResults={msg.optimizerResults} />
+        )}
+
+        {/* Weapon-only label */}
+        {msg.optimizerResults?.weaponOnly && (
+          <div className="mt-2 text-amber-600 text-xs">Weapon-only setup (no armour)</div>
+        )}
+
         {/* Optimizer results */}
         {msg.optimizerResults?.loadouts?.map((loadout, i) => (
           <LoadoutCard
@@ -138,20 +184,28 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hey adventurer! Ask me anything — like "What\'s the best DPS for Blue Dragons?" or "What gear should I use against Lesser Demons?" I\'ll help you find the optimal loadout!'
+      content: 'Hey! Ask me anything — "best gear for Blue Dragons", "weapon only for Lesser Demons", or "I want to stake [username]" and I\'ll run the numbers for you.'
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
-  // Username / stats lookup
+  // Player username lookup
   const [usernameInput, setUsernameInput] = useState('');
   const [fetchedStats, setFetchedStats] = useState(null);
   const [fetchedUsername, setFetchedUsername] = useState('');
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState('');
   const [usernameDismissed, setUsernameDismissed] = useState(false);
+
+  // Stake opponent lookup
+  const [pendingStake, setPendingStake] = useState(false);
+  const [stakeOpponentInput, setStakeOpponentInput] = useState('');
+  const [stakeOpponentStats, setStakeOpponentStats] = useState(null);
+  const [stakeOpponentName, setStakeOpponentName] = useState('');
+  const [stakeLoading, setStakeLoading] = useState(false);
+  const [stakeError, setStakeError] = useState('');
 
   const handleLookupStats = async () => {
     if (!usernameInput.trim()) return;
@@ -172,16 +226,38 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
     }
   };
 
-  // Merge fetched stats with playerStats (fetched takes priority for levels)
-  const effectiveStats = fetchedStats
-    ? { ...playerStats, ...fetchedStats }
-    : playerStats;
+  const handleStakeLookup = async () => {
+    if (!stakeOpponentInput.trim()) return;
+    setStakeLoading(true);
+    setStakeError('');
+    try {
+      const resp = await base44.functions.invoke('fetchHiscores', { username: stakeOpponentInput.trim() });
+      if (resp.data?.stats) {
+        const stats = resp.data.stats;
+        const name = stakeOpponentInput.trim();
+        setStakeOpponentStats(stats);
+        setStakeOpponentName(name);
+        setPendingStake(false);
+        setStakeOpponentInput('');
+        // Auto-send with opponent stats
+        await sendMessage(`Stake analysis vs ${name}`, { opponentStats: stats, opponentName: name });
+      } else {
+        setStakeError('Player not found on hiscores.');
+      }
+    } catch (e) {
+      setStakeError('Could not look up that player. Try again.');
+    } finally {
+      setStakeLoading(false);
+    }
+  };
+
+  const effectiveStats = fetchedStats ? { ...playerStats, ...fetchedStats } : playerStats;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = async (userText) => {
+  const sendMessage = async (userText, extraPayload = {}) => {
     if (!userText.trim()) return;
     const userMsg = { role: 'user', content: userText };
     const newMessages = [...messages, userMsg];
@@ -198,6 +274,8 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
         playerStats: effectiveStats,
         playerLevels: fetchedStats || null,
         availableMonsters: availableMonsters || [],
+        opponentStats: extraPayload.opponentStats || stakeOpponentStats || null,
+        opponentName: extraPayload.opponentName || stakeOpponentName || null,
       });
 
       const data = resp.data;
@@ -207,14 +285,21 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
         optimizerResults: data.optimizerResults || null,
       };
 
-      // If action is to optimize but monster wasn't found, offer style choices anyway
+      // Stake action with no opponent yet — show lookup banner
+      if (data.action?.type === 'stake' && data.action?.needsOpponentLookup) {
+        setPendingStake(true);
+        if (data.action.opponentName) {
+          setStakeOpponentInput(data.action.opponentName);
+        }
+      }
+
+      // If action is normal optimize but monster wasn't found, offer style choices
       if (data.action?.type === 'optimize' && !data.optimizerResults) {
-        aiMsg.content = data.message || `I found "${data.action.monsterName}" — which combat style would you like?`;
+        aiMsg.content = data.message || `I found "${data.action.monsterName}" — which combat style?`;
         aiMsg.styleChoices = STYLE_CHOICES;
         aiMsg.monsterName = data.action.monsterName;
       }
 
-      // If optimizer ran successfully, set the monster automatically
       if (data.optimizerResults?.monster && onSetMonster) {
         onSetMonster(data.optimizerResults.monster);
       }
@@ -232,43 +317,23 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
 
   const handleInteraction = async (interaction) => {
     if (interaction.type === 'styleChoice') {
-      const styles = interaction.value === 'both' ? ['melee', 'ranged'] :
-                     interaction.value === 'melee' ? ['melee'] : ['ranged'];
       const styleLabel = interaction.value === 'both' ? 'melee and ranged' : interaction.value;
       const userMsg = { role: 'user', content: `${styleLabel}` };
       const newMessages = [...messages, userMsg];
       setMessages(newMessages);
       setLoading(true);
-
       try {
-        // Find the monster from available list
-        const monsterName = interaction.monsterName?.toLowerCase() || '';
-        const foundMonster = availableMonsters?.find(m =>
-          m.name?.toLowerCase() === monsterName ||
-          m.name?.toLowerCase().includes(monsterName) ||
-          monsterName.includes(m.name?.toLowerCase())
-        );
-
         const resp = await base44.functions.invoke('aiChat', {
-          messages: [
-            ...newMessages.filter(m => !m.styleChoices && !m.optimizerResults).map(m => ({ role: m.role, content: m.content })),
-          ],
+          messages: newMessages.filter(m => !m.styleChoices && !m.optimizerResults).map(m => ({ role: m.role, content: m.content })),
           playerStats: effectiveStats,
           playerLevels: fetchedStats || null,
           availableMonsters: availableMonsters || [],
+          opponentStats: stakeOpponentStats || null,
+          opponentName: stakeOpponentName || null,
         });
-
         const data = resp.data;
-        const aiMsg = {
-          role: 'assistant',
-          content: data.message || `Here are the best ${styleLabel} loadouts!`,
-          optimizerResults: data.optimizerResults || null,
-        };
-
-        if (data.optimizerResults?.monster && onSetMonster) {
-          onSetMonster(data.optimizerResults.monster);
-        }
-
+        const aiMsg = { role: 'assistant', content: data.message || `Here are the best ${styleLabel} loadouts!`, optimizerResults: data.optimizerResults || null };
+        if (data.optimizerResults?.monster && onSetMonster) onSetMonster(data.optimizerResults.monster);
         setMessages(prev => [...prev, aiMsg]);
       } catch (e) {
         setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
@@ -276,22 +341,13 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
         setLoading(false);
       }
     } else if (interaction.type === 'applyLoadout') {
-      if (interaction.monster && onSetMonster) {
-        onSetMonster(interaction.monster);
-      }
-      onApplyLoadout(
-        interaction.loadout.equipment,
-        interaction.loadout.combatType,
-        interaction.loadout.style,
-        interaction.targetLoadoutId,
-        fetchedStats || null
-      );
+      if (interaction.monster && onSetMonster) onSetMonster(interaction.monster);
+      onApplyLoadout(interaction.loadout.equipment, interaction.loadout.combatType, interaction.loadout.style, interaction.targetLoadoutId, fetchedStats || null);
     }
   };
 
   const handleCreateAndApply = ({ loadout, monster }) => {
     if (monster && onSetMonster) onSetMonster(monster);
-    // Create new loadout then apply to it — parent provides onCreateLoadout that returns the new id
     const newId = onCreateLoadout?.();
     if (newId != null) {
       onApplyLoadout(loadout.equipment, loadout.combatType, loadout.style, newId, fetchedStats || null);
@@ -299,16 +355,13 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(input);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
   };
 
   const QUICK_QUESTIONS = [
     'Best gear for Blue Dragons?',
-    'What kills Lesser Demons fastest?',
-    'Best ranged setup for Hill Giants?',
+    'Weapon only for Lesser Demons?',
+    'I want to stake someone',
   ];
 
   return (
@@ -319,14 +372,14 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
           <div className="flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-amber-500" />
             <h2 className="text-amber-100 font-bold text-lg">AI Advisor</h2>
-            <span className="text-amber-700 text-xs">Ask anything about gear & monsters</span>
+            <span className="text-amber-700 text-xs">gear · staking · weapon-only</span>
           </div>
           <button onClick={onClose} className="text-amber-700 hover:text-amber-400 transition">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Username lookup banner */}
+        {/* Player username lookup banner */}
         {!usernameDismissed && !fetchedStats && (
           <div className="px-4 py-3 bg-gray-900 border-b border-amber-900/50 flex-shrink-0">
             <p className="text-amber-400 text-xs mb-2 flex items-center gap-1">
@@ -342,19 +395,10 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
                 placeholder="Your Lost City username..."
                 className="flex-1 bg-gray-800 border border-amber-900 rounded px-2 py-1 text-amber-100 text-xs placeholder-amber-800 focus:outline-none focus:border-amber-600"
               />
-              <button
-                onClick={handleLookupStats}
-                disabled={statsLoading || !usernameInput.trim()}
-                className="px-2 py-1 bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-amber-100 text-xs rounded transition"
-              >
+              <button onClick={handleLookupStats} disabled={statsLoading || !usernameInput.trim()} className="px-2 py-1 bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-amber-100 text-xs rounded transition">
                 {statsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Lookup'}
               </button>
-              <button
-                onClick={() => setUsernameDismissed(true)}
-                className="px-2 py-1 text-amber-700 hover:text-amber-400 text-xs transition"
-              >
-                Skip
-              </button>
+              <button onClick={() => setUsernameDismissed(true)} className="px-2 py-1 text-amber-700 hover:text-amber-400 text-xs transition">Skip</button>
             </div>
             {statsError && <p className="text-red-400 text-xs mt-1">{statsError}</p>}
           </div>
@@ -370,12 +414,32 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
                 — Atk {fetchedStats.attack} · Str {fetchedStats.strength} · Def {fetchedStats.defence} · Rng {fetchedStats.ranged} · Mag {fetchedStats.magic}
               </span>
             </div>
-            <button
-              onClick={() => { setFetchedStats(null); setFetchedUsername(''); setUsernameDismissed(false); }}
-              className="text-green-700 hover:text-green-400 text-xs transition"
-            >
-              ×
-            </button>
+            <button onClick={() => { setFetchedStats(null); setFetchedUsername(''); setUsernameDismissed(false); }} className="text-green-700 hover:text-green-400 text-xs transition">×</button>
+          </div>
+        )}
+
+        {/* Stake opponent lookup banner */}
+        {pendingStake && (
+          <div className="px-4 py-3 bg-gray-900 border-b border-amber-700 flex-shrink-0">
+            <p className="text-amber-300 text-xs mb-2 flex items-center gap-1">
+              <Swords className="w-3 h-3" />
+              Who are you staking? Enter their username to look up their stats.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={stakeOpponentInput}
+                onChange={e => setStakeOpponentInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleStakeLookup()}
+                placeholder="Opponent's username..."
+                className="flex-1 bg-gray-800 border border-amber-700 rounded px-2 py-1 text-amber-100 text-xs placeholder-amber-800 focus:outline-none focus:border-amber-500"
+              />
+              <button onClick={handleStakeLookup} disabled={stakeLoading || !stakeOpponentInput.trim()} className="px-2 py-1 bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-amber-100 text-xs rounded transition">
+                {stakeLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Lookup'}
+              </button>
+              <button onClick={() => setPendingStake(false)} className="px-2 py-1 text-amber-700 hover:text-amber-400 text-xs transition">Cancel</button>
+            </div>
+            {stakeError && <p className="text-red-400 text-xs mt-1">{stakeError}</p>}
           </div>
         )}
 
@@ -399,11 +463,7 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
         {messages.length <= 1 && (
           <div className="px-4 pb-2 flex flex-wrap gap-1 flex-shrink-0">
             {QUICK_QUESTIONS.map(q => (
-              <button
-                key={q}
-                onClick={() => sendMessage(q)}
-                className="text-xs px-2 py-1 bg-gray-900 hover:bg-gray-700 border border-amber-900 rounded text-amber-400 transition"
-              >
+              <button key={q} onClick={() => sendMessage(q)} className="text-xs px-2 py-1 bg-gray-900 hover:bg-gray-700 border border-amber-900 rounded text-amber-400 transition">
                 {q}
               </button>
             ))}
@@ -417,7 +477,7 @@ export default function AIChatModal({ playerStats, monster, availableMonsters, l
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about gear, monsters, best DPS..."
+            placeholder="Ask about gear, staking, best weapon..."
             className="flex-1 bg-gray-900 border border-amber-900 rounded px-3 py-2 text-amber-100 text-sm placeholder-amber-800 focus:outline-none focus:border-amber-600"
           />
           <button
