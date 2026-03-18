@@ -158,24 +158,15 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
     <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden mt-4">
       <div className="bg-gray-900 border-b-2 border-amber-900 p-3 flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-amber-600 font-bold text-sm">Kill Simulator</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-amber-700 text-xs">NPCs:</label>
-          {PRESET_COUNTS.map(p => (
-            <button
-              key={p}
-              onClick={() => onNpcCountChange && onNpcCountChange(p)}
-              className={`px-2 py-0.5 rounded text-xs border transition ${npcCount === p ? 'bg-amber-700 border-amber-600 text-amber-100 font-bold' : 'bg-gray-800 border-amber-900 text-amber-500 hover:border-amber-700'}`}
-            >
-              {p.toLocaleString()}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <label className="text-amber-700 text-xs">NPCs to kill:</label>
           <input
             type="number"
             min={1}
             max={100000}
             value={npcCount}
             onChange={e => onNpcCountChange && onNpcCountChange(Math.max(1, Math.min(100000, parseInt(e.target.value) || 1)))}
-            className="w-20 text-xs px-2 py-1 rounded border border-amber-900 bg-gray-900 text-amber-100 text-center"
+            className="w-24 text-xs px-2 py-1 rounded border border-amber-900 bg-gray-900 text-amber-100 text-center"
           />
         </div>
       </div>
