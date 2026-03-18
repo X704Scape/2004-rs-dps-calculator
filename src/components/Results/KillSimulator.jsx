@@ -132,7 +132,7 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
   const comparisonData = useMemo(() => {
     if (!showComparison) return null;
     const BASE_SEED = 42;
-    return PRESET_COUNTS.map(count => {
+    return [1, 10, 100, 1000, 10000].map(count => {
       const results = loadouts.map(loadout => {
         const r = loadout.results;
         if (!r) return null;
