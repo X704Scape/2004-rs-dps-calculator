@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
+
+// Module-level cache so data is only fetched once per session
+let itemsCache = null;
+let itemsFetchPromise = null;
 
 const EQUIPMENT_LAYOUT = [
   [null, 'head', null],
@@ -25,58 +29,46 @@ const SLOT_ICONS = {
 };
 
 export default function EquipmentTab({ equipment, onEquipmentChange }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState(itemsCache || []);
+  const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const [itemsResponse, metaResponse] = await Promise.all([
-          base44.functions.invoke('fetchGameData', { type: 'items' }),
-          base44.functions.invoke('fetchWeaponsMeta', {})
-        ]);
-        console.log('Items response:', itemsResponse.data);
-        console.log('Total items:', itemsResponse.data?.items?.length);
-        
-        // Merge weapons metadata into items
-        const itemsWithMeta = (itemsResponse.data.items || []).map(item => {
-          const meta = metaResponse.data.weaponsMeta[item.id];
-          return {
-            ...item,
-            attackStyles: meta?.attackStyles || item.attackStyles
-          };
+    if (itemsCache) return;
+    if (!itemsFetchPromise) {
+      itemsFetchPromise = Promise.all([
+        base44.functions.invoke('fetchGameData', { type: 'items' }),
+        base44.functions.invoke('fetchWeaponsMeta', {})
+      ]).then(([itemsResponse, metaResponse]) => {
+        return (itemsResponse.data.items || []).map(item => {
+          const meta = metaResponse.data.weaponsMeta?.[item.id];
+          return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
         });
-        
-        setItems(itemsWithMeta);
-      } catch (error) {
-        console.error('Failed to load items:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadItems();
+      });
+    }
+    itemsFetchPromise.then(loaded => {
+      itemsCache = loaded;
+      setItems(loaded);
+    }).catch(e => {
+      console.error('Failed to load items:', e);
+    }).finally(() => setLoading(false));
   }, []);
 
+  // Debounce search input by 150ms
   useEffect(() => {
-    if (searchTerm && searchTerm.length > 0) {
-      const results = items.filter(item => {
-        const nameMatch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const idMatch = String(item.id).toLowerCase().includes(searchTerm.toLowerCase());
-        return nameMatch || idMatch;
-      }).slice(0, 20);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchTerm, items]);
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 150);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  useEffect(() => {
-    console.log('Items loaded:', items.length);
-    console.log('Sample item:', items[0]);
-  }, [items]);
+  const searchResults = useMemo(() => {
+    if (!debouncedSearch) return [];
+    const lower = debouncedSearch.toLowerCase();
+    return items.filter(item =>
+      item.name.toLowerCase().includes(lower) || String(item.id).includes(lower)
+    ).slice(0, 20);
+  }, [debouncedSearch, items]);
 
   const handleSelectItem = (item) => {
     const newEquipment = { ...equipment };

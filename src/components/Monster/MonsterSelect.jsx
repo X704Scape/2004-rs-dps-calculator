@@ -2,31 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
+// Module-level cache so data is only fetched once per session
+let monstersCache = null;
+let monstersFetchPromise = null;
+
 export default function MonsterSelect({ selectedMonster, onMonsterChange, onMonstersLoaded }) {
-  const [monsters, setMonsters] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [monsters, setMonsters] = React.useState(monstersCache || []);
+  const [loading, setLoading] = React.useState(!monstersCache);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   useEffect(() => {
-    const loadMonsters = async () => {
-      try {
-        const response = await base44.functions.invoke('fetchGameData', { type: 'monsters' });
-        console.log('Full response:', response);
-        console.log('Response data:', response.data);
-        console.log('Monsters array:', response.data?.monsters);
-        console.log('Monsters count:', response.data?.monsters?.length);
-        const loaded = response.data?.monsters || [];
-        setMonsters(loaded);
-        if (onMonstersLoaded) onMonstersLoaded(loaded);
-      } catch (error) {
-        console.error('Failed to load monsters:', error);
-        console.error('Error details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMonsters();
+    if (monstersCache) {
+      if (onMonstersLoaded) onMonstersLoaded(monstersCache);
+      return;
+    }
+    if (!monstersFetchPromise) {
+      monstersFetchPromise = base44.functions.invoke('fetchGameData', { type: 'monsters' })
+        .then(r => r.data?.monsters || []);
+    }
+    monstersFetchPromise.then(loaded => {
+      monstersCache = loaded;
+      setMonsters(loaded);
+      if (onMonstersLoaded) onMonstersLoaded(loaded);
+    }).catch(e => {
+      console.error('Failed to load monsters:', e);
+    }).finally(() => setLoading(false));
   }, []);
 
   const filteredMonsters = monsters
