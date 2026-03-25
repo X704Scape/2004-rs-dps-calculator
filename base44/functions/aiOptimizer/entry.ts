@@ -72,6 +72,7 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
 
   } else if (combatType === 'ranged') {
     // No ranged prayers in 2004 per source
+    // Max hit uses raw ranged level; attack roll uses effective (with +8 + style bonus)
     const effRng = getEffectiveRanged(ranged, style);
     const rngStr = getBonus('rangedStrBonus');
     const rngAtk = getBonus('ranged');

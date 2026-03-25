@@ -159,6 +159,7 @@ Deno.serve(async (req) => {
 
     } else if (combatType === 'ranged') {
       // Source: no ranged prayers in 2004
+      // Max hit uses raw ranged level (not effective), attack roll uses effective (with +8 + style bonus)
       const effectiveRanged = getEffectiveRanged(rangedLevel, styleName, potionRanged);
       maxHit = getRangedMaxHit(effectiveRanged, rangedStrBonus);
 
