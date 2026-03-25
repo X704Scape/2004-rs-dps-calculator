@@ -21,21 +21,27 @@ function combatMaxHit(stat) {
   return Math.floor((stat + 320) / 640);
 }
 
-// Max hit: no style bonus (style only affects accuracy/speed)
-function getEffectiveStr(lvl, strPrayerBonus) {
-  return effectiveStat(lvl, strPrayerBonus) + 8;
+// Melee: style bonus applies to BOTH effective_attack (accuracy) AND effective_strength (max hit)
+// Source: combat_get_damagestyle_bonuses — aggressive=(0,3,0,0), controlled=(1,1,1,0), accurate=(3,0,0,0)
+function getStrengthStyleBonus(style) {
+  if (style === 'aggressive' || style.startsWith('aggressive')) return 3;
+  if (style.startsWith('controlled')) return 1;
+  return 0;
 }
-// Attack roll: includes style bonus
+function getAttackStyleBonus(style) {
+  if (style === 'accurate') return 3;
+  if (style.startsWith('controlled')) return 1;
+  return 0;
+}
+function getEffectiveStr(lvl, strPrayerBonus, style) {
+  return effectiveStat(lvl, strPrayerBonus) + 8 + getStrengthStyleBonus(style);
+}
 function getEffectiveAtk(lvl, atkPrayerBonus, style) {
-  const styleBonus = style === 'accurate' ? 3 : (style.startsWith('controlled') ? 1 : 0);
-  return effectiveStat(lvl, atkPrayerBonus) + 8 + styleBonus;
+  return effectiveStat(lvl, atkPrayerBonus) + 8 + getAttackStyleBonus(style);
 }
-// Ranged max hit: no style bonus
-function getEffectiveRangedStr(lvl) {
-  return effectiveStat(lvl, 100) + 8;
-}
-// Ranged attack roll: includes style bonus
-function getEffectiveRangedAtk(lvl, style) {
+// Ranged: accurate=+3, rapid=+0, longrange=+0 (longrange only grants +3 defence, not ranged)
+// Same effective_ranged used for both attack roll and max hit
+function getEffectiveRanged(lvl, style) {
   const styleBonus = style === 'accurate' ? 3 : 0;
   return effectiveStat(lvl, 100) + 8 + styleBonus;
 }
@@ -60,7 +66,7 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
   let maxHit = 0, attackRoll = 0, npcDefRoll = 0;
 
   if (combatType === 'melee') {
-    const effStr = getEffectiveStr(strength, strPrayerBonus);
+    const effStr = getEffectiveStr(strength, strPrayerBonus, style);
     const effAtk = getEffectiveAtk(attack, atkPrayerBonus, style);
     let attackType = 'slash';
     const cat = equipment.weapon?.category || '';
@@ -75,12 +81,11 @@ function calcDPS({ combatType, playerStats, equipment, monster }) {
     npcDefRoll = combatStatRoll(monster.defence + 9, monDef || 0);
 
   } else if (combatType === 'ranged') {
-    const effRngStr = getEffectiveRangedStr(ranged);
-    const effRngAtk = getEffectiveRangedAtk(ranged, style);
+    const effRng = getEffectiveRanged(ranged, style);
     const rngStr = getBonus('rangedStrBonus');
     const rngAtk = getBonus('ranged');
-    maxHit = getRangedMaxHit(effRngStr, rngStr);
-    attackRoll = combatStatRoll(effRngAtk, rngAtk);
+    maxHit = getRangedMaxHit(effRng, rngStr);
+    attackRoll = combatStatRoll(effRng, rngAtk);
     npcDefRoll = combatStatRoll(monster.defence + 9, monster.defenceRanged || 0);
 
   } else if (combatType === 'magic') {

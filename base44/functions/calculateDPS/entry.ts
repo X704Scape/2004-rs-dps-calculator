@@ -21,49 +21,48 @@ function effectiveStat(level, prayerBonus) {
   return Math.floor(level * Math.max(100, prayerBonus) / 100);
 }
 
-// Style bonuses from combat_get_damagestyle_bonuses in source
-// (attack, strength, defence, ranged)
-// style_melee_accurate: (3, 0, 0, 0)
+// Style bonuses from combat_get_damagestyle_bonuses in source (combat.rs2)
+// returns (attack_bonus, strength_bonus, defence_bonus, ranged_bonus)
+// style_melee_accurate:   (3, 0, 0, 0)
 // style_melee_aggressive: (0, 3, 0, 0)
-// style_melee_defensive: (0, 0, 3, 0)
+// style_melee_defensive:  (0, 0, 3, 0)
 // style_melee_controlled: (1, 1, 1, 0)
-// style_ranged_accurate: (0, 0, 0, 3)
-// style_ranged_longrange: (0, 0, 3, 0)
-// style_ranged_rapid: (0, 0, 0, 0)
-// magic always +1 (style bonus of 1 per JMod tweet in source comment)
+// style_ranged_accurate:  (0, 0, 0, 3)
+// style_ranged_longrange: (0, 0, 3, 0)  <-- ranged bonus = 0 !
+// style_ranged_rapid:     (0, 0, 0, 0)  <-- hits default case
+// magic: always +1 (per JMod tweet referenced in source comment)
+
 function getAttackStyleBonus(styleName) {
   if (styleName === 'accurate') return 3;
   if (styleName === 'controlled' || styleName === 'controlled_1' || styleName === 'controlled_2' || styleName === 'controlled_3') return 1;
   return 0;
 }
+// Strength style bonus applies to effective_strength → melee max hit AND is distinct from attack bonus
 function getStrengthStyleBonus(styleName) {
   if (styleName === 'aggressive' || styleName === 'aggressive_2' || styleName === 'aggressive_3') return 3;
   if (styleName === 'controlled' || styleName === 'controlled_1' || styleName === 'controlled_2' || styleName === 'controlled_3') return 1;
   return 0;
 }
+// Ranged style bonus: accurate=+3, rapid=+0, longrange=+0 (longrange only gives +3 defence, not ranged)
 function getRangedStyleBonus(styleName) {
   if (styleName === 'accurate') return 3;
   return 0;
 }
 
-// For attack roll: includes style bonus (affects accuracy)
+// Melee attack roll: attack level + prayer + 8 + attack style bonus
 function getEffectiveAttack(attackLevel, attackPrayerBonus, styleName, potionBoost = 0) {
   return effectiveStat(attackLevel + potionBoost, attackPrayerBonus) + 8 + getAttackStyleBonus(styleName);
 }
 
-// For max hit: NO style bonus (style does not affect max hit)
-function getEffectiveStrength(strengthLevel, strPrayerBonus, potionBoost = 0) {
-  return effectiveStat(strengthLevel + potionBoost, strPrayerBonus) + 8;
+// Melee max hit: strength level + prayer + 8 + strength style bonus
+// Source: $effective_strength used for both melee_strength (max hit) with style bonus applied
+function getEffectiveStrength(strengthLevel, strPrayerBonus, styleName, potionBoost = 0) {
+  return effectiveStat(strengthLevel + potionBoost, strPrayerBonus) + 8 + getStrengthStyleBonus(styleName);
 }
 
-// For attack roll: includes style bonus (affects accuracy only)
-function getEffectiveRangedAttack(rangedLevel, styleName, potionBoost = 0) {
+// Ranged: no prayer bonus. Same effective_ranged used for both attack roll AND max hit.
+function getEffectiveRanged(rangedLevel, styleName, potionBoost = 0) {
   return effectiveStat(rangedLevel + potionBoost, 100) + 8 + getRangedStyleBonus(styleName);
-}
-
-// For max hit: NO style bonus
-function getEffectiveRangedStr(rangedLevel, potionBoost = 0) {
-  return effectiveStat(rangedLevel + potionBoost, 100) + 8;
 }
 
 // Magic: no prayer bonus, always +1 style bonus (source comment: "magic always has a style bonus of 1")
@@ -149,7 +148,8 @@ Deno.serve(async (req) => {
     if (combatType === 'melee') {
       const atkPrayerBonus = PRAYER_ATK_BONUS[attackPrayer] || 100;
       const strPrayerBonus = PRAYER_STR_BONUS[strengthPrayer] || 100;
-      const effectiveStr = getEffectiveStrength(strengthLevel, strPrayerBonus, potionStr);
+      // Source: effective_strength includes strength style bonus → feeds melee max hit
+      const effectiveStr = getEffectiveStrength(strengthLevel, strPrayerBonus, styleName, potionStr);
       const effectiveAtk = getEffectiveAttack(attackLevel, atkPrayerBonus, styleName, potionAttack);
       maxHit = getMeleeMaxHit(effectiveStr, strBonus);
 
@@ -157,20 +157,17 @@ Deno.serve(async (req) => {
       if (body.weaponAttackType === 'slash') monsterDefBonus = body.monsterDefenceSlash || 0;
       else if (body.weaponAttackType === 'crush') monsterDefBonus = body.monsterDefenceCrush || 0;
 
-      // combat_stat(effective_attack, equipmentBonus)
       attackRoll = combatStat(effectiveAtk, equipmentBonus);
-      // NPC defence roll: (monsterDefence + 9) * (monsterDefBonus + 64)
       npcDefRoll = combatStat(monsterDefence + 9, monsterDefBonus);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
 
     } else if (combatType === 'ranged') {
-      // Max hit uses effective ranged with NO style bonus; attack roll includes style bonus (accuracy only)
-      const effRngStr = getEffectiveRangedStr(rangedLevel, potionRanged);
-      const effRngAtk = getEffectiveRangedAttack(rangedLevel, styleName, potionRanged);
-      maxHit = getRangedMaxHit(effRngStr, rangedStrBonus);
+      // Source: same effective_ranged (with style bonus) used for both attack roll and max hit
+      const effRng = getEffectiveRanged(rangedLevel, styleName, potionRanged);
+      maxHit = getRangedMaxHit(effRng, rangedStrBonus);
 
       const monsterDefBonus = body.monsterDefenceRanged || 0;
-      attackRoll = combatStat(effRngAtk, equipmentBonus);
+      attackRoll = combatStat(effRng, equipmentBonus);
       npcDefRoll = combatStat(monsterDefence + 9, monsterDefBonus);
       accuracy = getAccuracy(attackRoll, npcDefRoll);
 
