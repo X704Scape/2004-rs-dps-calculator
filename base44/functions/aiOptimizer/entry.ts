@@ -1,77 +1,93 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-const PRAYER_STR_MULTIPLIERS = {
-  none: 1.0, burst_of_strength: 1.05, superhuman_strength: 1.10, ultimate_strength: 1.15
+// Prayer bonus values (integer percentage) matching source check_*_prayer procs
+const PRAYER_ATK_BONUS = {
+  none: 100, clarity_of_thought: 105, improved_reflexes: 110, incredible_reflexes: 115
 };
-const PRAYER_ATK_MULTIPLIERS = {
-  none: 1.0, clarity_of_thought: 1.05, improved_reflexes: 1.10, incredible_reflexes: 1.15
-};
-const STYLE_BONUS = {
-  aggressive: 3, aggressive_2: 3, aggressive_3: 3,
-  controlled: 1, controlled_1: 1, controlled_2: 1, controlled_3: 1,
-  accurate: 0, defensive: 0
+const PRAYER_STR_BONUS = {
+  none: 100, burst_of_strength: 105, superhuman_strength: 110, ultimate_strength: 115
 };
 
-function getEffectiveStr(lvl, prayer, style) {
-  return Math.floor(lvl * prayer) + (STYLE_BONUS[style] || 0) + 8;
+// combat_effective_stat: floor(level * prayerBonus / 100)
+function effectiveStat(level, prayerBonus) {
+  return Math.floor(level * Math.max(100, prayerBonus) / 100);
 }
-function getEffectiveAtk(lvl, prayer, style) {
-  const bonus = style === 'accurate' ? 3 : (style.startsWith('controlled') ? 1 : 0);
-  return Math.floor(lvl * prayer) + bonus + 8;
+// combat_stat: effectiveLevel * (bonus + 64)
+function combatStatRoll(effectiveLevel, bonus) {
+  return effectiveLevel * (bonus + 64);
 }
-function getEffectiveRanged(lvl, prayer, style) {
-  return Math.floor(lvl * prayer) + (style === 'accurate' ? 3 : 0) + 8;
+// combat_maxhit: floor((combat_stat + 320) / 640)
+function combatMaxHit(stat) {
+  return Math.floor((stat + 320) / 640);
+}
+
+function getEffectiveStr(lvl, strPrayerBonus, style) {
+  const styleBonus = (style === 'aggressive' || style === 'aggressive_2' || style === 'aggressive_3') ? 3
+    : (style.startsWith('controlled')) ? 1 : 0;
+  return effectiveStat(lvl, strPrayerBonus) + 8 + styleBonus;
+}
+function getEffectiveAtk(lvl, atkPrayerBonus, style) {
+  const styleBonus = style === 'accurate' ? 3 : (style.startsWith('controlled') ? 1 : 0);
+  return effectiveStat(lvl, atkPrayerBonus) + 8 + styleBonus;
+}
+// No ranged prayers in 2004 per source
+function getEffectiveRanged(lvl, style) {
+  const styleBonus = style === 'accurate' ? 3 : 0;
+  return effectiveStat(lvl, 100) + 8 + styleBonus;
 }
 function getAccuracy(atkRoll, defRoll) {
   if (atkRoll > defRoll) return 1 - (defRoll + 2) / (2 * (atkRoll + 1));
   return atkRoll / (2 * (defRoll + 1));
 }
 function getMeleeMaxHit(effStr, strBonus) {
-  return Math.floor((effStr * (strBonus + 64) + 320) / 640);
+  return combatMaxHit(combatStatRoll(effStr, strBonus));
 }
 function getRangedMaxHit(effRng, rngStrBonus) {
-  return Math.floor((effRng * (rngStrBonus + 64) + 320) / 640);
+  return combatMaxHit(combatStatRoll(effRng, rngStrBonus));
 }
 
 function calcDPS({ combatType, playerStats, equipment, monster }) {
   const { attack, strength, ranged, magic, prayerActive, style } = playerStats;
-  const atkPrayer = PRAYER_ATK_MULTIPLIERS[prayerActive?.attack || 'none'] || 1.0;
-  const strPrayer = PRAYER_STR_MULTIPLIERS[prayerActive?.strength || 'none'] || 1.0;
+  const atkPrayerBonus = PRAYER_ATK_BONUS[prayerActive?.attack || 'none'] || 100;
+  const strPrayerBonus = PRAYER_STR_BONUS[prayerActive?.strength || 'none'] || 100;
 
   const getBonus = (key) => Object.values(equipment).reduce((s, i) => s + (i?.[key] || 0), 0);
 
   let maxHit = 0, attackRoll = 0, npcDefRoll = 0;
 
   if (combatType === 'melee') {
-    const effStr = getEffectiveStr(strength, strPrayer, style);
-    const effAtk = getEffectiveAtk(attack, atkPrayer, style);
-    // determine attack type from weapon category
+    const effStr = getEffectiveStr(strength, strPrayerBonus, style);
+    const effAtk = getEffectiveAtk(attack, atkPrayerBonus, style);
     let attackType = 'slash';
     const cat = equipment.weapon?.category || '';
     if (cat.includes('stab') || cat === 'weapon_stab') attackType = 'stab';
     else if (cat.includes('crush') || cat === 'weapon_blunt' || cat === 'weapon_spiked') attackType = 'crush';
-    
+
     const eqBonus = getBonus(attackType);
     const strBonus = getBonus('strBonus');
     maxHit = getMeleeMaxHit(effStr, strBonus);
-    attackRoll = effAtk * (eqBonus + 64);
+    attackRoll = combatStatRoll(effAtk, eqBonus);
     const monDef = attackType === 'stab' ? monster.defenceStab : attackType === 'crush' ? monster.defenceCrush : monster.defenceSlash;
-    npcDefRoll = (monster.defence + 9) * ((monDef || 0) + 64);
+    npcDefRoll = combatStatRoll(monster.defence + 9, monDef || 0);
+
   } else if (combatType === 'ranged') {
-    const effRng = getEffectiveRanged(ranged, strPrayer, style);
+    // No ranged prayers in 2004 per source
+    const effRng = getEffectiveRanged(ranged, style);
     const rngStr = getBonus('rangedStrBonus');
     const rngAtk = getBonus('ranged');
     maxHit = getRangedMaxHit(effRng, rngStr);
-    attackRoll = effRng * (rngAtk + 64);
-    npcDefRoll = (monster.defence + 9) * ((monster.defenceRanged || 0) + 64);
+    attackRoll = combatStatRoll(effRng, rngAtk);
+    npcDefRoll = combatStatRoll(monster.defence + 9, monster.defenceRanged || 0);
+
   } else if (combatType === 'magic') {
     const magicLvl = magic || 1;
     const spell = getBestSpell(magicLvl);
     maxHit = spell[1];
+    // effective_magic = combat_effective_stat(magic, 100) + 8 + 1 (no magic prayers, always +1 style)
+    const effMagic = effectiveStat(magicLvl, 100) + 8 + 1;
     const magicAtk = getBonus('magic');
-    const effMagic = magicLvl + 9;
-    attackRoll = effMagic * (magicAtk + 64);
-    npcDefRoll = (monster.defence + 9) * ((monster.defenceMagic || 0) + 64);
+    attackRoll = combatStatRoll(effMagic, magicAtk);
+    npcDefRoll = combatStatRoll(monster.defence + 9, monster.defenceMagic || 0);
   } else {
     return 0;
   }
