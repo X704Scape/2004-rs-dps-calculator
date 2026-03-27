@@ -237,21 +237,30 @@ export default function Calculator() {
       };
 
       if (targetLoadout) {
-      const getTargetDefBonus = (bonusType) => {
-        return Object.values(targetLoadout.equipment).reduce((sum, item) => {
-          return sum + (item[bonusType] || 0);
-        }, 0);
-      };
+        const getTargetDefBonus = (bonusType) => {
+          return Object.values(targetLoadout.equipment).reduce((sum, item) => {
+            return sum + (item[bonusType] || 0);
+          }, 0);
+        };
 
-      targetStats = {
-        hitpoints: targetLoadout.playerStats.hitpoints,
-        defence: targetLoadout.playerStats.defence,
-        defenceStab: getTargetDefBonus('defStab'),
-        defenceSlash: getTargetDefBonus('defSlash'),
-        defenceCrush: getTargetDefBonus('defCrush'),
-        defenceRanged: getTargetDefBonus('defRanged'),
-        defenceMagic: getTargetDefBonus('defMagic')
-      };
+        // Apply defence prayer bonus to target's effective defence level
+        const PRAYER_DEF_BONUS = {
+          thick_skin: 105, rock_skin: 110, steel_skin: 115
+        };
+        const targetDefPrayer = targetLoadout.playerStats.prayerActive?.defence || 'none';
+        const targetDefPrayerMult = PRAYER_DEF_BONUS[targetDefPrayer] || 100;
+        const targetBaseDefence = targetLoadout.playerStats.boostedDefence || targetLoadout.playerStats.defence;
+        const targetEffectiveDefence = Math.floor(targetBaseDefence * targetDefPrayerMult / 100);
+
+        targetStats = {
+          hitpoints: targetLoadout.playerStats.hitpoints,
+          defence: targetEffectiveDefence,
+          defenceStab: getTargetDefBonus('defenceStab'),
+          defenceSlash: getTargetDefBonus('defenceSlash'),
+          defenceCrush: getTargetDefBonus('defenceCrush'),
+          defenceRanged: getTargetDefBonus('defenceRanged'),
+          defenceMagic: getTargetDefBonus('defenceMagic')
+        };
       }
 
       return await base44.functions.invoke('calculateDPS', {
