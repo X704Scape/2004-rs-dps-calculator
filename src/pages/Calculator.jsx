@@ -124,8 +124,8 @@ export default function Calculator() {
     }
   };
 
-  const calculateDPS = async (loadout, targetLoadout = null) => {
-    if (!selectedMonster) return null;
+  const calculateDPS = async (loadout, targetLoadout = null, monster = selectedMonster) => {
+    if (!monster) return null;
 
     try {
       const { equipment, playerStats } = loadout;
@@ -227,13 +227,13 @@ export default function Calculator() {
 
       // PVP Mode: Use target loadout's defense stats
       let targetStats = {
-        hitpoints: selectedMonster.hitpoints,
-        defence: selectedMonster.defence,
-        defenceStab: selectedMonster.defenceStab,
-        defenceSlash: selectedMonster.defenceSlash,
-        defenceCrush: selectedMonster.defenceCrush,
-        defenceRanged: selectedMonster.defenceRanged,
-        defenceMagic: selectedMonster.defenceMagic
+        hitpoints: monster.hitpoints,
+        defence: monster.defence,
+        defenceStab: monster.defenceStab,
+        defenceSlash: monster.defenceSlash,
+        defenceCrush: monster.defenceCrush,
+        defenceRanged: monster.defenceRanged,
+        defenceMagic: monster.defenceMagic
       };
 
       if (targetLoadout) {
@@ -283,10 +283,10 @@ export default function Calculator() {
         potionAttack: 0,
         attackSpeedTicks,
         monsterHitpoints: targetStats.hitpoints,
-        monsterAttack: selectedMonster.attack,
+        monsterAttack: monster.attack,
         monsterDefence: targetStats.defence,
-        monsterRanged: selectedMonster.ranged,
-        monsterMagic: selectedMonster.magic,
+        monsterRanged: monster.ranged,
+        monsterMagic: monster.magic,
         monsterDefenceStab: targetStats.defenceStab,
         monsterDefenceSlash: targetStats.defenceSlash,
         monsterDefenceCrush: targetStats.defenceCrush,
@@ -312,18 +312,20 @@ export default function Calculator() {
   React.useEffect(() => {
     if (!selectedMonster) return;
 
+    const monster = selectedMonster; // snapshot for this effect run
+
     const updateAllResults = async () => {
       setCalculating(true);
 
       try {
         // PVP Mode: Calculate both directions
-        if (selectedMonster.id === 'pvp' && loadouts.length >= 2) {
+        if (monster.id === 'pvp' && loadouts.length >= 2) {
           const loadout1 = loadouts[0];
           const loadout2 = loadouts[1];
 
           const [response1, response2] = await Promise.all([
-            calculateDPS(loadout1, loadout2),
-            calculateDPS(loadout2, loadout1)
+            calculateDPS(loadout1, loadout2, monster),
+            calculateDPS(loadout2, loadout1, monster)
           ]);
 
           setLoadouts(prev => prev.map((loadout, idx) => ({
@@ -332,7 +334,7 @@ export default function Calculator() {
           })));
         } else {
           // Normal PVM mode
-          const responses = await Promise.all(loadouts.map(loadout => calculateDPS(loadout)));
+          const responses = await Promise.all(loadouts.map(loadout => calculateDPS(loadout, null, monster)));
           setLoadouts(prev => prev.map((loadout, idx) => ({
             ...loadout,
             results: responses[idx]?.data || null

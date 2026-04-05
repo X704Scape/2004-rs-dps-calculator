@@ -51,13 +51,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function KillSimulatorGraph({ loadouts, selectedMonster, npcCount }) {
   const hasResults = loadouts?.some(l => l.results);
-  if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
-
-  const npcHp = selectedMonster.hitpoints || 1;
+  const npcHp = selectedMonster?.hitpoints || 1;
   const BASE_SEED = 42;
 
   // Build x-axis points: evenly spaced from 1 to npcCount (max 20 points)
   const xPoints = useMemo(() => {
+    if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return [];
     const count = Math.min(npcCount, 20);
     const step = Math.max(1, Math.floor(npcCount / count));
     const pts = [];
@@ -67,6 +66,7 @@ export default function KillSimulatorGraph({ loadouts, selectedMonster, npcCount
   }, [npcCount]);
 
   const chartData = useMemo(() => {
+    if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return [];
     return xPoints.map(n => {
       const point = { npcs: n };
       loadouts.forEach((loadout, idx) => {
@@ -80,7 +80,9 @@ export default function KillSimulatorGraph({ loadouts, selectedMonster, npcCount
       });
       return point;
     });
-  }, [loadouts.map(l => JSON.stringify(l.results)).join(','), xPoints.join(','), npcHp]);
+  }, [hasResults, loadouts.map(l => JSON.stringify(l.results)).join(','), xPoints.join(','), npcHp, selectedMonster?.id]);
+
+  if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
 
   const activeLoadouts = loadouts.filter(l => l.results);
 

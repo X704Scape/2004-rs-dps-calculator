@@ -111,11 +111,10 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
   const [showComparison, setShowComparison] = useState(false);
 
   const hasResults = loadouts?.some(l => l.results);
-  if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
-
-  const npcHp = selectedMonster.hitpoints || 1;
+  const npcHp = selectedMonster?.hitpoints || 1;
 
   const simResults = useMemo(() => {
+    if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return [];
     const BASE_SEED = 42;
     return loadouts.map(loadout => {
       const r = loadout.results;
@@ -130,7 +129,7 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
 
   // Multi-count comparison: for each preset count, which loadout is fastest?
   const comparisonData = useMemo(() => {
-    if (!showComparison) return null;
+    if (!showComparison || !hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
     const BASE_SEED = 42;
     return [1, 10, 100, 1000, 10000].map(count => {
       const results = loadouts.map(loadout => {
@@ -152,7 +151,9 @@ export default function KillSimulator({ loadouts, selectedMonster, npcCount, onN
       });
       return { count, results, bestIdx };
     });
-  }, [showComparison, loadouts.map(l => JSON.stringify(l.results)).join(','), npcHp]);
+  }, [showComparison, hasResults, loadouts.map(l => JSON.stringify(l.results)).join(','), npcHp, selectedMonster?.id]);
+
+  if (!hasResults || !selectedMonster || selectedMonster.id === 'pvp') return null;
 
   return (
     <div className="bg-gray-800 border-2 border-amber-900 rounded overflow-hidden mt-4">
