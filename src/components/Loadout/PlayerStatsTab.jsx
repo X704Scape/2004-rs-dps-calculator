@@ -28,14 +28,19 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     setLoading(true);
     try {
       const normalizedUsername = username.trim().replace(/ /g, '_');
-      const apiUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
-      // Use corsproxy.io to relay the request from the browser
-      const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`);
+      const response = await fetch(
+        `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`
+      );
       if (!response.ok) {
         alert(`Player "${username}" not found on hiscores.`);
         return;
       }
       const data = await response.json();
+      // If it's an error object (not an array), bail
+      if (!Array.isArray(data)) {
+        alert(`Player "${username}" not found on hiscores.`);
+        return;
+      }
       const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
       const newStats = {};
       for (const entry of data) {
@@ -49,7 +54,7 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       }
     } catch (error) {
       console.error('Lookup failed:', error);
-      alert('Failed to load hiscores. Please try again.');
+      alert('Could not reach hiscores - the site may be blocking this request.');
     } finally {
       setLoading(false);
     }

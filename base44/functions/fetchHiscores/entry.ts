@@ -20,58 +20,19 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUsername = username.trim().replace(/ /g, '_');
+    const url = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
 
-    const response = await fetch(
-      `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://2004.lostcity.rs/hiscores',
-          'Origin': 'https://2004.lostcity.rs',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-origin',
-        }
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
       }
-    );
+    });
 
-    console.log('Hiscores API status:', response.status, 'for user:', normalizedUsername);
+    console.log('Status:', response.status, 'URL:', url);
 
     if (!response.ok) {
-      // Try the CSV/text hiscores endpoint as fallback
-      const csvResponse = await fetch(
-        `https://2004.lostcity.rs/hiscores/player/${encodeURIComponent(normalizedUsername)}`,
-        {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept': 'text/plain, */*',
-            'Referer': 'https://2004.lostcity.rs/hiscores',
-          }
-        }
-      );
-
-      console.log('CSV fallback status:', csvResponse.status);
-
-      if (!csvResponse.ok) {
-        return Response.json({ error: `Player "${username}" not found on hiscores` }, { status: 404 });
-      }
-
-      // CSV format: rank,level,xp per line, one per skill in order
-      // 0=Overall,1=Attack,2=Defence,3=Strength,4=Hitpoints,5=Ranged,6=Prayer,7=Magic...
-      const text = await csvResponse.text();
-      const lines = text.trim().split('\n');
-      const stats = {};
-      lines.forEach((line, idx) => {
-        const skillName = TYPE_MAP[idx];
-        if (!skillName) return;
-        const parts = line.split(',');
-        const level = parseInt(parts[1]);
-        if (!isNaN(level) && level > 0) stats[skillName] = level;
-      });
-
-      return Response.json({ stats });
+      return Response.json({ error: `Player "${username}" not found on hiscores` }, { status: 404 });
     }
 
     const data = await response.json();
@@ -83,7 +44,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ stats });
   } catch (error) {
-    console.error('Hiscores fetch error:', error);
+    console.error('Error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
