@@ -28,15 +28,14 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     setLoading(true);
     try {
       const normalizedUsername = username.trim().replace(/ /g, '_');
-      const response = await fetch(
-        `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`
-      );
+      const apiUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
+      // Use corsproxy.io to relay the request from the browser
+      const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`);
       if (!response.ok) {
-        alert(`Player "${username}" not found on hiscores`);
+        alert(`Player "${username}" not found on hiscores.`);
         return;
       }
       const data = await response.json();
-      // type map: 1=Attack, 2=Defence, 3=Strength, 4=Hitpoints, 5=Ranged, 6=Prayer, 7=Magic
       const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
       const newStats = {};
       for (const entry of data) {
@@ -46,7 +45,7 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       if (Object.keys(newStats).length > 0) {
         onStatsChange({ ...stats, ...newStats });
       } else {
-        alert(`Player "${username}" not found on hiscores`);
+        alert(`Player "${username}" not found on hiscores.`);
       }
     } catch (error) {
       console.error('Lookup failed:', error);
