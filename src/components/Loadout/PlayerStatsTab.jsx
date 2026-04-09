@@ -25,15 +25,32 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
 
   const loadFromHiscores = async () => {
     if (!username.trim()) return;
-    
     setLoading(true);
     try {
-      const response = await base44.functions.invoke('fetchHiscores', { username: username.trim().replace(/ /g, '_') });
-      if (response.data?.stats) {
-        onStatsChange({ ...stats, ...response.data.stats });
+      const normalizedUsername = username.trim().replace(/ /g, '_');
+      const response = await fetch(
+        `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`
+      );
+      if (!response.ok) {
+        alert(`Player "${username}" not found on hiscores`);
+        return;
+      }
+      const data = await response.json();
+      // type map: 1=Attack, 2=Defence, 3=Strength, 4=Hitpoints, 5=Ranged, 6=Prayer, 7=Magic
+      const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
+      const newStats = {};
+      for (const entry of data) {
+        const skillName = TYPE_MAP[entry.type];
+        if (skillName && entry.level) newStats[skillName] = entry.level;
+      }
+      if (Object.keys(newStats).length > 0) {
+        onStatsChange({ ...stats, ...newStats });
+      } else {
+        alert(`Player "${username}" not found on hiscores`);
       }
     } catch (error) {
       console.error('Lookup failed:', error);
+      alert('Failed to load hiscores. Please try again.');
     } finally {
       setLoading(false);
     }
