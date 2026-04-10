@@ -47,16 +47,19 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
         return res.json();
       };
 
+      // Try allorigins, fall back to corsproxy, retry once on failure
       let data;
-      try {
-        data = await tryAllOrigins();
-      } catch {
-        try {
-          data = await tryCorsProxy();
-        } catch {
-          throw new Error('all proxies failed');
-        }
+      const attempts = [
+        () => tryAllOrigins(),
+        () => tryCorsProxy(),
+        async () => { await new Promise(r => setTimeout(r, 800)); return tryAllOrigins(); },
+        async () => { await new Promise(r => setTimeout(r, 800)); return tryCorsProxy(); },
+      ];
+      let lastError;
+      for (const attempt of attempts) {
+        try { data = await attempt(); break; } catch (e) { lastError = e; }
       }
+      if (!data) throw lastError;
 
       if (!Array.isArray(data) || data.length === 0) {
         alert(`Player "${name}" not found on hiscores.`);
@@ -64,17 +67,14 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
       }
 
       const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
-      const newStats = {};
+      // Default all stats to 1, then fill in whatever the hiscores returns
+      const newStats = { attack: 1, defence: 1, strength: 1, hitpoints: 10, ranged: 1, prayer: 1, magic: 1 };
       for (const entry of data) {
         const skillName = TYPE_MAP[entry.type];
         if (skillName && entry.level) newStats[skillName] = entry.level;
       }
 
-      if (Object.keys(newStats).length > 0) {
-        onStatsChange({ ...stats, ...newStats });
-      } else {
-        alert(`Player "${name}" not found on hiscores.`);
-      }
+      onStatsChange({ ...stats, ...newStats });
     } catch (error) {
       console.error('Lookup failed:', error);
       alert(`Player "${name}" not found on hiscores.`);
