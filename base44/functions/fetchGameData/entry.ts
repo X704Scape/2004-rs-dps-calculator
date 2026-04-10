@@ -4,7 +4,7 @@ const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
 const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
 const GH_RAW = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/skill_combat/configs';
 
-const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','polearms','scimitars','shortswords','spears','kiteshields'];
+const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','polearms','scimitars','shortswords','spears','kiteshields','trails'];
 const RANGED_FILES = ['bows','crossbows','arrows','bolts','darts','javelins','knives','thrownaxes'];
 const MAGIC_FILES = ['battlestaves','mysticstaves','staves'];
 const NPC_274_URL = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/_unpack/274/all.npc';
@@ -69,37 +69,26 @@ function parseConfigWeapons(configText) {
   }
   if (current?.name) weapons.push(current);
 
-  // Post-process to set correct slots and filter armor
-  return weapons
-    .map(weapon => {
-      // Set correct slot based on wearpos
-      if (weapon.wearpos) {
-        const wearpos = weapon.wearpos.toLowerCase();
-        if (wearpos === 'quiver') {
-          weapon.slot = 'ammo';
-        } else if (wearpos === 'lefthand' && weapon.wearpos2 !== 'lefthand') {
-          weapon.slot = 'shield';
-        }
+  // Post-process to set correct slots for all equipment
+  const WEARPOS_TO_SLOT = {
+    'righthand': 'weapon', 'lefthand': 'shield', 'quiver': 'ammo',
+    'hat': 'head', 'head': 'head', 'torso': 'body', 'body': 'body',
+    'legs': 'legs', 'hands': 'hands', 'feet': 'feet', 'cape': 'cape',
+    'neck': 'neck', 'ring': 'ring'
+  };
+  return weapons.map(weapon => {
+    if (weapon.wearpos) {
+      const wearpos = weapon.wearpos.toLowerCase();
+      if (wearpos === 'quiver') {
+        weapon.slot = 'ammo';
+      } else if (wearpos === 'lefthand' && weapon.wearpos2 !== 'lefthand') {
+        weapon.slot = 'shield';
+      } else if (WEARPOS_TO_SLOT[wearpos]) {
+        weapon.slot = WEARPOS_TO_SLOT[wearpos];
       }
-      return weapon;
-    })
-    .filter(weapon => {
-      // If it has an armor category, exclude it
-      if (weapon.category && weapon.category.includes('armour_')) {
-        return false;
-      }
-      
-      // If wearpos indicates armor slot, exclude it
-      if (weapon.wearpos) {
-        const wearpos = weapon.wearpos.toLowerCase();
-        if (['head', 'body', 'legs', 'hands', 'feet', 'cape', 'neck', 'ring'].includes(wearpos)) {
-          return false;
-        }
-      }
-      
-      // Keep weapons, shields, and ammo
-      return true;
-    });
+    }
+    return weapon;
+  });
 }
 
 Deno.serve(async (req) => {
@@ -238,11 +227,7 @@ Deno.serve(async (req) => {
       // Add config weapons that have no API match (truly unique items)
       const apiItemNames = new Set(wearableItems.map(item => item.name));
       const allConfigWeapons = [...meleeWeapons, ...rangedWeapons, ...magicWeapons];
-      const uniqueConfigWeapons = allConfigWeapons.filter(w => {
-        const wearpos = w.wearpos?.toLowerCase();
-        const validWearpos = ['righthand', 'lefthand', 'quiver'];
-        return wearpos && validWearpos.includes(wearpos) && !apiItemNames.has(w.name);
-      });
+      const uniqueConfigWeapons = allConfigWeapons.filter(w => w.wearpos && !apiItemNames.has(w.name));
       console.log('Unique config weapons not in API:', uniqueConfigWeapons.length);
 
       const combinedItems = [...mergedItems, ...uniqueConfigWeapons];
