@@ -4,7 +4,7 @@ const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
 const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
 const GH_RAW = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/skill_combat/configs';
 
-const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','scimitars','shortswords','spears','kiteshields'];
+const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','polearms','scimitars','shortswords','spears','kiteshields'];
 const RANGED_FILES = ['bows','crossbows','arrows','bolts','darts','javelins','knives','thrownaxes'];
 const MAGIC_FILES = ['battlestaves','mysticstaves','staves'];
 const NPC_274_URL = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/_unpack/274/all.npc';
@@ -237,15 +237,15 @@ Deno.serve(async (req) => {
 
       // Add config weapons that have no API match (truly unique items)
       const apiItemNames = new Set(wearableItems.map(item => item.name));
-      const uniqueConfigWeapons = Array.from(configWeaponsByName.values())
-        .filter(weapon => !apiItemNames.has(weapon.name))
-        .map(weapon => ({
-          ...weapon,
-          id: `config_${weapon.name}` // Keep config ID for truly unique items
-        }));
+      const allConfigWeapons = [...meleeWeapons, ...rangedWeapons, ...magicWeapons];
+      const uniqueConfigWeapons = allConfigWeapons.filter(w => {
+        const wearpos = w.wearpos?.toLowerCase();
+        const validWearpos = ['righthand', 'lefthand', 'quiver'];
+        return wearpos && validWearpos.includes(wearpos) && !apiItemNames.has(w.name);
+      });
+      console.log('Unique config weapons not in API:', uniqueConfigWeapons.length);
 
       const combinedItems = [...mergedItems, ...uniqueConfigWeapons];
-      
       console.log('Returning combined items:', combinedItems.length);
       return Response.json({ items: combinedItems });
     }
