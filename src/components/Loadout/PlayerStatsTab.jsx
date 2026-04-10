@@ -29,14 +29,12 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     try {
       const normalizedUsername = username.trim().replace(/ /g, '_');
       const targetUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-      const proxyRes = await fetch(proxyUrl);
-      const proxyJson = await proxyRes.json();
-      if (!proxyJson.contents) {
+      const proxyRes = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`);
+      if (!proxyRes.ok) {
         alert(`Player "${username}" not found on hiscores.`);
         return;
       }
-      const data = JSON.parse(proxyJson.contents);
+      const data = await proxyRes.json();
       if (!Array.isArray(data)) {
         alert(`Player "${username}" not found on hiscores.`);
         return;
