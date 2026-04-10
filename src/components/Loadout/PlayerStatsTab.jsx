@@ -27,53 +27,18 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     if (!username.trim()) return;
     setLoading(true);
     try {
-      const normalizedUsername = username.trim().replace(/ /g, '_');
-      const targetUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
+      const response = await base44.functions.invoke('fetchHiscores', { username: username.trim() });
+      const { stats: fetchedStats, error } = response.data;
 
-      // Race two proxies, use whichever succeeds first
-      const tryProxy = async (proxyUrl) => {
-        const res = await fetch(proxyUrl);
-        if (!res.ok) throw new Error('proxy failed');
-        const text = await res.text();
-        // allorigins wraps in {contents: ...}
-        try {
-          const json = JSON.parse(text);
-          if (json.contents) return JSON.parse(json.contents);
-          return json;
-        } catch { throw new Error('parse failed'); }
-      };
-
-      let data;
-      try {
-        data = await Promise.any([
-          tryProxy(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`),
-          tryProxy(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`),
-        ]);
-      } catch {
-        alert(`Player "${username}" not found or hiscores unreachable.`);
+      if (error || !fetchedStats || Object.keys(fetchedStats).length === 0) {
+        alert(`Player "${username.trim()}" not found on hiscores.`);
         return;
       }
 
-      if (!Array.isArray(data)) {
-        alert(`Player "${username}" not found on hiscores.`);
-        return;
-      }
-
-      const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
-      const newStats = {};
-      for (const entry of data) {
-        const skillName = TYPE_MAP[entry.type];
-        if (skillName && entry.level) newStats[skillName] = entry.level;
-      }
-
-      if (Object.keys(newStats).length > 0) {
-        onStatsChange({ ...stats, ...newStats });
-      } else {
-        alert(`Player "${username}" not found on hiscores.`);
-      }
+      onStatsChange({ ...stats, ...fetchedStats });
     } catch (error) {
       console.error('Lookup failed:', error);
-      alert('Could not reach hiscores - the site may be blocking this request.');
+      alert(`Player "${username.trim()}" not found on hiscores.`);
     } finally {
       setLoading(false);
     }
