@@ -7,6 +7,7 @@ const GH_RAW = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/
 const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','scimitars','shortswords','spears','kiteshields'];
 const RANGED_FILES = ['bows','crossbows','arrows','bolts','darts','javelins','knives','thrownaxes'];
 const MAGIC_FILES = ['battlestaves','mysticstaves','staves'];
+const NPC_274_URL = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/_unpack/274/all.npc';
 
 const SLOT_ALIASES = {
   'weapon': 'weapon', 'shield': 'shield', 'head': 'head', 'body': 'body',
@@ -250,10 +251,49 @@ Deno.serve(async (req) => {
     }
 
     if (dataType === 'monsters') {
-      const npcResponse = await fetch(NPC_URL);
-      const npcData = await npcResponse.json();
+      // Fetch both old API data and new 274 NPC configs in parallel
+      const [npcResponse, npc274Text] = await Promise.all([
+        fetch(NPC_URL).then(r => r.json()),
+        fetchConfigFile(NPC_274_URL)
+      ]);
+      const npcData = npcResponse;
       console.log('Fetched NPCs from API (object with keys):', Object.keys(npcData).length);
-      
+
+      // Parse 274 NPC config file
+      function parseNpcConfig(text) {
+        const npcs = [];
+        const lines = text.split('\n');
+        let current = null;
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (line.startsWith('//')) continue;
+          if (line.startsWith('[') && line.endsWith(']')) {
+            if (current?.name && current.isAttackable) npcs.push(current);
+            current = { id: line.slice(1,-1), name: null, hitpoints: 0, attack: 1, strength: 1, defence: 1, ranged: 1, magic: 1, defenceStab: 0, defenceSlash: 0, defenceCrush: 0, defenceRanged: 0, defenceMagic: 0, vislevel: 0, size: 1, isAttackable: false };
+          } else if (current) {
+            if (line.startsWith('name=')) current.name = line.slice(5);
+            else if (line.startsWith('hitpoints=')) current.hitpoints = parseInt(line.slice(10)) || 0;
+            else if (line.startsWith('attack=')) current.attack = parseInt(line.slice(7)) || 1;
+            else if (line.startsWith('strength=')) current.strength = parseInt(line.slice(9)) || 1;
+            else if (line.startsWith('defence=')) current.defence = parseInt(line.slice(8)) || 1;
+            else if (line.startsWith('ranged=')) current.ranged = parseInt(line.slice(7)) || 1;
+            else if (line.startsWith('magic=')) current.magic = parseInt(line.slice(6)) || 1;
+            else if (line.startsWith('size=')) current.size = parseInt(line.slice(5)) || 1;
+            else if (line.startsWith('vislevel=') && line !== 'vislevel=hide') current.vislevel = parseInt(line.slice(9)) || 0;
+            else if (line.startsWith('param=stabdefence,')) current.defenceStab = parseInt(line.split(',')[1]) || 0;
+            else if (line.startsWith('param=slashdefence,')) current.defenceSlash = parseInt(line.split(',')[1]) || 0;
+            else if (line.startsWith('param=crushdefence,')) current.defenceCrush = parseInt(line.split(',')[1]) || 0;
+            else if (line.startsWith('param=magicdefence,') && !line.includes('10000')) current.defenceMagic = parseInt(line.split(',')[1]) || 0;
+            else if (line.startsWith('param=rangedefence,')) current.defenceRanged = parseInt(line.split(',')[1]) || 0;
+            else if (line === 'op2=Attack') current.isAttackable = true;
+          }
+        }
+        if (current?.name && current.isAttackable) npcs.push(current);
+        return npcs;
+      }
+      const npc274List = parseNpcConfig(npc274Text);
+      console.log('Parsed 274 NPCs:', npc274List.length);
+
       // NPC data is an object, not an array - extract values and filter
       const allMonsters = Object.entries(npcData)
         .map(([key, npc], index) => {
@@ -286,16 +326,38 @@ Deno.serve(async (req) => {
             defence: parseInt(npc.defence) || 1,
             ranged: parseInt(npc.ranged) || 1,
             magic: parseInt(npc.magic) || 1,
-            defenceStab,
-            defenceSlash,
-            defenceCrush,
-            defenceRanged,
-            defenceMagic,
+            defenceStab, defenceSlash, defenceCrush, defenceRanged, defenceMagic,
             size: parseInt(npc.size) || 1,
             aggressive: npc.huntmode ? true : false
           };
         })
         .filter(npc => npc !== null);
+
+      // Merge in 274 NPCs that aren't already in the API data (by name)
+      const existingNames = new Set(allMonsters.map(m => m.name.toLowerCase()));
+      let nextId = 10000;
+      for (const npc274 of npc274List) {
+        if (!existingNames.has(npc274.name.toLowerCase()) && npc274.hitpoints > 0) {
+          allMonsters.push({
+            id: nextId++,
+            name: npc274.name,
+            hitpoints: npc274.hitpoints,
+            attack: npc274.attack,
+            strength: npc274.strength,
+            defence: npc274.defence,
+            ranged: npc274.ranged,
+            magic: npc274.magic,
+            defenceStab: npc274.defenceStab,
+            defenceSlash: npc274.defenceSlash,
+            defenceCrush: npc274.defenceCrush,
+            defenceRanged: npc274.defenceRanged,
+            defenceMagic: npc274.defenceMagic,
+            size: npc274.size,
+            aggressive: false
+          });
+          existingNames.add(npc274.name.toLowerCase());
+        }
+      }
 
       console.log('Returning monsters:', allMonsters.length);
       return Response.json({ monsters: allMonsters });
