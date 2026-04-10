@@ -1,100 +1,73 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
 const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
+const GH_RAW = 'https://raw.githubusercontent.com/LostCityRS/Content/refs/heads/274/scripts/skill_combat/configs';
+
+const MELEE_FILES = ['2hswords','battleaxes','claws','daggers','halberds','longswords','maces','scimitars','shortswords','spears','kiteshields'];
+const RANGED_FILES = ['bows','crossbows','arrows','bolts','darts','javelins','knives','thrownaxes'];
+const MAGIC_FILES = ['battlestaves','mysticstaves','staves'];
 
 const SLOT_ALIASES = {
-  'weapon': 'weapon',
-  'shield': 'shield',
-  'head': 'head',
-  'body': 'body',
-  'legs': 'legs',
-  'hands': 'hands',
-  'feet': 'feet',
-  'cape': 'cape',
-  'neck': 'neck',
-  'ammo': 'ammo',
-  'ring': 'ring',
-  'ammunition': 'ammo'
+  'weapon': 'weapon', 'shield': 'shield', 'head': 'head', 'body': 'body',
+  'legs': 'legs', 'hands': 'hands', 'feet': 'feet', 'cape': 'cape',
+  'neck': 'neck', 'ammo': 'ammo', 'ring': 'ring', 'ammunition': 'ammo'
 };
 
-// Parse config format (works for both melee and ranged)
+async function fetchConfigFile(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return '';
+    return res.text();
+  } catch { return ''; }
+}
+
 function parseConfigWeapons(configText) {
   const weapons = [];
   const lines = configText.split('\n');
-  let currentWeapon = {};
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    if (line.startsWith('name=')) {
-      if (currentWeapon.name) {
-        weapons.push(currentWeapon);
-      }
-      const weaponName = line.substring(5);
-      currentWeapon = {
-        name: weaponName,
-        stab: 0,
-        slash: 0,
-        crush: 0,
-        magic: 0,
-        ranged: 0,
-        strBonus: 0,
-        rangedStrBonus: 0,
-        defenceStab: 0,
-        defenceSlash: 0,
-        defenceCrush: 0,
-        defenceMagic: 0,
-        defenceRanged: 0,
-        attackRate: 4,
-        slot: 'weapon',
-        wearpos: 'righthand',
-        wearpos2: null,
-        category: null,
-        equipable: true,
-        requirement: 1
+  let current = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line.startsWith('//')) continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      if (current?.name) weapons.push(current);
+      current = {
+        id: line.slice(1, -1),
+        name: null,
+        stab: 0, slash: 0, crush: 0, magic: 0, ranged: 0,
+        strBonus: 0, rangedStrBonus: 0, prayerBonus: 0,
+        defenceStab: 0, defenceSlash: 0, defenceCrush: 0, defenceMagic: 0, defenceRanged: 0,
+        attackRate: 4, slot: 'weapon', wearpos: 'righthand', wearpos2: null,
+        category: null, equipable: true, requirement: 1, hasSpec: false, specEnergy: 0
       };
-    } else if (line.startsWith('wearpos=')) {
-      currentWeapon.wearpos = line.substring(8);
-    } else if (line.startsWith('wearpos2=')) {
-      currentWeapon.wearpos2 = line.substring(9);
-    } else if (line.startsWith('category=')) {
-      currentWeapon.category = line.substring(9);
-    } else if (line.startsWith('param=stabattack,')) {
-      currentWeapon.stab = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=slashattack,')) {
-      currentWeapon.slash = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=crushattack,')) {
-      currentWeapon.crush = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=magicattack,')) {
-      currentWeapon.magic = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=rangeattack,')) {
-      currentWeapon.ranged = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=strengthbonus,')) {
-      currentWeapon.strBonus = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=rangebonus,')) {
-      currentWeapon.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=rangestrengthbonus,')) {
-      currentWeapon.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=attackrate,')) {
-      currentWeapon.attackRate = parseInt(line.split(',')[1]) || 4;
-    } else if (line.startsWith('param=stabdefence,')) {
-      currentWeapon.defenceStab = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=slashdefence,')) {
-      currentWeapon.defenceSlash = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=crushdefence,')) {
-      currentWeapon.defenceCrush = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=magicdefence,')) {
-      currentWeapon.defenceMagic = parseInt(line.split(',')[1]) || 0;
-    } else if (line.startsWith('param=rangedefence,')) {
-      currentWeapon.defenceRanged = parseInt(line.split(',')[1]) || 0;
+    } else if (current) {
+      if (line.startsWith('name=')) current.name = line.slice(5);
+      else if (line.startsWith('wearpos=')) current.wearpos = line.slice(8);
+      else if (line.startsWith('wearpos2=')) current.wearpos2 = line.slice(9);
+      else if (line.startsWith('category=')) current.category = line.slice(9);
+      else if (line.startsWith('param=stabattack,')) current.stab = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=slashattack,')) current.slash = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=crushattack,')) current.crush = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=magicattack,')) current.magic = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=rangeattack,')) current.ranged = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=strengthbonus,')) current.strBonus = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=rangebonus,') || line.startsWith('param=rangestrengthbonus,')) current.rangedStrBonus = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=prayerbonus,')) current.prayerBonus = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=attackrate,')) current.attackRate = parseInt(line.split(',')[1]) || 4;
+      else if (line.startsWith('param=stabdefence,')) current.defenceStab = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=slashdefence,')) current.defenceSlash = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=crushdefence,')) current.defenceCrush = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=magicdefence,')) current.defenceMagic = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=rangedefence,')) current.defenceRanged = parseInt(line.split(',')[1]) || 0;
+      else if (line.startsWith('param=levelrequire,')) current.requirement = parseInt(line.split(',')[1]) || 1;
+      else if (line.startsWith('param=specwep,')) current.hasSpec = true;
+      else if (line.startsWith('param=sa_energy,')) current.specEnergy = parseInt(line.split(',')[1]) || 0;
     }
   }
-  
-  if (currentWeapon.name) {
-    weapons.push(currentWeapon);
-  }
-  
+  if (current?.name) weapons.push(current);
+
   // Post-process to set correct slots and filter armor
   return weapons
     .map(weapon => {
@@ -137,26 +110,16 @@ Deno.serve(async (req) => {
     console.log('fetchGameData called with type:', dataType);
 
     if (dataType === 'items') {
-      // Fetch melee weapons config
-      const meleeConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/21fdc43de_combined_melee_configs.txt';
-      const meleeConfigResponse = await fetch(meleeConfigUrl);
-      const meleeConfigText = await meleeConfigResponse.text();
-      const meleeWeapons = parseConfigWeapons(meleeConfigText);
-      console.log('Parsed melee weapons from config:', meleeWeapons.length);
-
-      // Fetch ranged weapons config
-      const rangedConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/c02381c5b_combined_ranged_configs.txt';
-      const rangedConfigResponse = await fetch(rangedConfigUrl);
-      const rangedConfigText = await rangedConfigResponse.text();
-      const rangedWeapons = parseConfigWeapons(rangedConfigText);
-      console.log('Parsed ranged weapons from config:', rangedWeapons.length);
-
-      // Fetch magic weapons config
-      const magicConfigUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/b4fa4e195_combined_magic_configs.txt';
-      const magicConfigResponse = await fetch(magicConfigUrl);
-      const magicConfigText = await magicConfigResponse.text();
-      const magicWeapons = parseConfigWeapons(magicConfigText);
-      console.log('Parsed magic weapons from config:', magicWeapons.length);
+      // Fetch all weapon config files directly from GitHub 274 branch
+      const [meleeTexts, rangedTexts, magicTexts] = await Promise.all([
+        Promise.all(MELEE_FILES.map(f => fetchConfigFile(`${GH_RAW}/melee/${f}.obj`))),
+        Promise.all(RANGED_FILES.map(f => fetchConfigFile(`${GH_RAW}/ranged/${f}.obj`))),
+        Promise.all(MAGIC_FILES.map(f => fetchConfigFile(`${GH_RAW}/magic/${f}.obj`)))
+      ]);
+      const meleeWeapons = parseConfigWeapons(meleeTexts.join('\n'));
+      const rangedWeapons = parseConfigWeapons(rangedTexts.join('\n'));
+      const magicWeapons = parseConfigWeapons(magicTexts.join('\n'));
+      console.log('Parsed weapons - melee:', meleeWeapons.length, 'ranged:', rangedWeapons.length, 'magic:', magicWeapons.length);
 
       const itemResponse = await fetch(ITEM_URL);
       const itemData = await itemResponse.json();
@@ -251,12 +214,16 @@ Deno.serve(async (req) => {
             magic: configWeapon.magic || apiItem.magic,
             strBonus: configWeapon.strBonus || apiItem.strBonus,
             rangedStrBonus: configWeapon.rangedStrBonus || apiItem.rangedStrBonus,
+            prayerBonus: configWeapon.prayerBonus || apiItem.prayer || 0,
             defenceStab: configWeapon.defenceStab || apiItem.defenceStab,
             defenceSlash: configWeapon.defenceSlash || apiItem.defenceSlash,
             defenceCrush: configWeapon.defenceCrush || apiItem.defenceCrush,
             defenceRanged: configWeapon.defenceRanged || apiItem.defenceRanged,
             defenceMagic: configWeapon.defenceMagic || apiItem.defenceMagic,
             attackRate: configWeapon.attackRate || apiItem.attackRate,
+            // Spec data from config
+            hasSpec: configWeapon.hasSpec || false,
+            specEnergy: configWeapon.specEnergy || 0,
             // Preserve config's wearpos data and category
             wearpos: configWeapon.wearpos || apiItem.wearpos,
             wearpos2: configWeapon.wearpos2 || apiItem.wearpos2,
