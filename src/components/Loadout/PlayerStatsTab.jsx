@@ -28,25 +28,34 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     if (!name) return;
     setLoading(true);
     try {
+      // RS names use underscores for spaces
       const normalizedName = name.replace(/ /g, '_');
-      const targetUrl = `https://2004.lostcity.rs/api/hiscores/player/${normalizedName}`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+      const targetUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedName)}`;
 
-      const fetchData = async () => {
-        const res = await fetch(proxyUrl);
-        if (!res.ok) throw new Error('proxy error');
+      // Try allorigins first, fall back to corsproxy if rate-limited
+      const tryAllOrigins = async () => {
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error('allorigins failed');
         const json = await res.json();
-        if (!json.contents) throw new Error('empty response');
+        if (!json.contents) throw new Error('no contents');
         return JSON.parse(json.contents);
+      };
+
+      const tryCorsProxy = async () => {
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error('corsproxy failed');
+        return res.json();
       };
 
       let data;
       try {
-        data = await fetchData();
+        data = await tryAllOrigins();
       } catch {
-        // Retry once after a short delay (handles rate limiting)
-        await new Promise(r => setTimeout(r, 1000));
-        data = await fetchData();
+        try {
+          data = await tryCorsProxy();
+        } catch {
+          throw new Error('all proxies failed');
+        }
       }
 
       if (!Array.isArray(data) || data.length === 0) {
