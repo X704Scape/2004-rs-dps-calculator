@@ -192,8 +192,8 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
             ) : (
               searchResults.map((item) => (
                 <button
-                  key={item.id}
-                  onClick={() => handleSelectItem(item)}
+                  key={`item-${item.id}-${item.name}`}
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleSelectItem(item); }}
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
                   {(item.icon || item.iconUrl) && (
