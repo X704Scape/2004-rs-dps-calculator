@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 import BoostsSelector, { BOOSTS } from './BoostsSelector';
@@ -17,7 +17,6 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedBoosts, setSelectedBoosts] = useState(stats.selectedBoosts || []);
-  const isMountedRef = useRef(false);
 
   const handleStatChange = (id, value) => {
     const newStats = { ...stats, [id]: parseInt(value) || 1 };
@@ -29,13 +28,53 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     if (!name) return;
     setLoading(true);
     try {
-      const response = await base44.functions.invoke('fetchHiscores', { username: name });
-      const { stats: fetchedStats, error } = response.data;
-      if (error) {
+      // RS names use underscores for spaces
+      const normalizedName = name.replace(/ /g, '_');
+      const targetUrl = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedName)}`;
+
+      // Try allorigins first, fall back to corsproxy if rate-limited
+      const tryAllOrigins = async () => {
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error('allorigins failed');
+        const json = await res.json();
+        if (!json.contents) throw new Error('no contents');
+        return JSON.parse(json.contents);
+      };
+
+      const tryCorsProxy = async () => {
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error('corsproxy failed');
+        return res.json();
+      };
+
+      // Try allorigins, fall back to corsproxy, retry once on failure
+      let data;
+      const attempts = [
+        () => tryAllOrigins(),
+        () => tryCorsProxy(),
+        async () => { await new Promise(r => setTimeout(r, 800)); return tryAllOrigins(); },
+        async () => { await new Promise(r => setTimeout(r, 800)); return tryCorsProxy(); },
+      ];
+      let lastError;
+      for (const attempt of attempts) {
+        try { data = await attempt(); break; } catch (e) { lastError = e; }
+      }
+      if (!data) throw lastError;
+
+      if (!Array.isArray(data) || data.length === 0) {
         alert(`Player "${name}" not found on hiscores.`);
         return;
       }
-      onStatsChange({ ...stats, ...fetchedStats });
+
+      const TYPE_MAP = { 1: 'attack', 2: 'defence', 3: 'strength', 4: 'hitpoints', 5: 'ranged', 6: 'prayer', 7: 'magic' };
+      // Default all stats to 1, then fill in whatever the hiscores returns
+      const newStats = { attack: 1, defence: 1, strength: 1, hitpoints: 10, ranged: 1, prayer: 1, magic: 1 };
+      for (const entry of data) {
+        const skillName = TYPE_MAP[entry.type];
+        if (skillName && entry.level) newStats[skillName] = entry.level;
+      }
+
+      onStatsChange({ ...stats, ...newStats });
     } catch (error) {
       console.error('Lookup failed:', error);
       alert(`Player "${name}" not found on hiscores.`);
@@ -45,10 +84,6 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   };
 
   useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      return;
-    }
     applyAllBoosts(selectedBoosts);
   }, [selectedBoosts]);
 

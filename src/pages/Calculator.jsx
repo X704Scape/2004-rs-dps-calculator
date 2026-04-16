@@ -84,7 +84,6 @@ export default function Calculator() {
   };
 
   const updateLoadout = (id, field, value) => {
-    console.log('[Calculator] updateLoadout — id:', id, '| field:', field, '| value type:', typeof value, field === 'equipment' ? '| eq keys: ' + Object.keys(value || {}).join(',') : '');
     setLoadouts(loadouts.map(l => {
       if (l.id === id) {
         const updated = { ...l, [field]: value };
@@ -133,7 +132,6 @@ export default function Calculator() {
       // Calculate total bonuses from equipment
       const getTotalBonus = (bonusType) => {
         return Object.values(equipment).reduce((sum, item) => {
-          if (!item || typeof item !== 'object') return sum;
           return sum + (item[bonusType] || 0);
         }, 0);
       };
@@ -241,7 +239,6 @@ export default function Calculator() {
       if (targetLoadout) {
         const getTargetDefBonus = (bonusType) => {
           return Object.values(targetLoadout.equipment).reduce((sum, item) => {
-            if (!item || typeof item !== 'object') return sum;
             return sum + (item[bonusType] || 0);
           }, 0);
         };

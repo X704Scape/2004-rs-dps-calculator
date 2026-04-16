@@ -1,6 +1,10 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
+
+// Module-level cache so data is only fetched once per session
+let itemsCache = null;
+let itemsFetchPromise = null;
 
 const EQUIPMENT_LAYOUT = [
   [null, 'head', null],
@@ -24,116 +28,98 @@ const SLOT_ICONS = {
   ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
 };
 
-const VALID_SLOTS = new Set(['head','cape','neck','ammo','weapon','body','shield','legs','hands','feet','ring']);
-
-// Module-level cache — never causes re-renders
-const _itemsCache = { items: null, promise: null };
-
-// Safe item extractor — always returns null or a plain object with expected fields
-function safeItem(val) {
-  if (val && typeof val === 'object' && !Array.isArray(val) && typeof val.name === 'string') {
-    return val;
-  }
-  return null;
-}
-
-function EquipmentTab({ equipment, onEquipmentChange }) {
-  const [items, setItems] = useState(_itemsCache.items || []);
-  const [loading, setLoading] = useState(!_itemsCache.items);
+export default function EquipmentTab({ equipment, onEquipmentChange }) {
+  const [items, setItems] = useState(itemsCache || []);
+  const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    if (_itemsCache.items) {
-      setItems(_itemsCache.items);
-      setLoading(false);
-      return;
-    }
-    if (!_itemsCache.promise) {
-      _itemsCache.promise = Promise.all([
+    if (itemsCache) return;
+    if (!itemsFetchPromise) {
+      itemsFetchPromise = Promise.all([
         base44.functions.invoke('fetchGameData', { type: 'items' }),
         base44.functions.invoke('fetchWeaponsMeta', {})
-      ]).then(([itemsRes, metaRes]) => {
-        const merged = (itemsRes.data.items || []).map(item => {
-          const meta = metaRes.data.weaponsMeta?.[item.id];
+      ]).then(([itemsResponse, metaResponse]) => {
+        return (itemsResponse.data.items || []).map(item => {
+          const meta = metaResponse.data.weaponsMeta?.[item.id];
           return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
         });
-        _itemsCache.items = merged;
-        return merged;
-      }).catch(err => {
-        console.error('Failed to load items:', err);
-        _itemsCache.promise = null;
-        return [];
       });
     }
-    _itemsCache.promise.then(loaded => {
-      if (!mountedRef.current) return;
+    itemsFetchPromise.then(loaded => {
+      itemsCache = loaded;
       setItems(loaded);
-      setLoading(false);
-    });
+    }).catch(e => {
+      console.error('Failed to load items:', e);
+    }).finally(() => setLoading(false));
   }, []);
 
+  // Debounce search input by 150ms
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 150);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Build safe equipment — only valid slot keys, only valid item objects
-  const rawEq = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
-  const safeEquipment = {};
-  for (const slot of VALID_SLOTS) {
-    const item = safeItem(rawEq[slot]);
-    if (item) safeEquipment[slot] = item;
-  }
-  const is2HandedWeapon = rawEq._2handed === true;
-
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
     const lower = debouncedSearch.toLowerCase();
-    return items
-      .filter(item => item.name && (item.name.toLowerCase().includes(lower) || String(item.id).includes(lower)))
-      .slice(0, 20);
+    return items.filter(item =>
+      item.name.toLowerCase().includes(lower) || String(item.id).includes(lower)
+    ).slice(0, 20);
   }, [debouncedSearch, items]);
 
   const handleSelectItem = (item) => {
-    const newEq = { ...rawEq };
+    const newEquipment = { ...equipment };
+    
+    // Check if item is 2-handed (occupies both weapon and shield slots)
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
+    
+    // If equipping a 2-handed weapon
     if (is2Handed) {
-      delete newEq.shield;
-      newEq.weapon = item;
-      newEq._2handed = true;
-    } else if (item.slot === 'shield') {
-      if (newEq.weapon?.wearpos2 === 'lefthand') delete newEq.weapon;
-      delete newEq._2handed;
-      newEq.shield = item;
-    } else if (item.slot === 'weapon') {
-      delete newEq._2handed;
-      newEq.weapon = item;
-    } else {
-      newEq[item.slot] = item;
+      delete newEquipment.shield;
+      newEquipment.weapon = item;
+      newEquipment._2handed = true; // Mark that weapon is 2-handed
     }
-    onEquipmentChange(newEq);
+    // If equipping a shield
+    else if (item.slot === 'shield') {
+      // Remove 2-handed weapon if equipped
+      if (newEquipment.weapon?.wearpos2 === 'lefthand') {
+        delete newEquipment.weapon;
+      }
+      delete newEquipment._2handed;
+      newEquipment.shield = item;
+    }
+    // If equipping a 1-handed weapon
+    else if (item.slot === 'weapon') {
+      delete newEquipment._2handed;
+      newEquipment.weapon = item;
+    }
+    // Other slots
+    else {
+      newEquipment[item.slot] = item;
+    }
+    
+    onEquipmentChange(newEquipment);
     setSearchTerm('');
     setShowDropdown(false);
   };
 
   const getTotalBonus = (bonusType) => {
-    return Object.values(safeEquipment).reduce((sum, item) => sum + (Number(item[bonusType]) || 0), 0);
+    return Object.values(equipment).reduce((sum, item) => {
+      return sum + (item[bonusType] || 0);
+    }, 0);
   };
 
-  const speed = (() => {
-    const weapon = safeEquipment.weapon;
-    if (!weapon) return { ticks: 4, seconds: '2.4' };
+  const getAttackSpeed = () => {
+    const weapon = equipment.weapon;
+    if (!weapon) return { ticks: 4, seconds: 2.4 };
+    
     const ticks = weapon.attackRate || 4;
-    return { ticks, seconds: (ticks * 0.6).toFixed(1) };
-  })();
+    const seconds = (ticks * 0.6).toFixed(1);
+    return { ticks, seconds };
+  };
 
   return (
     <div>
@@ -142,39 +128,46 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
         {EQUIPMENT_LAYOUT.map((row, rowIdx) => (
           <div key={rowIdx} className="flex justify-center gap-1 mb-1">
             {row.map((slot, colIdx) => {
-              const key = `${rowIdx}-${colIdx}`;
               if (!slot) {
-                return <div key={key} style={{ width: 56, height: 56 }} />;
+                return <div key={colIdx} className="w-14 h-14" />;
               }
-
-              const item = safeEquipment[slot] || null;
-              const blocked = slot === 'shield' && is2HandedWeapon;
-              const slotIcon = SLOT_ICONS[slot] || '';
-              const imgSrc = (item && !blocked) ? (item.iconUrl || item.icon || slotIcon) : slotIcon;
-
+              const item = equipment[slot];
+              // If shield slot and 2-handed weapon equipped, show as blocked
+              const is2HandedEquipped = slot === 'shield' && equipment.weapon?.wearpos2 === 'lefthand';
+              
               return (
                 <div
-                  key={key}
-                  style={{ width: 56, height: 56 }}
-                  className={[
-                    'bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden',
-                    blocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-amber-700'
-                  ].join(' ')}
-                  title={blocked ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
+                  key={slot}
                   onClick={() => {
-                    if (!item || blocked) return;
-                    const next = { ...rawEq };
-                    delete next[slot];
-                    if (slot === 'weapon' && item.wearpos2 === 'lefthand') delete next._2handed;
-                    onEquipmentChange(next);
+                    if (item && !is2HandedEquipped) {
+                      const newEquipment = { ...equipment };
+                      delete newEquipment[slot];
+                      // If removing a 2-handed weapon, also clear the marker
+                      if (slot === 'weapon' && item.wearpos2 === 'lefthand') {
+                        delete newEquipment._2handed;
+                      }
+                      onEquipmentChange(newEquipment);
+                    }
                   }}
+                  className={`w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center transition overflow-hidden ${is2HandedEquipped ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-amber-700'}`}
+                  title={is2HandedEquipped ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
-                  <img
-                    src={imgSrc}
-                    alt={item && !blocked ? item.name : `Empty ${slot}`}
-                    className={['w-full h-full object-contain', (!item || blocked) ? 'opacity-50' : ''].join(' ')}
-                    onError={(e) => { e.target.src = slotIcon; }}
-                  />
+                  {item && !is2HandedEquipped ? (
+                    <img 
+                      src={item.iconUrl || item.icon} 
+                      alt={item.name} 
+                      className="w-full h-full object-contain" 
+                      onError={(e) => {
+                        e.target.src = SLOT_ICONS[slot];
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={SLOT_ICONS[slot]} 
+                      alt={`Empty ${slot}`} 
+                      className="w-full h-full object-contain opacity-50" 
+                    />
+                  )}
                 </div>
               );
             })}
@@ -192,7 +185,6 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onFocus={() => setShowDropdown(true)}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             className="w-full bg-transparent text-xs text-amber-100 outline-none"
           />
         </div>
@@ -206,16 +198,16 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
             ) : (
               searchResults.map((item) => (
                 <button
-                  key={`${item.id}-${item.name}`}
-                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleSelectItem(item); }}
+                  key={item.id}
+                  onClick={() => handleSelectItem(item)}
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
                   {(item.icon || item.iconUrl) && (
-                    <img
-                      src={item.iconUrl || item.icon}
-                      alt={item.name}
-                      className="w-8 h-8 object-contain"
-                      onError={(e) => { e.target.style.display = 'none'; }}
+                    <img 
+                      src={item.iconUrl || item.icon} 
+                      alt={item.name} 
+                      className="w-8 h-8 object-contain" 
+                      onError={(e) => e.target.style.display = 'none'}
                     />
                   )}
                   <div>
@@ -236,30 +228,72 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
           <div>
             <p className="text-amber-700 text-xs font-bold mb-1">Offensive</p>
             <div className="space-y-1 text-xs text-amber-100">
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" /><span>{getTotalBonus('stab')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" /><span>{getTotalBonus('slash')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" /><span>{getTotalBonus('crush')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" /><span>{getTotalBonus('ranged')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" /><span>{getTotalBonus('magic')}</span></div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" />
+                <span>{getTotalBonus('stab')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" />
+                <span>{getTotalBonus('slash')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" />
+                <span>{getTotalBonus('crush')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" />
+                <span>{getTotalBonus('ranged')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" />
+                <span>{getTotalBonus('magic')}</span>
+              </div>
             </div>
           </div>
           <div>
             <p className="text-amber-700 text-xs font-bold mb-1">Defensive</p>
             <div className="space-y-1 text-xs text-amber-100">
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" /><span>{getTotalBonus('defenceStab')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" /><span>{getTotalBonus('defenceSlash')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" /><span>{getTotalBonus('defenceCrush')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" /><span>{getTotalBonus('defenceRanged')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" /><span>{getTotalBonus('defenceMagic')}</span></div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/3a457fe7c_Screenshot2026-01-19015627.png" className="w-4 h-4" alt="Stab" />
+                <span>{getTotalBonus('defenceStab')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/dd15bf355_Screenshot2026-01-19015651.png" className="w-4 h-4" alt="Slash" />
+                <span>{getTotalBonus('defenceSlash')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/90ab47df6_Screenshot2026-01-19015923.png" className="w-4 h-4" alt="Crush" />
+                <span>{getTotalBonus('defenceCrush')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/2821a90c6_Screenshot2026-01-19015934.png" className="w-4 h-4" alt="Ranged" />
+                <span>{getTotalBonus('defenceRanged')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/e8f8b4235_Screenshot2026-01-19015928.png" className="w-4 h-4" alt="Magic" />
+                <span>{getTotalBonus('defenceMagic')}</span>
+              </div>
             </div>
           </div>
           <div>
             <p className="text-amber-700 text-xs font-bold mb-1">Other</p>
             <div className="space-y-1 text-xs text-amber-100">
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/453a291c6_Screenshot2026-01-19015942.png" className="w-4 h-4" alt="Strength" /><span>{getTotalBonus('strBonus')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/11e84d1fb_Screenshot2026-01-19015950.png" className="w-4 h-4" alt="Ranged Str" /><span>{getTotalBonus('rangedStrBonus')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/973d3f90f_Screenshot2026-01-19020003.png" className="w-4 h-4" alt="Prayer" /><span>{getTotalBonus('prayer')}</span></div>
-              <div className="flex items-center gap-2"><img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aed2e430d_Screenshot2026-01-19020030.png" className="w-4 h-4" alt="Speed" /><span>{speed.ticks} ticks ({speed.seconds}s)</span></div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/453a291c6_Screenshot2026-01-19015942.png" className="w-4 h-4" alt="Strength" />
+                <span>{getTotalBonus('strBonus')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/11e84d1fb_Screenshot2026-01-19015950.png" className="w-4 h-4" alt="Ranged Str" />
+                <span>{getTotalBonus('rangedStrBonus')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/973d3f90f_Screenshot2026-01-19020003.png" className="w-4 h-4" alt="Prayer" />
+                <span>{getTotalBonus('prayer')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aed2e430d_Screenshot2026-01-19020030.png" className="w-4 h-4" alt="Speed" />
+                <span>{getAttackSpeed().ticks} ticks ({getAttackSpeed().seconds}s)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -267,5 +301,3 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
     </div>
   );
 }
-
-export default EquipmentTab;

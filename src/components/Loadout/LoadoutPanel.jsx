@@ -14,7 +14,7 @@ const TABS = [
 ];
 
 export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange, playerStats, onStatsChange, onCombatStyleChange, onPrayerChange, otherLoadouts, onCopyFrom }) {
-  const [activeTab, setActiveTab] = useState('combat');
+  const [activeTab, setActiveTab] = useState('equipment');
   const [showCopyMenu, setShowCopyMenu] = useState(false);
 
   const handleCombatStyleChange = (style) => {
