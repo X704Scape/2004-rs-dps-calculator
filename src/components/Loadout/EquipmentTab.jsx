@@ -70,8 +70,10 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
     ).slice(0, 20);
   }, [debouncedSearch, items]);
 
+  const safeEquipment = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+
   const handleSelectItem = (item) => {
-    const newEquipment = { ...equipment };
+    const newEquipment = { ...safeEquipment };
     
     // Check if item is 2-handed (occupies both weapon and shield slots)
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
@@ -107,16 +109,14 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
   };
 
   const getTotalBonus = (bonusType) => {
-    return Object.values(equipment).reduce((sum, item) => {
+    return Object.values(safeEquipment).reduce((sum, item) => {
       if (!item || typeof item !== 'object') return sum;
       return sum + (item[bonusType] || 0);
     }, 0);
   };
 
-  if (!equipment || typeof equipment !== 'object') return null;
-
   const getAttackSpeed = () => {
-    const weapon = equipment.weapon;
+    const weapon = safeEquipment.weapon;
     if (!weapon) return { ticks: 4, seconds: 2.4 };
     
     const ticks = weapon.attackRate || 4;
@@ -135,15 +135,15 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
               if (!slot) {
                 return <div key={cellKey} className="w-14 h-14" />;
               }
-              const rawItem = equipment[slot];
+              const rawItem = safeEquipment[slot];
               const item = (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) ? rawItem : null;
-              const is2HandedEquipped = slot === 'shield' && equipment.weapon && typeof equipment.weapon === 'object' && equipment.weapon.wearpos2 === 'lefthand';
+              const is2HandedEquipped = slot === 'shield' && safeEquipment.weapon && typeof safeEquipment.weapon === 'object' && safeEquipment.weapon.wearpos2 === 'lefthand';
               return (
                 <div
                   key={cellKey}
                   onClick={() => {
                     if (item && !is2HandedEquipped) {
-                      const newEquipment = { ...equipment };
+                      const newEquipment = { ...safeEquipment };
                       delete newEquipment[slot];
                       if (slot === 'weapon' && item.wearpos2 === 'lefthand') {
                         delete newEquipment._2handed;
