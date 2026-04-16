@@ -132,6 +132,7 @@ export default function Calculator() {
       // Calculate total bonuses from equipment
       const getTotalBonus = (bonusType) => {
         return Object.values(equipment).reduce((sum, item) => {
+          if (!item || typeof item !== 'object') return sum;
           return sum + (item[bonusType] || 0);
         }, 0);
       };
@@ -239,6 +240,7 @@ export default function Calculator() {
       if (targetLoadout) {
         const getTargetDefBonus = (bonusType) => {
           return Object.values(targetLoadout.equipment).reduce((sum, item) => {
+            if (!item || typeof item !== 'object') return sum;
             return sum + (item[bonusType] || 0);
           }, 0);
         };

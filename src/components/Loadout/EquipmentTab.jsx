@@ -79,7 +79,10 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const safeEquipment = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+  const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+
+  // Bail out early if something is seriously wrong — prevents React fiber corruption
+  if (typeof safeEquipment !== 'object') return null;
 
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
