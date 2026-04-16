@@ -81,8 +81,13 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
-  console.log('[EquipmentTab] post-hooks — safeEquipment keys:', Object.keys(safeEquipment));
+  const rawEq = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+  // Strip non-slot keys like _2handed so they don't pollute slot lookups or bonus calcs
+  const VALID_SLOTS = new Set(['head','cape','neck','ammo','weapon','body','shield','legs','hands','feet','ring']);
+  const safeEquipment = Object.fromEntries(
+    Object.entries(rawEq).filter(([k]) => VALID_SLOTS.has(k))
+  );
+  const is2HandedWeapon = rawEq._2handed === true;
 
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
@@ -93,7 +98,7 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
   }, [debouncedSearch, items]);
 
   const handleSelectItem = (item) => {
-    const newEquipment = { ...safeEquipment };
+    const newEquipment = { ...rawEq };
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
     if (is2Handed) {
       delete newEquipment.shield;
@@ -142,10 +147,7 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
               }
               const rawItem = safeEquipment[slot];
               const item = (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) ? rawItem : null;
-              const is2Handed = slot === 'shield' &&
-                safeEquipment.weapon &&
-                typeof safeEquipment.weapon === 'object' &&
-                safeEquipment.weapon.wearpos2 === 'lefthand';
+              const is2Handed = slot === 'shield' && is2HandedWeapon;
 
               const slotIcon = SLOT_ICONS[slot] || '';
               const imgSrc = (item && !is2Handed) ? (item.iconUrl || item.icon || slotIcon) : slotIcon;
@@ -165,7 +167,7 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
                   title={titleText}
                   onClick={() => {
                     if (item && !is2Handed) {
-                      const next = { ...safeEquipment };
+                      const next = { ...rawEq };
                       delete next[slot];
                       if (slot === 'weapon' && item.wearpos2 === 'lefthand') delete next._2handed;
                       onEquipmentChange(next);
