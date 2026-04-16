@@ -30,7 +30,9 @@ function getItemsCache() {
 }
 
 function EquipmentTab({ equipment, onEquipmentChange }) {
+  console.log('[EquipmentTab] render start — equipment type:', typeof equipment, '| value:', JSON.stringify(equipment)?.slice(0, 100));
   const cache = getItemsCache();
+  console.log('[EquipmentTab] cache state:', { hasItems: !!cache.items, hasPromise: !!cache.promise });
   const [items, setItems] = useState(cache.items || []);
   const [loading, setLoading] = useState(!cache.items);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,6 +82,7 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
   }, [searchTerm]);
 
   const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+  console.log('[EquipmentTab] post-hooks — safeEquipment keys:', Object.keys(safeEquipment));
 
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];

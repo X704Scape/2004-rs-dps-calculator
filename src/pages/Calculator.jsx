@@ -84,6 +84,7 @@ export default function Calculator() {
   };
 
   const updateLoadout = (id, field, value) => {
+    console.log('[Calculator] updateLoadout — id:', id, '| field:', field, '| value type:', typeof value, field === 'equipment' ? '| eq keys: ' + Object.keys(value || {}).join(',') : '');
     setLoadouts(loadouts.map(l => {
       if (l.id === id) {
         const updated = { ...l, [field]: value };
