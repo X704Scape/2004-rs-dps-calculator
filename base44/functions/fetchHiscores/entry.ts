@@ -1,4 +1,15 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
+// Type IDs from the official 2004.lostcity.rs hiscores API
+const SKILL_TYPES = {
+  1: 'attack',
+  2: 'defence',
+  3: 'strength',
+  4: 'hitpoints',
+  5: 'ranged',
+  6: 'prayer',
+  7: 'magic'
+};
 
 Deno.serve(async (req) => {
   try {
@@ -10,10 +21,23 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUsername = username.trim().replace(/ /g, '_');
-    const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${encodeURIComponent(normalizedUsername)}`);
-    const html = await response.text();
+    const response = await fetch(`https://2004.losthq.rs/pages/api/LCHiscoresProxy.php?username=${encodeURIComponent(normalizedUsername)}`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; DPS-Calculator/1.0)',
+        'Referer': 'https://2004.losthq.rs/'
+      }
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('Non-JSON response:', text.slice(0, 200));
+      return Response.json({ error: 'Hiscores API returned unexpected response' }, { status: 502 });
+    }
 
-    // Parse stats from HTML table structure
+    // Default stats
     const stats = {
       hitpoints: 10,
       attack: 1,
@@ -24,29 +48,13 @@ Deno.serve(async (req) => {
       prayer: 1
     };
 
-    // HTML structure: skill name inside <a> tag, then rank, level, xp in <td align="right"> cells
-    // Pattern: skill name ... </td> rank </td> level </td>
-    const getSkillLevel = (skillName) => {
-      const regex = new RegExp(skillName + '[\\s\\S]*?<td align="right">\\s*[\\d,]+\\s*<\\/td>\\s*<td align="right">\\s*([\\d,]+)\\s*<\\/td>', 'i');
-      const match = html.match(regex);
-      return match ? parseInt(match[1].replace(/,/g, '')) : null;
-    };
-
-    const attack = getSkillLevel('Attack');
-    const defence = getSkillLevel('Defence');
-    const strength = getSkillLevel('Strength');
-    const hitpoints = getSkillLevel('Hitpoints');
-    const ranged = getSkillLevel('Ranged');
-    const prayer = getSkillLevel('Prayer');
-    const magic = getSkillLevel('Magic');
-
-    if (attack) stats.attack = attack;
-    if (defence) stats.defence = defence;
-    if (strength) stats.strength = strength;
-    if (hitpoints) stats.hitpoints = hitpoints;
-    if (ranged) stats.ranged = ranged;
-    if (prayer) stats.prayer = prayer;
-    if (magic) stats.magic = magic;
+    // Map type IDs to stat names
+    for (const entry of data) {
+      const statName = SKILL_TYPES[entry.type];
+      if (statName && entry.level) {
+        stats[statName] = entry.level;
+      }
+    }
 
     return Response.json({ stats });
   } catch (error) {
