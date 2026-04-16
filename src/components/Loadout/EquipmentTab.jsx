@@ -132,7 +132,8 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               if (!slot) {
                 return <div key={colIdx} className="w-14 h-14" />;
               }
-              const item = equipment[slot];
+              const rawItem = equipment[slot];
+              const item = (rawItem && typeof rawItem === 'object') ? rawItem : null;
               // If shield slot and 2-handed weapon equipped, show as blocked
               const is2HandedEquipped = slot === 'shield' && equipment.weapon?.wearpos2 === 'lefthand';
               
