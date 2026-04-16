@@ -28,7 +28,8 @@ const SLOT_ICONS = {
   ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
 };
 
-export default function EquipmentTab({ equipment, onEquipmentChange }) {
+export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
+  if (!equipment || typeof equipment !== 'object') return null;
   const [items, setItems] = useState(itemsCache || []);
   const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');
