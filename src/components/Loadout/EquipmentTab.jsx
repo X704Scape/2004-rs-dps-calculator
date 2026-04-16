@@ -36,7 +36,11 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    if (itemsCache) return;
+    if (itemsCache) {
+      setItems(itemsCache);
+      setLoading(false);
+      return;
+    }
     if (!itemsFetchPromise) {
       itemsFetchPromise = Promise.all([
         base44.functions.invoke('fetchGameData', { type: 'items' }),
@@ -46,14 +50,17 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
           const meta = metaResponse.data.weaponsMeta?.[item.id];
           return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
         });
+      }).catch(e => {
+        console.error('Failed to load items:', e);
+        itemsFetchPromise = null; // reset so next mount retries
+        return [];
       });
     }
     itemsFetchPromise.then(loaded => {
-      itemsCache = loaded;
+      if (loaded.length > 0) itemsCache = loaded;
       setItems(loaded);
-    }).catch(e => {
-      console.error('Failed to load items:', e);
-    }).finally(() => setLoading(false));
+      setLoading(false);
+    });
   }, []);
 
   // Debounce search input by 150ms
