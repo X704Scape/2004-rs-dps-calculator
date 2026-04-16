@@ -108,7 +108,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const getTotalBonus = (bonusType) => {
     return Object.values(equipment).reduce((sum, item) => {
-      if (!item || typeof item !== 'object') return sum;
+      if (!item || typeof item !== 'object' || item.id === undefined) return sum;
       return sum + (item[bonusType] || 0);
     }, 0);
   };
