@@ -81,9 +81,6 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
 
-  // Bail out early if something is seriously wrong — prevents React fiber corruption
-  if (typeof safeEquipment !== 'object') return null;
-
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
     const lower = debouncedSearch.toLowerCase();
