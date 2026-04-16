@@ -40,15 +40,8 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     if (!itemsFetchPromise) {
       itemsFetchPromise = base44.functions.invoke('fetchGameData', { type: 'items' })
         .then(itemsResponse => {
-          const items = (itemsResponse?.data?.items || []);
-          return base44.functions.invoke('fetchWeaponsMeta', {})
-            .then(metaResponse => {
-              const weaponsMeta = metaResponse?.data?.weaponsMeta || {};
-              return items.map(item => {
-                const meta = weaponsMeta[item.id];
-                return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
-              });
-            });
+          itemsCache = itemsResponse?.data?.items || [];
+          return itemsCache;
         })
         .catch(e => {
           console.error('Failed to load items:', e);
@@ -56,7 +49,6 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
         });
     }
     itemsFetchPromise.then(loaded => {
-      itemsCache = loaded;
       setItems(loaded);
     }).finally(() => setLoading(false));
   }, []);
