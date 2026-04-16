@@ -2,9 +2,11 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
-// Module-level cache so data is only fetched once per session
-let itemsCache = null;
-let itemsFetchPromise = null;
+// Use window-level cache so HMR reloads don't create stale closures
+if (!window.__equipmentTabCache) {
+  window.__equipmentTabCache = { items: null, promise: null };
+}
+const _cache = window.__equipmentTabCache;
 
 const EQUIPMENT_LAYOUT = [
   [null, 'head', null],
@@ -29,8 +31,8 @@ const SLOT_ICONS = {
 };
 
 export default function EquipmentTab({ equipment, onEquipmentChange }) {
-  const [items, setItems] = useState(itemsCache || []);
-  const [loading, setLoading] = useState(!itemsCache);
+  const [items, setItems] = useState(_cache.items || []);
+  const [loading, setLoading] = useState(!_cache.items);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -42,13 +44,13 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   }, []);
 
   useEffect(() => {
-    if (itemsCache) {
-      setItems(itemsCache);
+    if (_cache.items) {
+      setItems(_cache.items);
       setLoading(false);
       return;
     }
-    if (!itemsFetchPromise) {
-      itemsFetchPromise = Promise.all([
+    if (!_cache.promise) {
+      _cache.promise = Promise.all([
         base44.functions.invoke('fetchGameData', { type: 'items' }),
         base44.functions.invoke('fetchWeaponsMeta', {})
       ]).then(([itemsResponse, metaResponse]) => {
@@ -58,13 +60,13 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
         });
       }).catch(e => {
         console.error('Failed to load items:', e);
-        itemsFetchPromise = null;
+        _cache.promise = null;
         return [];
       });
     }
-    itemsFetchPromise.then(loaded => {
+    _cache.promise.then(loaded => {
       if (!mountedRef.current) return;
-      if (loaded.length > 0) itemsCache = loaded;
+      if (loaded.length > 0) _cache.items = loaded;
       setItems(loaded);
       setLoading(false);
     });
