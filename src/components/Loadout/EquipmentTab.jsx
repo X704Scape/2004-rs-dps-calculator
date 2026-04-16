@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
@@ -34,6 +34,12 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     if (itemsCache) {
@@ -52,11 +58,12 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
         });
       }).catch(e => {
         console.error('Failed to load items:', e);
-        itemsFetchPromise = null; // reset so next mount retries
+        itemsFetchPromise = null;
         return [];
       });
     }
     itemsFetchPromise.then(loaded => {
+      if (!mountedRef.current) return;
       if (loaded.length > 0) itemsCache = loaded;
       setItems(loaded);
       setLoading(false);
