@@ -28,7 +28,7 @@ const SLOT_ICONS = {
   ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
 };
 
-export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
+export default function EquipmentTab({ equipment, onEquipmentChange }) {
   const [items, setItems] = useState(itemsCache || []);
   const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,7 +70,7 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
     ).slice(0, 20);
   }, [debouncedSearch, items]);
 
-  const safeEquipment = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+  const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
 
   const handleSelectItem = (item) => {
     const newEquipment = { ...safeEquipment };
