@@ -97,7 +97,7 @@ export default function LoadoutPanel({ loadoutName, equipment, onEquipmentChange
         )}
         {activeTab === 'equipment' && (
           <EquipmentTab 
-            equipment={(() => { console.log('[LoadoutPanel] passing equipment to EquipmentTab:', typeof equipment, JSON.stringify(equipment)?.slice(0, 100)); return equipment; })()}
+            equipment={equipment}
             onEquipmentChange={onEquipmentChange}
           />
         )}

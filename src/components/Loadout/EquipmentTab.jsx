@@ -31,9 +31,7 @@ function getItemsCache() {
 }
 
 function EquipmentTab({ equipment, onEquipmentChange }) {
-  console.log('[EquipmentTab] render start — equipment type:', typeof equipment, '| value:', JSON.stringify(equipment)?.slice(0, 100));
   const cache = getItemsCache();
-  console.log('[EquipmentTab] cache state:', { hasItems: !!cache.items, hasPromise: !!cache.promise });
   const [items, setItems] = useState(cache.items || []);
   const [loading, setLoading] = useState(!cache.items);
   const [searchTerm, setSearchTerm] = useState('');
@@ -136,15 +134,18 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const speed = getAttackSpeed();
 
+  // Safety: ensure EQUIPMENT_LAYOUT rows are always valid arrays
+  const safeLayout = EQUIPMENT_LAYOUT.map(row => Array.isArray(row) ? row : []);
+
   return (
     <div>
       {/* Equipment Grid */}
       <div className="mb-4">
-        {EQUIPMENT_LAYOUT.map((row, rowIdx) => (
+        {safeLayout.map((row, rowIdx) => (
           <div key={rowIdx} className="flex justify-center gap-1 mb-1">
             {row.map((slot, colIdx) => {
               if (slot === null) {
-                return <div key={`${rowIdx}-${colIdx}`} className="w-14 h-14" />;
+                return <span key={`${rowIdx}-${colIdx}`} className="w-14 h-14 inline-block" aria-hidden="true" />;
               }
               const rawItem = safeEquipment[slot];
               const item = (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) ? rawItem : null;
