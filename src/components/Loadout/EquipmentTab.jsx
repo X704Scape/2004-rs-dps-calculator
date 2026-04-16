@@ -2,14 +2,6 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 
-// Stable global cache - keyed on window to survive HMR
-const getCache = () => {
-  if (!window.__equipmentTabCache) {
-    window.__equipmentTabCache = { items: null, promise: null };
-  }
-  return window.__equipmentTabCache;
-};
-
 const EQUIPMENT_LAYOUT = [
   [null, 'head', null],
   ['cape', 'neck', 'ammo'],
@@ -32,9 +24,15 @@ const SLOT_ICONS = {
   ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
 };
 
-export default function EquipmentTab({ equipment, onEquipmentChange }) {
-  const [items, setItems] = useState(() => getCache().items || []);
-  const [loading, setLoading] = useState(() => !getCache().items);
+function getItemsCache() {
+  if (!window.__eqCache) window.__eqCache = { items: null, promise: null };
+  return window.__eqCache;
+}
+
+function EquipmentTab({ equipment, onEquipmentChange }) {
+  const cache = getItemsCache();
+  const [items, setItems] = useState(cache.items || []);
+  const [loading, setLoading] = useState(!cache.items);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -46,83 +44,68 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   }, []);
 
   useEffect(() => {
-    const cache = getCache();
-    if (cache.items) {
-      setItems(cache.items);
+    const c = getItemsCache();
+    if (c.items) {
+      setItems(c.items);
       setLoading(false);
       return;
     }
-    if (!cache.promise) {
-      cache.promise = Promise.all([
+    if (!c.promise) {
+      c.promise = Promise.all([
         base44.functions.invoke('fetchGameData', { type: 'items' }),
         base44.functions.invoke('fetchWeaponsMeta', {})
-      ]).then(([itemsResponse, metaResponse]) => {
-        return (itemsResponse.data.items || []).map(item => {
-          const meta = metaResponse.data.weaponsMeta?.[item.id];
+      ]).then(([itemsRes, metaRes]) => {
+        const merged = (itemsRes.data.items || []).map(item => {
+          const meta = metaRes.data.weaponsMeta?.[item.id];
           return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
         });
-      }).catch(e => {
-        console.error('Failed to load items:', e);
-        getCache().promise = null;
+        getItemsCache().items = merged;
+        return merged;
+      }).catch(err => {
+        console.error('Failed to load items:', err);
+        getItemsCache().promise = null;
         return [];
       });
     }
-    cache.promise.then(loaded => {
+    c.promise.then(loaded => {
       if (!mountedRef.current) return;
-      const c = getCache();
-      if (loaded.length > 0) c.items = loaded;
       setItems(loaded);
       setLoading(false);
     });
   }, []);
 
-  // Debounce search input by 150ms
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 150);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const safeEquipment = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
+
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
     const lower = debouncedSearch.toLowerCase();
-    return items.filter(item =>
-      item.name.toLowerCase().includes(lower) || String(item.id).includes(lower)
-    ).slice(0, 20);
+    return items
+      .filter(item => item.name && (item.name.toLowerCase().includes(lower) || String(item.id).includes(lower)))
+      .slice(0, 20);
   }, [debouncedSearch, items]);
-
-  const safeEquipment = (equipment != null && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
 
   const handleSelectItem = (item) => {
     const newEquipment = { ...safeEquipment };
-    
-    // Check if item is 2-handed (occupies both weapon and shield slots)
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
-    
-    // If equipping a 2-handed weapon
     if (is2Handed) {
       delete newEquipment.shield;
       newEquipment.weapon = item;
-      newEquipment._2handed = true; // Mark that weapon is 2-handed
-    }
-    // If equipping a shield
-    else if (item.slot === 'shield') {
-      // Remove 2-handed weapon if equipped
-      if (newEquipment.weapon?.wearpos2 === 'lefthand') {
-        delete newEquipment.weapon;
-      }
+      newEquipment._2handed = true;
+    } else if (item.slot === 'shield') {
+      if (newEquipment.weapon?.wearpos2 === 'lefthand') delete newEquipment.weapon;
       delete newEquipment._2handed;
       newEquipment.shield = item;
-    }
-    // If equipping a 1-handed weapon
-    else if (item.slot === 'weapon') {
+    } else if (item.slot === 'weapon') {
       delete newEquipment._2handed;
       newEquipment.weapon = item;
-    }
-    // Other slots
-    else {
+    } else {
       newEquipment[item.slot] = item;
     }
-    
     onEquipmentChange(newEquipment);
     setSearchTerm('');
     setShowDropdown(false);
@@ -137,12 +120,12 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const getAttackSpeed = () => {
     const weapon = safeEquipment.weapon;
-    if (!weapon) return { ticks: 4, seconds: 2.4 };
-    
+    if (!weapon) return { ticks: 4, seconds: '2.4' };
     const ticks = weapon.attackRate || 4;
-    const seconds = (ticks * 0.6).toFixed(1);
-    return { ticks, seconds };
+    return { ticks, seconds: (ticks * 0.6).toFixed(1) };
   };
+
+  const speed = getAttackSpeed();
 
   return (
     <div>
@@ -151,36 +134,46 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
         {EQUIPMENT_LAYOUT.map((row, rowIdx) => (
           <div key={rowIdx} className="flex justify-center gap-1 mb-1">
             {row.map((slot, colIdx) => {
-              const cellKey = `cell-${rowIdx}-${colIdx}`;
-              if (!slot) {
-                return <div key={cellKey} className="w-14 h-14" />;
+              if (slot === null) {
+                return <div key={`${rowIdx}-${colIdx}`} className="w-14 h-14" />;
               }
               const rawItem = safeEquipment[slot];
               const item = (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) ? rawItem : null;
-              const is2HandedEquipped = slot === 'shield' && safeEquipment.weapon && typeof safeEquipment.weapon === 'object' && safeEquipment.weapon.wearpos2 === 'lefthand';
+              const is2Handed = slot === 'shield' &&
+                safeEquipment.weapon &&
+                typeof safeEquipment.weapon === 'object' &&
+                safeEquipment.weapon.wearpos2 === 'lefthand';
+
+              const slotIcon = SLOT_ICONS[slot] || '';
+              const imgSrc = (item && !is2Handed) ? (item.iconUrl || item.icon || slotIcon) : slotIcon;
+              const imgAlt = (item && !is2Handed) ? item.name : `Empty ${slot}`;
+              const imgClass = (item && !is2Handed) ? 'w-full h-full object-contain' : 'w-full h-full object-contain opacity-50';
+              const divClass = is2Handed
+                ? 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden opacity-50 cursor-not-allowed'
+                : 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden cursor-pointer hover:border-amber-700';
+              const titleText = is2Handed
+                ? '2-handed weapon equipped'
+                : item ? `${item.name} (Click to remove)` : `Empty ${slot}`;
+
               return (
                 <div
-                  key={cellKey}
+                  key={`${rowIdx}-${colIdx}`}
+                  className={divClass}
+                  title={titleText}
                   onClick={() => {
-                    if (item && !is2HandedEquipped) {
-                      const newEquipment = { ...safeEquipment };
-                      delete newEquipment[slot];
-                      if (slot === 'weapon' && item.wearpos2 === 'lefthand') {
-                        delete newEquipment._2handed;
-                      }
-                      onEquipmentChange(newEquipment);
+                    if (item && !is2Handed) {
+                      const next = { ...safeEquipment };
+                      delete next[slot];
+                      if (slot === 'weapon' && item.wearpos2 === 'lefthand') delete next._2handed;
+                      onEquipmentChange(next);
                     }
                   }}
-                  className={is2HandedEquipped
-                    ? 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden opacity-50 cursor-not-allowed'
-                    : 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden cursor-pointer hover:border-amber-700'}
-                  title={is2HandedEquipped ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
                   <img
-                    src={item && !is2HandedEquipped ? (item.iconUrl || item.icon || SLOT_ICONS[slot]) : SLOT_ICONS[slot]}
-                    alt={item && !is2HandedEquipped ? item.name : `Empty ${slot}`}
-                    className={`w-full h-full object-contain${item && !is2HandedEquipped ? '' : ' opacity-50'}`}
-                    onError={(e) => { e.target.src = SLOT_ICONS[slot]; }}
+                    src={imgSrc}
+                    alt={imgAlt}
+                    className={imgClass}
+                    onError={(e) => { e.target.src = slotIcon; }}
                   />
                 </div>
               );
@@ -212,16 +205,16 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
             ) : (
               searchResults.map((item) => (
                 <button
-                  key={`item-${item.id}-${item.name}`}
+                  key={`${item.id}-${item.name}`}
                   onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleSelectItem(item); }}
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
                   {(item.icon || item.iconUrl) && (
-                    <img 
-                      src={item.iconUrl || item.icon} 
-                      alt={item.name} 
-                      className="w-8 h-8 object-contain" 
-                      onError={(e) => e.target.style.display = 'none'}
+                    <img
+                      src={item.iconUrl || item.icon}
+                      alt={item.name}
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   )}
                   <div>
@@ -306,7 +299,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               </div>
               <div className="flex items-center gap-2">
                 <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/aed2e430d_Screenshot2026-01-19020030.png" className="w-4 h-4" alt="Speed" />
-                <span>{getAttackSpeed().ticks} ticks ({getAttackSpeed().seconds}s)</span>
+                <span>{speed.ticks} ticks ({speed.seconds}s)</span>
               </div>
             </div>
           </div>
@@ -315,3 +308,5 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     </div>
   );
 }
+
+export default EquipmentTab;
