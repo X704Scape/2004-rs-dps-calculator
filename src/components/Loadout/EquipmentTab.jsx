@@ -81,6 +81,11 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const safeEquipment = (equipment && typeof equipment === 'object' && !Array.isArray(equipment)) ? equipment : {};
 
+  // Filter out non-object values (e.g. _2handed boolean flag) before any iteration
+  const safeEquipmentItems = Object.fromEntries(
+    Object.entries(safeEquipment).filter(([, v]) => v && typeof v === 'object' && !Array.isArray(v))
+  );
+
   const searchResults = useMemo(() => {
     if (!debouncedSearch) return [];
     const lower = debouncedSearch.toLowerCase();
@@ -112,8 +117,7 @@ function EquipmentTab({ equipment, onEquipmentChange }) {
   };
 
   const getTotalBonus = (bonusType) => {
-    return Object.values(safeEquipment).reduce((sum, item) => {
-      if (!item || typeof item !== 'object') return sum;
+    return Object.values(safeEquipmentItems).reduce((sum, item) => {
       return sum + (item[bonusType] || 0);
     }, 0);
   };
