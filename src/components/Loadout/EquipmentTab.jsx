@@ -38,20 +38,22 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
   useEffect(() => {
     if (itemsCache) return;
     if (!itemsFetchPromise) {
-      itemsFetchPromise = Promise.all([
-        base44.functions.invoke('fetchGameData', { type: 'items' }),
-        base44.functions.invoke('fetchWeaponsMeta', {})
-      ]).then(([itemsResponse, metaResponse]) => {
-        const items = (itemsResponse?.data?.items || []);
-        const weaponsMeta = metaResponse?.data?.weaponsMeta || {};
-        return items.map(item => {
-          const meta = weaponsMeta[item.id];
-          return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
+      itemsFetchPromise = base44.functions.invoke('fetchGameData', { type: 'items' })
+        .then(itemsResponse => {
+          const items = (itemsResponse?.data?.items || []);
+          return base44.functions.invoke('fetchWeaponsMeta', {})
+            .then(metaResponse => {
+              const weaponsMeta = metaResponse?.data?.weaponsMeta || {};
+              return items.map(item => {
+                const meta = weaponsMeta[item.id];
+                return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
+              });
+            });
+        })
+        .catch(e => {
+          console.error('Failed to load items:', e);
+          return [];
         });
-      }).catch(e => {
-        console.error('Failed to load items:', e);
-        return [];
-      });
     }
     itemsFetchPromise.then(loaded => {
       itemsCache = loaded;
