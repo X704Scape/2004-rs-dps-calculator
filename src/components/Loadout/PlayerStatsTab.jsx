@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 import BoostsSelector, { BOOSTS } from './BoostsSelector';
@@ -17,6 +17,7 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedBoosts, setSelectedBoosts] = useState(stats.selectedBoosts || []);
+  const isMountedRef = useRef(false);
 
   const handleStatChange = (id, value) => {
     const newStats = { ...stats, [id]: parseInt(value) || 1 };
@@ -44,6 +45,10 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
   };
 
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
     applyAllBoosts(selectedBoosts);
   }, [selectedBoosts]);
 
