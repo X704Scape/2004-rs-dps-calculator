@@ -29,7 +29,6 @@ const SLOT_ICONS = {
 };
 
 export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
-  if (!equipment || typeof equipment !== 'object') return null;
   const [items, setItems] = useState(itemsCache || []);
   const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,6 +121,8 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
     const seconds = (ticks * 0.6).toFixed(1);
     return { ticks, seconds };
   };
+
+  if (!equipment || typeof equipment !== 'object') return null;
 
   return (
     <div>
