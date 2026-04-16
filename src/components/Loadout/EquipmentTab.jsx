@@ -72,15 +72,14 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const handleSelectItem = (item) => {
     const newEquipment = { ...equipment };
-    
+
     // Check if item is 2-handed (occupies both weapon and shield slots)
     const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
-    
+
     // If equipping a 2-handed weapon
     if (is2Handed) {
       delete newEquipment.shield;
       newEquipment.weapon = item;
-      newEquipment._2handed = true; // Mark that weapon is 2-handed
     }
     // If equipping a shield
     else if (item.slot === 'shield') {
@@ -88,19 +87,17 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
       if (newEquipment.weapon?.wearpos2 === 'lefthand') {
         delete newEquipment.weapon;
       }
-      delete newEquipment._2handed;
       newEquipment.shield = item;
     }
     // If equipping a 1-handed weapon
     else if (item.slot === 'weapon') {
-      delete newEquipment._2handed;
       newEquipment.weapon = item;
     }
     // Other slots
     else {
       newEquipment[item.slot] = item;
     }
-    
+
     onEquipmentChange(newEquipment);
     setSearchTerm('');
     setShowDropdown(false);
@@ -108,24 +105,18 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const getTotalBonus = (bonusType) => {
     return Object.values(equipment).reduce((sum, item) => {
-      if (!item || typeof item !== 'object' || item.id === undefined) return sum;
       return sum + (item[bonusType] || 0);
     }, 0);
   };
 
   const getAttackSpeed = () => {
     const weapon = equipment.weapon;
-    if (!weapon || typeof weapon !== 'object') return { ticks: 4, seconds: 2.4 };
-    
+    if (!weapon) return { ticks: 4, seconds: 2.4 };
+
     const ticks = weapon.attackRate || 4;
     const seconds = (ticks * 0.6).toFixed(1);
     return { ticks, seconds };
   };
-
-  // Safety guard: if equipment is null, render early
-  if (!equipment || typeof equipment !== 'object') {
-    return <div className="p-4 text-amber-600">Equipment data unavailable</div>;
-  }
 
   return (
     <div>
@@ -148,10 +139,6 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                     if (item && !is2HandedEquipped) {
                       const newEquipment = { ...equipment };
                       delete newEquipment[slot];
-                      // If removing a 2-handed weapon, also clear the marker
-                      if (slot === 'weapon' && item.wearpos2 === 'lefthand') {
-                        delete newEquipment._2handed;
-                      }
                       onEquipmentChange(newEquipment);
                     }
                   }}
