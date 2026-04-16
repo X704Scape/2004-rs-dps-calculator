@@ -131,23 +131,16 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
         {EQUIPMENT_LAYOUT.map((row, rowIdx) => (
           <div key={rowIdx} className="flex justify-center gap-1 mb-1">
             {row.map((slot, colIdx) => {
-              if (slot === null || slot === undefined) {
-                return <div key={`empty-${rowIdx}-${colIdx}`} className="w-14 h-14" />;
+              const cellKey = `cell-${rowIdx}-${colIdx}`;
+              if (!slot) {
+                return <div key={cellKey} className="w-14 h-14" />;
               }
               const rawItem = equipment[slot];
               const item = (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) ? rawItem : null;
               const is2HandedEquipped = slot === 'shield' && equipment.weapon && typeof equipment.weapon === 'object' && equipment.weapon.wearpos2 === 'lefthand';
-              const slotClass = is2HandedEquipped
-                ? 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center transition overflow-hidden opacity-50 cursor-not-allowed'
-                : 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center transition overflow-hidden cursor-pointer hover:border-amber-700';
-              const slotTitle = is2HandedEquipped
-                ? '2-handed weapon equipped'
-                : item
-                  ? `${item.name} (Click to remove)`
-                  : `Empty ${slot}`;
               return (
                 <div
-                  key={`${rowIdx}-${colIdx}`}
+                  key={cellKey}
                   onClick={() => {
                     if (item && !is2HandedEquipped) {
                       const newEquipment = { ...equipment };
@@ -158,23 +151,17 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
                       onEquipmentChange(newEquipment);
                     }
                   }}
-                  className={slotClass}
-                  title={slotTitle}
+                  className={is2HandedEquipped
+                    ? 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden opacity-50 cursor-not-allowed'
+                    : 'w-14 h-14 bg-gray-900 border border-amber-900 rounded flex items-center justify-center overflow-hidden cursor-pointer hover:border-amber-700'}
+                  title={is2HandedEquipped ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
-                  {item && !is2HandedEquipped ? (
-                    <img
-                      src={item.iconUrl || item.icon || SLOT_ICONS[slot]}
-                      alt={item.name}
-                      className="w-full h-full object-contain"
-                      onError={(e) => { e.target.src = SLOT_ICONS[slot]; }}
-                    />
-                  ) : (
-                    <img
-                      src={SLOT_ICONS[slot]}
-                      alt={`Empty ${slot}`}
-                      className="w-full h-full object-contain opacity-50"
-                    />
-                  )}
+                  <img
+                    src={item && !is2HandedEquipped ? (item.iconUrl || item.icon || SLOT_ICONS[slot]) : SLOT_ICONS[slot]}
+                    alt={item && !is2HandedEquipped ? item.name : `Empty ${slot}`}
+                    className={`w-full h-full object-contain${item && !is2HandedEquipped ? '' : ' opacity-50'}`}
+                    onError={(e) => { e.target.src = SLOT_ICONS[slot]; }}
+                  />
                 </div>
               );
             })}
