@@ -1,14 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-
-const TYPE_MAP = {
-  1: 'attack',
-  2: 'defence',
-  3: 'strength',
-  4: 'hitpoints',
-  5: 'ranged',
-  6: 'prayer',
-  7: 'magic'
-};
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
@@ -20,31 +10,47 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUsername = username.trim().replace(/ /g, '_');
-    const url = `https://2004.lostcity.rs/api/hiscores/player/${encodeURIComponent(normalizedUsername)}`;
+    const response = await fetch(`https://2004.lostcity.rs/hiscores/player/${encodeURIComponent(normalizedUsername)}`);
+    const html = await response.text();
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-      }
-    });
+    // Parse stats from HTML table structure
+    const stats = {
+      hitpoints: 10,
+      attack: 1,
+      strength: 1,
+      defence: 1,
+      ranged: 1,
+      magic: 1,
+      prayer: 1
+    };
 
-    console.log('Status:', response.status, 'URL:', url);
+    // HTML structure: skill name inside <a> tag, then rank, level, xp in <td align="right"> cells
+    // Pattern: skill name ... </td> rank </td> level </td>
+    const getSkillLevel = (skillName) => {
+      const regex = new RegExp(skillName + '[\\s\\S]*?<td align="right">\\s*[\\d,]+\\s*<\\/td>\\s*<td align="right">\\s*([\\d,]+)\\s*<\\/td>', 'i');
+      const match = html.match(regex);
+      return match ? parseInt(match[1].replace(/,/g, '')) : null;
+    };
 
-    if (!response.ok) {
-      return Response.json({ error: `Player "${username}" not found on hiscores` }, { status: 404 });
-    }
+    const attack = getSkillLevel('Attack');
+    const defence = getSkillLevel('Defence');
+    const strength = getSkillLevel('Strength');
+    const hitpoints = getSkillLevel('Hitpoints');
+    const ranged = getSkillLevel('Ranged');
+    const prayer = getSkillLevel('Prayer');
+    const magic = getSkillLevel('Magic');
 
-    const data = await response.json();
-    const stats = {};
-    for (const entry of data) {
-      const skillName = TYPE_MAP[entry.type];
-      if (skillName && entry.level) stats[skillName] = entry.level;
-    }
+    if (attack) stats.attack = attack;
+    if (defence) stats.defence = defence;
+    if (strength) stats.strength = strength;
+    if (hitpoints) stats.hitpoints = hitpoints;
+    if (ranged) stats.ranged = ranged;
+    if (prayer) stats.prayer = prayer;
+    if (magic) stats.magic = magic;
 
     return Response.json({ stats });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Hiscores fetch error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
