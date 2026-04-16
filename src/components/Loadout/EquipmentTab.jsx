@@ -24,9 +24,10 @@ const SLOT_ICONS = {
   ring: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/696c1e34985164b40968262c/edf33913e_Screenshot2026-01-19174530.png'
 };
 
+// Module-level cache — lives outside React, never causes re-renders
+const _itemsCache = { items: null, promise: null };
 function getItemsCache() {
-  if (!window.__eqCache) window.__eqCache = { items: null, promise: null };
-  return window.__eqCache;
+  return _itemsCache;
 }
 
 function EquipmentTab({ equipment, onEquipmentChange }) {
