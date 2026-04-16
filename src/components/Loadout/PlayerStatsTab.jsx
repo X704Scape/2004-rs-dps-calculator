@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Search } from 'lucide-react';
 import BoostsSelector, { BOOSTS } from './BoostsSelector';
 
 const STATS = [
@@ -14,34 +12,12 @@ const STATS = [
 ];
 
 export default function PlayerStatsTab({ stats, onStatsChange }) {
-  const [username, setUsername] = useState('');
-  const [loading, setLoading] = useState(false);
   const [selectedBoosts, setSelectedBoosts] = useState(stats.selectedBoosts || []);
   const isMountedRef = useRef(false);
 
   const handleStatChange = (id, value) => {
     const newStats = { ...stats, [id]: parseInt(value) || 1 };
     applyAllBoosts(selectedBoosts, newStats);
-  };
-
-  const loadFromHiscores = async () => {
-    const name = username.trim();
-    if (!name) return;
-    setLoading(true);
-    try {
-      const response = await base44.functions.invoke('fetchHiscores', { username: name });
-      const { stats: fetchedStats, error } = response.data;
-      if (error) {
-        alert(`Player "${name}" not found on hiscores.`);
-        return;
-      }
-      onStatsChange({ ...stats, ...fetchedStats });
-    } catch (error) {
-      console.error('Lookup failed:', error);
-      alert(`Player "${name}" not found on hiscores.`);
-    } finally {
-      setLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -117,27 +93,6 @@ export default function PlayerStatsTab({ stats, onStatsChange }) {
     <div>
       <h3 className="text-amber-600 font-bold text-sm mb-3">Player Stats</h3>
       
-      {/* Hiscores Lookup */}
-      <div className="mb-4 bg-gray-900 rounded p-3 border border-amber-900">
-        <label className="text-xs text-amber-700 block mb-2">Load from Hiscores</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="flex-1 bg-gray-800 border border-amber-900 rounded px-2 py-1 text-xs text-amber-100 focus:outline-none"
-          />
-          <button
-            onClick={loadFromHiscores}
-            disabled={loading || !username}
-            className="bg-amber-900 hover:bg-amber-800 disabled:opacity-50 px-3 py-1 rounded text-xs text-amber-100"
-          >
-            {loading ? 'Loading...' : 'Load'}
-          </button>
-        </div>
-      </div>
-
       {/* Manual Stats */}
       <div className="space-y-2 mb-4">
         {STATS.map((stat) => {
