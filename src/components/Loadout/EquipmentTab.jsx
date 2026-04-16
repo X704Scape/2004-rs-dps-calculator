@@ -102,6 +102,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
 
   const getTotalBonus = (bonusType) => {
     return Object.values(equipment).reduce((sum, item) => {
+      if (!item || typeof item !== 'object') return sum;
       return sum + (item[bonusType] || 0);
     }, 0);
   };
@@ -120,18 +121,18 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
       {/* Equipment Grid */}
       <div className="mb-4">
         {EQUIPMENT_LAYOUT.map((row, rowIdx) => (
-          <div key={rowIdx} className="flex justify-center gap-1 mb-1">
+          <div key={`row-${rowIdx}`} className="flex justify-center gap-1 mb-1">
             {row.map((slot, colIdx) => {
-              if (!slot) {
-                return <div key={colIdx} className="w-14 h-14" />;
+              if (slot === null || slot === undefined) {
+                return <div key={`empty-${rowIdx}-${colIdx}`} className="w-14 h-14" />;
               }
-              const item = equipment[slot];
+              const item = equipment[slot] || null;
               // If shield slot and 2-handed weapon equipped, show as blocked
               const is2HandedEquipped = slot === 'shield' && equipment.weapon?.wearpos2 === 'lefthand';
               
               return (
                 <div
-                  key={slot}
+                  key={`slot-${slot}`}
                   onClick={() => {
                     if (item && !is2HandedEquipped) {
                       const newEquipment = { ...equipment };
