@@ -42,17 +42,20 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
         base44.functions.invoke('fetchGameData', { type: 'items' }),
         base44.functions.invoke('fetchWeaponsMeta', {})
       ]).then(([itemsResponse, metaResponse]) => {
-        return (itemsResponse.data.items || []).map(item => {
-          const meta = metaResponse.data.weaponsMeta?.[item.id];
+        const items = (itemsResponse?.data?.items || []);
+        const weaponsMeta = metaResponse?.data?.weaponsMeta || {};
+        return items.map(item => {
+          const meta = weaponsMeta[item.id];
           return { ...item, attackStyles: meta?.attackStyles || item.attackStyles };
         });
+      }).catch(e => {
+        console.error('Failed to load items:', e);
+        return [];
       });
     }
     itemsFetchPromise.then(loaded => {
       itemsCache = loaded;
       setItems(loaded);
-    }).catch(e => {
-      console.error('Failed to load items:', e);
     }).finally(() => setLoading(false));
   }, []);
 
