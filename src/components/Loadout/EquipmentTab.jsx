@@ -113,6 +113,8 @@ export default function EquipmentTab({ equipment = {}, onEquipmentChange }) {
     }, 0);
   };
 
+  if (!equipment || typeof equipment !== 'object') return null;
+
   const getAttackSpeed = () => {
     const weapon = equipment.weapon;
     if (!weapon) return { ticks: 4, seconds: 2.4 };
