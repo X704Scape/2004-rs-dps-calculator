@@ -29,6 +29,11 @@ const SLOT_ICONS = {
 };
 
 export default function EquipmentTab({ equipment, onEquipmentChange }) {
+  // Safety guard: if equipment is null, return early
+  if (!equipment || typeof equipment !== 'object') {
+    return <div className="p-4 text-amber-600">Equipment data unavailable</div>;
+  }
+
   const [items, setItems] = useState(itemsCache || []);
   const [loading, setLoading] = useState(!itemsCache);
   const [searchTerm, setSearchTerm] = useState('');

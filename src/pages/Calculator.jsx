@@ -128,10 +128,17 @@ export default function Calculator() {
     if (!monster) return null;
 
     try {
-      const { equipment, playerStats } = loadout;
+      // Filter equipment to only actual items (skip metadata flags like _2handed)
+      const filteredEquipment = Object.entries(loadout.equipment)
+        .filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined)
+        .reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
+
+      const { playerStats } = loadout;
+      const equipment = filteredEquipment;
       // Calculate total bonuses from equipment
       const getTotalBonus = (bonusType) => {
         return Object.values(equipment).reduce((sum, item) => {
+          if (!item || typeof item !== 'object') return sum;
           return sum + (item[bonusType] || 0);
         }, 0);
       };
@@ -237,8 +244,13 @@ export default function Calculator() {
       };
 
       if (targetLoadout) {
+        const targetEquipment = Object.entries(targetLoadout.equipment)
+          .filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined)
+          .reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
+
         const getTargetDefBonus = (bonusType) => {
-          return Object.values(targetLoadout.equipment).reduce((sum, item) => {
+          return Object.values(targetEquipment).reduce((sum, item) => {
+            if (!item || typeof item !== 'object') return sum;
             return sum + (item[bonusType] || 0);
           }, 0);
         };
