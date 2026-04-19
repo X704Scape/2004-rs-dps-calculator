@@ -190,7 +190,9 @@ Deno.serve(async (req) => {
     // DPS calculation
     // Expected damage: (maxHit / 2) when hit lands * accuracy of landing the hit
     const avgHit = (maxHit / 2) * accuracy;
-    const attackSpeed = attackSpeedTicks * 0.6; // Convert ticks to seconds
+    // Magic spells always cast at 5 ticks regardless of equipped weapon
+    const effectiveSpeedTicks = combatType === 'magic' ? 5 : attackSpeedTicks;
+    const attackSpeed = effectiveSpeedTicks * 0.6; // Convert ticks to seconds
     dps = avgHit / attackSpeed;
 
     // Time to kill
@@ -357,7 +359,7 @@ Deno.serve(async (req) => {
       ttk: ttk.toFixed(1),
       avgHit: avgHit.toFixed(2),
       overkill: overkill.toFixed(2),
-      attackSpeedTicks,
+      attackSpeedTicks: effectiveSpeedTicks,
       specAccuracy,
       specMaxHit,
       specExpectedHit
