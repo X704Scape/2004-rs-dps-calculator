@@ -17,28 +17,28 @@ const calculateCombatLevel = (stats) => {
 
 export default function Calculator() {
   const [loadouts, setLoadouts] = useState([
-    {
-      id: 1,
-      name: 'Loadout 1',
-      equipment: {},
-      playerStats: {
-        hitpoints: 10,
-        attack: 1,
-        strength: 1,
-        defence: 1,
-        ranged: 1,
-        prayer: 1,
-        magic: 1,
-        combatType: 'melee',
-        prayerActive: 'none',
-        style: 'aggressive',
-        combatLevel: 3,
-        selectedSpell: null,
-        chargeActive: false
-      },
-      results: null
-    }
-  ]);
+  {
+    id: 1,
+    name: 'Loadout 1',
+    equipment: {},
+    playerStats: {
+      hitpoints: 10,
+      attack: 1,
+      strength: 1,
+      defence: 1,
+      ranged: 1,
+      prayer: 1,
+      magic: 1,
+      combatType: 'melee',
+      prayerActive: 'none',
+      style: 'aggressive',
+      combatLevel: 3,
+      selectedSpell: null,
+      chargeActive: false
+    },
+    results: null
+  }]
+  );
   const [activeLoadoutId, setActiveLoadoutId] = useState(1);
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [availableMonsters, setAvailableMonsters] = useState([]);
@@ -47,8 +47,8 @@ export default function Calculator() {
   const [showOptimizer, setShowOptimizer] = useState(false);
 
   const addLoadout = () => {
-    const newId = Math.max(...loadouts.map(l => l.id)) + 1;
-    setLoadouts(prev => [...prev, {
+    const newId = Math.max(...loadouts.map((l) => l.id)) + 1;
+    setLoadouts((prev) => [...prev, {
       id: newId,
       name: `Loadout ${newId}`,
       equipment: {},
@@ -74,17 +74,17 @@ export default function Calculator() {
 
   const removeLoadout = (id) => {
     if (loadouts.length > 1) {
-      setLoadouts(loadouts.filter(l => l.id !== id));
+      setLoadouts(loadouts.filter((l) => l.id !== id));
       // Switch to first remaining loadout if removing active one
       if (activeLoadoutId === id) {
-        const remaining = loadouts.filter(l => l.id !== id);
+        const remaining = loadouts.filter((l) => l.id !== id);
         setActiveLoadoutId(remaining[0]?.id || 1);
       }
     }
   };
 
   const updateLoadout = (id, field, value) => {
-    setLoadouts(loadouts.map(l => {
+    setLoadouts(loadouts.map((l) => {
       if (l.id === id) {
         const updated = { ...l, [field]: value };
         // Update combat level when player stats change
@@ -99,19 +99,19 @@ export default function Calculator() {
 
   const applyOptimizerResult = (equipment, combatType, style, targetLoadoutId, playerStatsOverride) => {
     const targetId = targetLoadoutId ?? activeLoadoutId;
-    setLoadouts(prev => prev.map(l => {
+    setLoadouts((prev) => prev.map((l) => {
       if (l.id !== targetId) return l;
-      const mergedStats = playerStatsOverride
-        ? { ...l.playerStats, ...playerStatsOverride, style, combatType }
-        : { ...l.playerStats, style, combatType };
+      const mergedStats = playerStatsOverride ?
+      { ...l.playerStats, ...playerStatsOverride, style, combatType } :
+      { ...l.playerStats, style, combatType };
       return { ...l, equipment, playerStats: mergedStats };
     }));
   };
 
   const copyLoadout = (toId, fromId) => {
-    const fromLoadout = loadouts.find(l => l.id === fromId);
+    const fromLoadout = loadouts.find((l) => l.id === fromId);
     if (fromLoadout) {
-      setLoadouts(loadouts.map(l => {
+      setLoadouts(loadouts.map((l) => {
         if (l.id === toId) {
           return {
             ...l,
@@ -129,9 +129,9 @@ export default function Calculator() {
 
     try {
       // Filter equipment to only actual items (skip metadata flags like _2handed)
-      const filteredEquipment = Object.entries(loadout.equipment)
-        .filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined)
-        .reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
+      const filteredEquipment = Object.entries(loadout.equipment).
+      filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined).
+      reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
 
       const { playerStats } = loadout;
       const equipment = filteredEquipment;
@@ -193,8 +193,8 @@ export default function Calculator() {
       if (playerStats.style === 'spell') {
         detectedCombatType = 'magic';
       } else if (weapon?.attackStyles && weapon.attackStyles.length > 0) {
-        const hasRanged = weapon.attackStyles.some(s => s.type === 'ranged');
-        const hasMagic = weapon.attackStyles.some(s => s.type === 'magic');
+        const hasRanged = weapon.attackStyles.some((s) => s.type === 'ranged');
+        const hasMagic = weapon.attackStyles.some((s) => s.type === 'magic');
         if (hasRanged) {
           detectedCombatType = 'ranged';
         } else if (hasMagic) {
@@ -202,9 +202,9 @@ export default function Calculator() {
         }
       } else {
         // Fallback to name detection
-        if (weaponName.includes('bow') || weaponName.includes('crossbow') || weaponName.includes('dart') || 
-            weaponName.includes('knife') || weaponName.includes('javelin') || weaponName.includes('thrownaxe') ||
-            weaponName.includes('blowpipe')) {
+        if (weaponName.includes('bow') || weaponName.includes('crossbow') || weaponName.includes('dart') ||
+        weaponName.includes('knife') || weaponName.includes('javelin') || weaponName.includes('thrownaxe') ||
+        weaponName.includes('blowpipe')) {
           detectedCombatType = 'ranged';
         } else if (weaponName.includes('staff') || weaponName.includes('wand')) {
           detectedCombatType = 'magic';
@@ -226,7 +226,7 @@ export default function Calculator() {
 
       // Get attack speed in ticks
       let attackSpeedTicks = weapon?.attackRate || 4;
-      
+
       // Apply rapid style bonus for ranged (-1 tick)
       if (detectedCombatType === 'ranged' && playerStats.style === 'rapid' && weapon) {
         attackSpeedTicks = Math.max(1, attackSpeedTicks - 1);
@@ -244,9 +244,9 @@ export default function Calculator() {
       };
 
       if (targetLoadout) {
-        const targetEquipment = Object.entries(targetLoadout.equipment)
-          .filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined)
-          .reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
+        const targetEquipment = Object.entries(targetLoadout.equipment).
+        filter(([_, item]) => item && typeof item === 'object' && item.id !== undefined).
+        reduce((acc, [key, item]) => ({ ...acc, [key]: item }), {});
 
         const getTargetDefBonus = (bonusType) => {
           return Object.values(targetEquipment).reduce((sum, item) => {
@@ -336,18 +336,18 @@ export default function Calculator() {
           const loadout2 = loadouts[1];
 
           const [response1, response2] = await Promise.all([
-            calculateDPS(loadout1, loadout2, monster),
-            calculateDPS(loadout2, loadout1, monster)
-          ]);
+          calculateDPS(loadout1, loadout2, monster),
+          calculateDPS(loadout2, loadout1, monster)]
+          );
 
-          setLoadouts(prev => prev.map((loadout, idx) => ({
+          setLoadouts((prev) => prev.map((loadout, idx) => ({
             ...loadout,
-            results: idx === 0 ? (response1?.data || null) : idx === 1 ? (response2?.data || null) : null
+            results: idx === 0 ? response1?.data || null : idx === 1 ? response2?.data || null : null
           })));
         } else {
           // Normal PVM mode
-          const responses = await Promise.all(loadouts.map(loadout => calculateDPS(loadout, null, monster)));
-          setLoadouts(prev => prev.map((loadout, idx) => ({
+          const responses = await Promise.all(loadouts.map((loadout) => calculateDPS(loadout, null, monster)));
+          setLoadouts((prev) => prev.map((loadout, idx) => ({
             ...loadout,
             results: responses[idx]?.data || null
           })));
@@ -359,7 +359,7 @@ export default function Calculator() {
 
     const timer = setTimeout(updateAllResults, 400);
     return () => clearTimeout(timer);
-  }, [loadouts.map(l => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
+  }, [loadouts.map((l) => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950">
@@ -368,12 +368,12 @@ export default function Calculator() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-amber-600">2004 RuneScape DPS Calculator</h1>
-            <p className="text-amber-100 text-sm mt-1">Authentic 2004 formulas</p>
+            <p className="text-amber-100 text-sm mt-1">Authentic 2004 formulas Revision 274</p>
           </div>
           <button
             onClick={() => setShowOptimizer(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 border border-amber-600 rounded text-amber-100 font-semibold text-sm transition"
-          >
+            className="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 border border-amber-600 rounded text-amber-100 font-semibold text-sm transition">
+            
             ✨ AI Optimizer
           </button>
         </div>
@@ -386,47 +386,47 @@ export default function Calculator() {
           <div className="lg:col-span-1 flex flex-col gap-6">
             {/* Tabs */}
             <div className="flex items-center gap-1 mb-3">
-              {loadouts.map((loadout, index) => (
-                <button
-                  key={loadout.id}
-                  onClick={() => setActiveLoadoutId(loadout.id)}
-                  className={`px-4 py-2 rounded-t font-semibold text-sm border-2 border-b-0 relative ${
-                    activeLoadoutId === loadout.id
-                      ? 'bg-gray-800 border-amber-900 text-amber-600 z-10'
-                      : 'bg-gray-900 border-amber-900/50 text-amber-700 hover:bg-gray-850'
-                  }`}
-                >
+              {loadouts.map((loadout, index) =>
+              <button
+                key={loadout.id}
+                onClick={() => setActiveLoadoutId(loadout.id)}
+                className={`px-4 py-2 rounded-t font-semibold text-sm border-2 border-b-0 relative ${
+                activeLoadoutId === loadout.id ?
+                'bg-gray-800 border-amber-900 text-amber-600 z-10' :
+                'bg-gray-900 border-amber-900/50 text-amber-700 hover:bg-gray-850'}`
+                }>
+                
                   {index + 1}
-                  {loadouts.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeLoadout(loadout.id);
-                      }}
-                      className="ml-2 text-red-600 hover:text-red-400"
-                    >
+                  {loadouts.length > 1 &&
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeLoadout(loadout.id);
+                  }}
+                  className="ml-2 text-red-600 hover:text-red-400">
+                  
                       ×
                     </button>
-                  )}
+                }
                 </button>
-              ))}
+              )}
               <button
                 onClick={addLoadout}
-                className="px-3 py-2 rounded-t bg-amber-900 hover:bg-amber-800 border-2 border-amber-700 text-amber-100 font-bold text-sm"
-              >
+                className="px-3 py-2 rounded-t bg-amber-900 hover:bg-amber-800 border-2 border-amber-700 text-amber-100 font-bold text-sm">
+                
                 +
               </button>
             </div>
 
             {/* Active Loadout */}
-            {loadouts.filter(l => l.id === activeLoadoutId).map((loadout) => {
-              const otherLoadoutsWithNumbers = loadouts
-                .filter(l => l.id !== loadout.id)
-                .map((l, idx) => {
-                  const actualIndex = loadouts.findIndex(lo => lo.id === l.id);
-                  return { ...l, displayNumber: actualIndex + 1 };
-                });
-              
+            {loadouts.filter((l) => l.id === activeLoadoutId).map((loadout) => {
+              const otherLoadoutsWithNumbers = loadouts.
+              filter((l) => l.id !== loadout.id).
+              map((l, idx) => {
+                const actualIndex = loadouts.findIndex((lo) => lo.id === l.id);
+                return { ...l, displayNumber: actualIndex + 1 };
+              });
+
               return (
                 <LoadoutPanel
                   key={loadout.id}
@@ -438,9 +438,9 @@ export default function Calculator() {
                   onCombatStyleChange={(style) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, style })}
                   onPrayerChange={(prayer) => updateLoadout(loadout.id, 'playerStats', { ...loadout.playerStats, prayerActive: prayer })}
                   otherLoadouts={otherLoadoutsWithNumbers}
-                  onCopyFrom={(fromId) => copyLoadout(loadout.id, fromId)}
-                />
-              );
+                  onCopyFrom={(fromId) => copyLoadout(loadout.id, fromId)} />);
+
+
             })}
           </div>
 
@@ -456,26 +456,26 @@ export default function Calculator() {
         </div>
 
         {/* Bottom Row - Graph full width */}
-        {selectedMonster && selectedMonster.id !== 'pvp' && loadouts.some(l => l.results) && (
-          <div className="mt-6">
+        {selectedMonster && selectedMonster.id !== 'pvp' && loadouts.some((l) => l.results) &&
+        <div className="mt-6">
             <KillSimulatorGraph loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} />
           </div>
-        )}
+        }
       </div>
 
       {/* AI Chat Modal */}
-      {showOptimizer && (
-        <AIChatModal
-          playerStats={loadouts.find(l => l.id === activeLoadoutId)?.playerStats}
-          monster={selectedMonster}
-          availableMonsters={availableMonsters}
-          loadouts={loadouts}
-          onApplyLoadout={applyOptimizerResult}
-          onSetMonster={setSelectedMonster}
-          onCreateLoadout={addLoadout}
-          onClose={() => setShowOptimizer(false)}
-        />
-      )}
+      {showOptimizer &&
+      <AIChatModal
+        playerStats={loadouts.find((l) => l.id === activeLoadoutId)?.playerStats}
+        monster={selectedMonster}
+        availableMonsters={availableMonsters}
+        loadouts={loadouts}
+        onApplyLoadout={applyOptimizerResult}
+        onSetMonster={setSelectedMonster}
+        onCreateLoadout={addLoadout}
+        onClose={() => setShowOptimizer(false)} />
+
+      }
 
       {/* Footer */}
       <div className="text-center py-6 mt-12 border-t border-amber-900">
@@ -487,6 +487,6 @@ export default function Calculator() {
           <a href="https://2004.lostcity.rs/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-amber-900 rounded text-amber-600 text-xs transition">⚔️ Play Lost City</a>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
