@@ -482,7 +482,7 @@ export default function Calculator() {
         <p className="text-amber-700 text-xs">2004 RuneScape DPS Calculator • Data from LostHQ</p>
         <p className="text-amber-800 text-xs mt-1">All formulas and data are pulled directly from the 2004 Lost City project. Credit to the LC Development team.</p>
         <div className="flex justify-center gap-3 mt-3">
-          <a href="https://github.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/tree/main" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-amber-900 rounded text-amber-600 text-xs transition">⌨ Source Code</a>
+          <a href="https://github.com/X704Scape/2004-rs-dps-calculator/tree/main" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-amber-900 rounded text-amber-600 text-xs transition">⌨ Source Code</a>
           <a href="https://2004.losthq.rs/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-amber-900 rounded text-amber-600 text-xs transition">📦 LostHQ</a>
           <a href="https://2004.lostcity.rs/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-amber-900 rounded text-amber-600 text-xs transition">⚔️ Play Lost City</a>
         </div>
