@@ -124,8 +124,7 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange, onMons
 
       {selectedMonster && (
         <div className="bg-gray-900 rounded p-3 border border-amber-900">
-          <div className="flex flex-col items-center mb-3 gap-2">
-            {selectedMonster.id !== 'pvp' && <GameSprite id={selectedMonster.id} type="npc" size={96} />}
+          <div className="flex items-center gap-2 mb-3">
             <h3 className="text-amber-600 font-bold text-sm">{selectedMonster.name}</h3>
           </div>
           
