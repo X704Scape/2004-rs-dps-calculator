@@ -109,7 +109,6 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange, onMons
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                     >
-                    <GameSprite id={monster.id} type="npc" size={28} />
                     <div>
                       <div className="font-semibold">{monster.name}</div>
                       <div className="text-amber-700">ID: {monster.id}</div>
