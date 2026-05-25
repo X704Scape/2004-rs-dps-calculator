@@ -3,8 +3,8 @@ import React from 'react';
 const SPRITE_SIZE = 32;
 const COLS = 16;
 
-const ITEM_SHEET = 'https://2004.losthq.rs/img/item_spritesheet.png?v=274';
-const NPC_SHEET = 'https://2004.losthq.rs/img/npc_spritesheet.png?v=274';
+const ITEM_SHEET = 'https://raw.githubusercontent.com/X704Scape/2004-rs-dps-calculator/main/item_spritesheet.png';
+const NPC_SHEET = 'https://raw.githubusercontent.com/X704Scape/2004-rs-dps-calculator/main/npc_spritesheet.png';
 
 /**
  * Renders a sprite from the item or npc spritesheet by numeric ID.
