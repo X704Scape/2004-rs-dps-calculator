@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
-const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
+const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=274';
+const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=274';
 
 const SLOT_ALIASES = {
   'weapon': 'weapon',
