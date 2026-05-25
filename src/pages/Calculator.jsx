@@ -368,7 +368,7 @@ export default function Calculator() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-amber-600">2004 RuneScape DPS Calculator</h1>
-            <p className="text-amber-100 text-sm mt-1">Authentic 2004 formulas Revision 274</p>
+            <p className="text-amber-100 text-sm mt-1">Authentic 2004 Formulas Revision 274</p>
           </div>
           <button
             onClick={() => setShowOptimizer(true)}
