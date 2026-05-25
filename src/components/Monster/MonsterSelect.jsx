@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
+import GameSprite from '@/components/ui/GameSprite';
 
 // Module-level cache so data is only fetched once per session
 let monstersCache = null;
@@ -106,10 +107,13 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange, onMons
                       setShowDropdown(false);
                       setSearchTerm('');
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0"
+                    className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                     >
-                    <div className="font-semibold">{monster.name}</div>
-                    <div className="text-amber-700">ID: {monster.id}</div>
+                    <GameSprite id={monster.id} type="npc" size={28} />
+                    <div>
+                      <div className="font-semibold">{monster.name}</div>
+                      <div className="text-amber-700">ID: {monster.id}</div>
+                    </div>
                     </button>
                 ))
               )}
@@ -120,7 +124,10 @@ export default function MonsterSelect({ selectedMonster, onMonsterChange, onMons
 
       {selectedMonster && (
         <div className="bg-gray-900 rounded p-3 border border-amber-900">
-          <h3 className="text-amber-600 font-bold text-sm mb-3">{selectedMonster.name}</h3>
+          <div className="flex items-center gap-2 mb-3">
+            {selectedMonster.id !== 'pvp' && <GameSprite id={selectedMonster.id} type="npc" size={32} />}
+            <h3 className="text-amber-600 font-bold text-sm">{selectedMonster.name}</h3>
+          </div>
           
           <div className="grid grid-cols-2 gap-2 text-xs text-amber-100 mb-3">
             <div>HP: {selectedMonster.hitpoints}</div>

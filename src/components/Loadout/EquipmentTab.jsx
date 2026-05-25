@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
+import GameSprite from '@/components/ui/GameSprite';
 
 // Module-level cache so data is only fetched once per session
 let itemsCache = null;
@@ -144,14 +145,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   title={is2HandedEquipped ? '2-handed weapon equipped' : item ? `${item.name} (Click to remove)` : `Empty ${slot}`}
                 >
                   {item && !is2HandedEquipped ? (
-                    <img 
-                      src={item.iconUrl || item.icon} 
-                      alt={item.name} 
-                      className="w-full h-full object-contain" 
-                      onError={(e) => {
-                        e.target.src = SLOT_ICONS[slot];
-                      }}
-                    />
+                    <GameSprite id={item.id} type="item" size={48} />
                   ) : (
                     <img 
                       src={SLOT_ICONS[slot]} 
@@ -193,14 +187,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
                   onClick={() => handleSelectItem(item)}
                   className="w-full text-left px-3 py-2 text-xs text-amber-100 hover:bg-amber-900 transition border-b border-gray-800 last:border-b-0 flex items-center gap-2"
                 >
-                  {(item.icon || item.iconUrl) && (
-                    <img 
-                      src={item.iconUrl || item.icon} 
-                      alt={item.name} 
-                      className="w-8 h-8 object-contain" 
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                  )}
+                  <GameSprite id={item.id} type="item" size={28} />
                   <div>
                     <div className="font-semibold">{item.name}</div>
                     <div className="text-amber-700">{item.slot} • ID: {item.id}</div>

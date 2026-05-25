@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
-const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=254';
+const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=274';
+const NPC_URL = 'https://2004.losthq.rs/js/npcdb/npc_data.json?v=274';
 
 const SLOT_ALIASES = {
   'weapon': 'weapon',
@@ -189,12 +189,13 @@ Deno.serve(async (req) => {
 
           return {
             id: index,
+            debugname: item.debugname || null,
             name: item.name || 'Unknown',
             slot,
             wearpos: equipData.wearpos,
             wearpos2: equipData.wearpos2,
             category: category,
-            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/icons/${index}.png`,
+            icon: null,
             // Melee bonuses
             stab: equipData.stabattack || 0,
             slash: equipData.slashattack || 0,
@@ -309,7 +310,7 @@ Deno.serve(async (req) => {
             });
           }
 
-          const npcId = parseInt(key) || npc.id || index;
+          const npcId = parseInt(npc.id) || parseInt(key) || index;
           return {
             id: npcId,
             name: npc.name,
