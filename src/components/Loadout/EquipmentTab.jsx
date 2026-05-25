@@ -68,11 +68,23 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     ).slice(0, 20);
   }, [debouncedSearch, items]);
 
+  const is2HandedWeapon = (item) => {
+    if (item.slot !== 'weapon') return false;
+    // Config-based: wearpos2 = lefthand (case-insensitive)
+    if (item.wearpos2?.toLowerCase() === 'lefthand') return true;
+    // Category-based: halberds and 2h swords are always 2-handed
+    if (item.category === 'weapon_halberd' || item.category === 'weapon_2h_sword') return true;
+    // Name-based fallback for halberds
+    const name = item.name?.toLowerCase() || '';
+    if (name.includes('halberd') || name.includes('2h')) return true;
+    return false;
+  };
+
   const handleSelectItem = (item) => {
     const newEquipment = { ...equipment };
 
     // Check if item is 2-handed (occupies both weapon and shield slots)
-    const is2Handed = item.wearpos2 === 'lefthand' && item.slot === 'weapon';
+    const is2Handed = is2HandedWeapon(item);
 
     // If equipping a 2-handed weapon
     if (is2Handed) {
@@ -82,7 +94,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
     // If equipping a shield
     else if (item.slot === 'shield') {
       // Remove 2-handed weapon if equipped
-      if (newEquipment.weapon?.wearpos2 === 'lefthand') {
+      if (is2HandedWeapon(newEquipment.weapon)) {
         delete newEquipment.weapon;
       }
       newEquipment.shield = item;
@@ -129,7 +141,7 @@ export default function EquipmentTab({ equipment, onEquipmentChange }) {
               }
               const item = equipment[slot] || null;
               // If shield slot and 2-handed weapon equipped, show as blocked
-              const is2HandedEquipped = slot === 'shield' && equipment.weapon?.wearpos2 === 'lefthand';
+              const is2HandedEquipped = slot === 'shield' && is2HandedWeapon(equipment.weapon || {});
               
               return (
                 <div

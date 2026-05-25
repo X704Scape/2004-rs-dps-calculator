@@ -103,9 +103,14 @@ function parseConfigWeapons(configText) {
         const wearpos = weapon.wearpos.toLowerCase();
         if (wearpos === 'quiver') {
           weapon.slot = 'ammo';
-        } else if (wearpos === 'lefthand' && weapon.wearpos2 !== 'lefthand') {
+        } else if (wearpos === 'lefthand' && weapon.wearpos2?.toLowerCase() !== 'lefthand') {
           weapon.slot = 'shield';
         }
+      }
+      // Ensure halberds are marked as 2-handed (wearpos2 = lefthand) by category or name
+      if (weapon.category === 'weapon_halberd' || weapon.name?.toLowerCase().includes('halberd')) {
+        weapon.wearpos2 = 'lefthand';
+        weapon.slot = 'weapon';
       }
       return weapon;
     })

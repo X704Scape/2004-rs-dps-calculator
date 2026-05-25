@@ -258,6 +258,7 @@ Deno.serve(async (req) => {
     const isDragonDagger = wepName.includes('dragon dagger');
     const isDragonLongsword = wepName.includes('dragon longsword');
     const isDragonMace = wepName.includes('dragon mace');
+    const isDragonHalberd = wepName.includes('dragon halberd');
     const isMagicLongbow = wepName.includes('magic longbow');
     const isMagicShortbow = wepName.includes('magic shortbow');
     const isRuneClaws = wepName.includes('rune claws');
@@ -300,6 +301,19 @@ Deno.serve(async (req) => {
       specAccuracy = (specHitAccuracy * 100).toFixed(2);
       specMaxHit = specMaxHitVal;
       specExpectedHit = ((specMaxHitVal / 2) * specHitAccuracy).toFixed(2);
+
+    } else if (isDragonHalberd && combatType === 'melee') {
+      // Source (pvm_dragon_halberd.rs2):
+      // First hit: maxhit = scale(110, 100, %com_maxhit), normal accuracy vs slash def
+      // Second hit: always hits all adjacent targets for maxhit (single target = just the one hit)
+      // Attack roll uses normal accuracy vs slash defence
+      const specMaxHitVal = Math.floor(maxHit * 110 / 100);
+      const slashNpcDefRoll = combatStat(monsterDefence + 9, monsterDefenceSlash || 0);
+      const specHitAccuracy = getAccuracy(attackRoll, slashNpcDefRoll);
+      specAccuracy = (specHitAccuracy * 100).toFixed(2);
+      specMaxHit = specMaxHitVal;
+      // Two hits: first hit has accuracy roll, second hit always lands
+      specExpectedHit = ((specMaxHitVal / 2) * specHitAccuracy + specMaxHitVal / 2).toFixed(2);
 
     } else if (isMagicLongbow && combatType === 'ranged') {
       // Source (pvm_magic_longbow.rs2):
