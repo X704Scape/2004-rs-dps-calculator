@@ -189,12 +189,13 @@ Deno.serve(async (req) => {
 
           return {
             id: index,
+            debugname: item.debugname || null,
             name: item.name || 'Unknown',
             slot,
             wearpos: equipData.wearpos,
             wearpos2: equipData.wearpos2,
             category: category,
-            icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/icons/${index}.png`,
+            icon: null,
             // Melee bonuses
             stab: equipData.stabattack || 0,
             slash: equipData.slashattack || 0,
@@ -309,7 +310,7 @@ Deno.serve(async (req) => {
             });
           }
 
-          const npcId = parseInt(key) || npc.id || index;
+          const npcId = parseInt(npc.id) || parseInt(key) || index;
           return {
             id: npcId,
             name: npc.name,
