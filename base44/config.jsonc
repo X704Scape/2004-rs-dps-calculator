@@ -1,0 +1,9 @@
+{
+  "name": "2004 RS DPS Calculator",
+  "site": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}
