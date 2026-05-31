@@ -90,9 +90,9 @@ export const WEAPON_COMBAT_STYLES = {
     { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
   ],
   weapon_halberd: [
-    { id: 'accurate', name: 'Accurate', type: 'slash', bonus: '+3 Attack' },
+    { id: 'controlled', name: 'Controlled', type: 'stab', bonus: '+1 All' },
     { id: 'aggressive', name: 'Aggressive', type: 'slash', bonus: '+3 Strength' },
-    { id: 'defensive', name: 'Defensive', type: 'slash', bonus: '+3 Defence' }
+    { id: 'defensive', name: 'Defensive', type: 'stab', bonus: '+3 Defence' }
   ]
 };
 
