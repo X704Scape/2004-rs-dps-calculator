@@ -303,17 +303,19 @@ Deno.serve(async (req) => {
       specExpectedHit = ((specMaxHitVal / 2) * specHitAccuracy).toFixed(2);
 
     } else if (isDragonHalberd && combatType === 'melee') {
-      // Source (pvm_dragon_halberd.rs2):
-      // First hit: maxhit = scale(110, 100, %com_maxhit), normal accuracy vs slash def
-      // Second hit: always hits all adjacent targets for maxhit (single target = just the one hit)
-      // Attack roll uses normal accuracy vs slash defence
+      // Source (pvm_dragon_halberd_sa):
+      // maxhit = scale(110, 100, %com_maxhit)
+      // First hit: scale(100, 100, attack_roll) vs slash def — normal accuracy
+      // Second hit: only on large NPCs (nc_size > 1) at scale(100, 100) — same accuracy
+      // Adjacent NPCs in multi: scale(75, 100, attack_roll) — not modelled here (single target)
+      // For a 1x1 NPC there is only ONE hit.
       const specMaxHitVal = Math.floor(maxHit * 110 / 100);
       const slashNpcDefRoll = combatStat(monsterDefence + 9, monsterDefenceSlash || 0);
       const specHitAccuracy = getAccuracy(attackRoll, slashNpcDefRoll);
       specAccuracy = (specHitAccuracy * 100).toFixed(2);
       specMaxHit = specMaxHitVal;
-      // Two hits: first hit has accuracy roll, second hit always lands
-      specExpectedHit = ((specMaxHitVal / 2) * specHitAccuracy + specMaxHitVal / 2).toFixed(2);
+      // Single target (1x1 NPC): one accuracy-checked hit only
+      specExpectedHit = ((specMaxHitVal / 2) * specHitAccuracy).toFixed(2);
 
     } else if (isMagicLongbow && combatType === 'ranged') {
       // Source (pvm_magic_longbow.rs2):
