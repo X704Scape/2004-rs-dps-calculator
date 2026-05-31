@@ -28,9 +28,17 @@ export default function CombatStyleTab({ equipment, onCombatStyleChange, current
     return baseSpeed;
   };
 
+  // Resolve effective category — name-based overrides for items whose category doesn't match
+  const effectiveCategory = (() => {
+    if (!weapon) return null;
+    const name = weapon.name?.toLowerCase() || '';
+    if (name.includes('halberd')) return 'weapon_halberd';
+    return weapon.category || null;
+  })();
+
   let styles = DEFAULT_STYLES;
-  if (weapon?.category && WEAPON_COMBAT_STYLES[weapon.category]) {
-    styles = WEAPON_COMBAT_STYLES[weapon.category];
+  if (effectiveCategory && WEAPON_COMBAT_STYLES[effectiveCategory]) {
+    styles = WEAPON_COMBAT_STYLES[effectiveCategory];
   } else if (weapon?.attackStyles?.length > 0) {
     styles = weapon.attackStyles.map(style => ({
       id: style.id,
