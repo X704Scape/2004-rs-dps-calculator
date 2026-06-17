@@ -7,6 +7,23 @@ import ResultsPanel from '../components/Results/ResultsPanel';
 import KillSimulatorGraph from '../components/Results/KillSimulatorGraph';
 import AIChatModal from '../components/Optimizer/AIChatModal';
 
+const SAVE_KEY = 'rs2004_calc_loadouts';
+const ACTIVE_KEY = 'rs2004_calc_active_tab';
+
+const loadSavedState = (key, fallback) => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return fallback;
+};
+
+const saveState = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 const calculateCombatLevel = (stats) => {
   const base = 10 * (stats.defence + stats.hitpoints + Math.floor(stats.prayer / 2));
   const melee = 13 * (stats.attack + stats.strength);
@@ -16,30 +33,30 @@ const calculateCombatLevel = (stats) => {
 };
 
 export default function Calculator() {
-  const [loadouts, setLoadouts] = useState([
-  {
-    id: 1,
-    name: 'Loadout 1',
-    equipment: {},
-    playerStats: {
-      hitpoints: 10,
-      attack: 1,
-      strength: 1,
-      defence: 1,
-      ranged: 1,
-      prayer: 1,
-      magic: 1,
-      combatType: 'melee',
-      prayerActive: 'none',
-      style: 'aggressive',
-      combatLevel: 3,
-      selectedSpell: null,
-      chargeActive: false
-    },
-    results: null
-  }]
+  const [loadouts, setLoadouts] = useState(() =>
+    loadSavedState(SAVE_KEY, [{
+      id: 1,
+      name: 'Loadout 1',
+      equipment: {},
+      playerStats: {
+        hitpoints: 10,
+        attack: 1,
+        strength: 1,
+        defence: 1,
+        ranged: 1,
+        prayer: 1,
+        magic: 1,
+        combatType: 'melee',
+        prayerActive: 'none',
+        style: 'aggressive',
+        combatLevel: 3,
+        selectedSpell: null,
+        chargeActive: false
+      },
+      results: null
+    }])
   );
-  const [activeLoadoutId, setActiveLoadoutId] = useState(1);
+  const [activeLoadoutId, setActiveLoadoutId] = useState(() => loadSavedState(ACTIVE_KEY, 1));
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [availableMonsters, setAvailableMonsters] = useState([]);
   const [calculating, setCalculating] = useState(false);
@@ -82,6 +99,16 @@ export default function Calculator() {
       }
     }
   };
+
+  // Persist loadouts to localStorage
+  useEffect(() => {
+    saveState(SAVE_KEY, loadouts);
+  }, [loadouts]);
+
+  // Persist active tab to localStorage
+  useEffect(() => {
+    saveState(ACTIVE_KEY, activeLoadoutId);
+  }, [activeLoadoutId]);
 
   const updateLoadout = (id, field, value) => {
     setLoadouts(loadouts.map((l) => {
