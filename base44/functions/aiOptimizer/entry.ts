@@ -241,6 +241,75 @@ function meetsRequirements(item, playerLevels) {
   return true;
 }
 
+// Module-level item cache — persists across warm invocations
+let _cachedItems = null;
+let _cacheTimestamp = 0;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
+const SLOT_ALIASES = {
+  'weapon': 'weapon', 'shield': 'shield', 'head': 'head', 'body': 'body',
+  'legs': 'legs', 'hands': 'hands', 'feet': 'feet', 'cape': 'cape',
+  'neck': 'neck', 'ammo': 'ammo', 'ring': 'ring', 'ammunition': 'ammo',
+  'quiver': 'ammo', 'righthand': 'weapon', 'lefthand': 'shield'
+};
+
+async function getItems() {
+  const now = Date.now();
+  if (_cachedItems && (now - _cacheTimestamp) < CACHE_TTL_MS) {
+    return _cachedItems;
+  }
+  const itemResp = await fetch(ITEM_URL);
+  const itemData = await itemResp.json();
+  const parsed = itemData
+    .map((item, index) => {
+      const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
+      if (!hasWieldOp || !item.equipable_item) return null;
+      const eq = item.equipable_item;
+      const wearpos = eq.wearpos?.toLowerCase();
+      const slot = SLOT_ALIASES[wearpos] || wearpos;
+      if (!slot) return null;
+      const itemName = item.name?.toLowerCase() || '';
+      let category = null;
+      if (itemName.includes('staff') || itemName.includes('iban')) category = 'weapon_staff';
+      else if (itemName.includes('bow') && !itemName.includes('crossbow')) category = 'weapon_bow';
+      else if (itemName.includes('crossbow')) category = 'weapon_crossbow';
+      else if (itemName.includes('dart') || itemName.includes('knife') || itemName.includes('thrownaxe') || itemName.includes('javelin')) category = 'weapon_thrown';
+      else if (itemName.includes('sword') || itemName.includes('scimitar') || itemName.includes('longsword') || itemName.includes('2h')) category = 'weapon_slash';
+      else if (itemName.includes('dagger') || itemName.includes('spear')) category = 'weapon_stab';
+      else if (itemName.includes('mace') || itemName.includes('warhammer') || itemName.includes('maul')) category = 'weapon_blunt';
+      else if (itemName.includes('axe') && slot === 'weapon') category = 'weapon_axe';
+      return {
+        id: index, name: item.name || 'Unknown', slot, category,
+        icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/icons/${index}.png`,
+        stab: eq.stabattack || 0, slash: eq.slashattack || 0, crush: eq.crushattack || 0,
+        strBonus: eq.strengthbonus || 0,
+        ranged: eq.rangedattack || eq.rangeattack || 0,
+        rangedStrBonus: eq.rangedstrengthbonus || eq.rangestrengthbonus || eq.rangebonus || 0,
+        magic: eq.magicattack || 0,
+        defenceStab: eq.stabdefence || 0, defenceSlash: eq.slashdefence || 0,
+        defenceCrush: eq.crushdefence || 0,
+        defenceRanged: eq.rangeddefence || eq.rangedefence || 0,
+        defenceMagic: eq.magicdefence || 0,
+        attackRate: eq.attackrate || 4,
+        equipable: true,
+        price: item.cost || 0
+      };
+    })
+    .filter(item => {
+      if (!item) return false;
+      const maxStat = Math.max(item.stab, item.slash, item.crush, item.strBonus, item.ranged, item.rangedStrBonus);
+      if (maxStat > 150) return false;
+      const lower = item.name.toLowerCase();
+      const banned = ['(p)', 'poisoned', 'mod ', 'gm ', 'dev ', 'debug', 'null', 'placeholder'];
+      if (banned.some(b => lower.includes(b))) return false;
+      return true;
+    });
+  _cachedItems = parsed;
+  _cacheTimestamp = now;
+  return parsed;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -260,63 +329,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing playerStats or monster' }, { status: 400 });
     }
 
-    // Fetch item data directly from external sources (same as fetchGameData)
-    const ITEM_URL = 'https://2004.losthq.rs/js/itemdb/item_data.json?v=254';
-    const SLOT_ALIASES = {
-      'weapon': 'weapon', 'shield': 'shield', 'head': 'head', 'body': 'body',
-      'legs': 'legs', 'hands': 'hands', 'feet': 'feet', 'cape': 'cape',
-      'neck': 'neck', 'ammo': 'ammo', 'ring': 'ring', 'ammunition': 'ammo',
-      'quiver': 'ammo', 'righthand': 'weapon', 'lefthand': 'shield'
-    };
-
-    const itemResp = await fetch(ITEM_URL);
-    const itemData = await itemResp.json();
-
-    const allItems = itemData
-      .map((item, index) => {
-        const hasWieldOp = item.iops && Object.values(item.iops).some(op => op === 'Wield' || op === 'Wear');
-        if (!hasWieldOp || !item.equipable_item) return null;
-        const eq = item.equipable_item;
-        const wearpos = eq.wearpos?.toLowerCase();
-        const slot = SLOT_ALIASES[wearpos] || wearpos;
-        if (!slot) return null;
-        const itemName = item.name?.toLowerCase() || '';
-        let category = null;
-        if (itemName.includes('staff') || itemName.includes('iban')) category = 'weapon_staff';
-        else if (itemName.includes('bow') && !itemName.includes('crossbow')) category = 'weapon_bow';
-        else if (itemName.includes('crossbow')) category = 'weapon_crossbow';
-        else if (itemName.includes('dart') || itemName.includes('knife') || itemName.includes('thrownaxe') || itemName.includes('javelin')) category = 'weapon_thrown';
-        else if (itemName.includes('sword') || itemName.includes('scimitar') || itemName.includes('longsword') || itemName.includes('2h')) category = 'weapon_slash';
-        else if (itemName.includes('dagger') || itemName.includes('spear')) category = 'weapon_stab';
-        else if (itemName.includes('mace') || itemName.includes('warhammer') || itemName.includes('maul')) category = 'weapon_blunt';
-        else if (itemName.includes('axe') && slot === 'weapon') category = 'weapon_axe';
-        return {
-          id: index, name: item.name || 'Unknown', slot, category,
-          icon: `https://raw.githubusercontent.com/X704Scape/2004-Runescape-DPS-Calculator-Rev-254/main/icons/${index}.png`,
-          stab: eq.stabattack || 0, slash: eq.slashattack || 0, crush: eq.crushattack || 0,
-          strBonus: eq.strengthbonus || 0,
-          ranged: eq.rangedattack || eq.rangeattack || 0,
-          rangedStrBonus: eq.rangedstrengthbonus || eq.rangestrengthbonus || eq.rangebonus || 0,
-          magic: eq.magicattack || 0,
-          defenceStab: eq.stabdefence || 0, defenceSlash: eq.slashdefence || 0,
-          defenceCrush: eq.crushdefence || 0,
-          defenceRanged: eq.rangeddefence || eq.rangedefence || 0,
-          defenceMagic: eq.magicdefence || 0,
-          attackRate: eq.attackrate || 4,
-          equipable: true,
-          price: item.cost || 0
-        };
-      })
-      .filter(item => {
-        if (!item) return false;
-        // Filter out corrupted/mod items
-        const maxStat = Math.max(item.stab, item.slash, item.crush, item.strBonus, item.ranged, item.rangedStrBonus);
-        if (maxStat > 150) return false;
-        const lower = item.name.toLowerCase();
-        const banned = ['(p)', 'poisoned', 'mod ', 'gm ', 'dev ', 'debug', 'null', 'placeholder'];
-        if (banned.some(b => lower.includes(b))) return false;
-        return true;
-      });
+    const allItems = await getItems();
 
     if (!allItems.length) {
       return Response.json({ error: 'Could not load item database' }, { status: 500 });

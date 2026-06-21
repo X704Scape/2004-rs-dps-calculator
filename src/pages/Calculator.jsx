@@ -384,7 +384,7 @@ export default function Calculator() {
       }
     };
 
-    const timer = setTimeout(updateAllResults, 400);
+    const timer = setTimeout(updateAllResults, 250);
     return () => clearTimeout(timer);
   }, [loadouts.map((l) => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 

@@ -214,7 +214,7 @@ Deno.serve(async (req) => {
       const missProb = 1 - accuracy;
 
       let expectedOverkill = 0;
-      const maxIter = 5000;
+      const maxIter = 800;
 
       for (let iter = 0; iter < maxIter; iter++) {
         // Check if enough probability mass remains
