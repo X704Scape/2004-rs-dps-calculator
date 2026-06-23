@@ -104,9 +104,14 @@ export const WEAPON_COMBAT_STYLES = {
 export function resolveAttackType(weapon, styleId) {
   if (!weapon) return 'crush';
 
+  // Name-based category overrides (must match CombatStyleTab logic)
+  const name = weapon.name?.toLowerCase() || '';
+  let effectiveCategory = weapon.category;
+  if (name.includes('halberd')) effectiveCategory = 'weapon_halberd';
+
   // First try category-based styles (authoritative - handles aggressive_2 etc.)
-  if (weapon.category && WEAPON_COMBAT_STYLES[weapon.category]) {
-    const categoryStyle = WEAPON_COMBAT_STYLES[weapon.category].find(s => s.id === styleId);
+  if (effectiveCategory && WEAPON_COMBAT_STYLES[effectiveCategory]) {
+    const categoryStyle = WEAPON_COMBAT_STYLES[effectiveCategory].find(s => s.id === styleId);
     if (categoryStyle) return categoryStyle.type;
   }
 
