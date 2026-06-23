@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { resolveAttackType } from '../components/weaponStyles';
 import LoadoutPanel from '../components/Loadout/LoadoutPanel';
@@ -60,8 +60,10 @@ export default function Calculator() {
   const [selectedMonster, setSelectedMonster] = useState(null);
   const [availableMonsters, setAvailableMonsters] = useState([]);
   const [calculating, setCalculating] = useState(false);
+  const [results, setResults] = useState({});
   const [npcCount, setNpcCount] = useState(10);
   const [showOptimizer, setShowOptimizer] = useState(false);
+  const calculatingRef = useRef(false);
 
   const addLoadout = () => {
     const newId = Math.max(...loadouts.map((l) => l.id)) + 1;
@@ -348,44 +350,43 @@ export default function Calculator() {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!selectedMonster) return;
 
-    const monster = selectedMonster; // snapshot for this effect run
+    const monster = selectedMonster;
+    const loadoutsSnapshot = loadouts;
 
     const updateAllResults = async () => {
+      if (calculatingRef.current) return;
+      calculatingRef.current = true;
       setCalculating(true);
 
       try {
-        // PVP Mode: Calculate both directions
-        if (monster.id === 'pvp' && loadouts.length >= 2) {
-          const loadout1 = loadouts[0];
-          const loadout2 = loadouts[1];
-
-          const [response1, response2] = await Promise.all([
-          calculateDPS(loadout1, loadout2, monster),
-          calculateDPS(loadout2, loadout1, monster)]
-          );
-
-          setLoadouts((prev) => prev.map((loadout, idx) => ({
-            ...loadout,
-            results: idx === 0 ? response1?.data || null : idx === 1 ? response2?.data || null : null
-          })));
+        let newResults = {};
+        if (monster.id === 'pvp' && loadoutsSnapshot.length >= 2) {
+          const [r1, r2] = await Promise.all([
+            calculateDPS(loadoutsSnapshot[0], loadoutsSnapshot[1], monster),
+            calculateDPS(loadoutsSnapshot[1], loadoutsSnapshot[0], monster)
+          ]);
+          newResults[loadoutsSnapshot[0].id] = r1?.data || null;
+          newResults[loadoutsSnapshot[1].id] = r2?.data || null;
         } else {
-          // Normal PVM mode
-          const responses = await Promise.all(loadouts.map((loadout) => calculateDPS(loadout, null, monster)));
-          setLoadouts((prev) => prev.map((loadout, idx) => ({
-            ...loadout,
-            results: responses[idx]?.data || null
-          })));
+          const responses = await Promise.all(loadoutsSnapshot.map((l) => calculateDPS(l, null, monster)));
+          loadoutsSnapshot.forEach((l, idx) => {
+            newResults[l.id] = responses[idx]?.data || null;
+          });
         }
+        setResults(newResults);
       } finally {
+        calculatingRef.current = false;
         setCalculating(false);
       }
     };
 
     const timer = setTimeout(updateAllResults, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [loadouts.map((l) => JSON.stringify({ eq: l.equipment, stats: l.playerStats })).join(','), selectedMonster]);
 
   return (
@@ -478,14 +479,14 @@ export default function Calculator() {
 
           {/* Right Column - Results */}
           <div className="lg:col-span-1">
-            <ResultsPanel loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={setNpcCount} />
+            <ResultsPanel loadouts={loadouts.map(l => ({ ...l, results: results[l.id] || null }))} selectedMonster={selectedMonster} npcCount={npcCount} onNpcCountChange={setNpcCount} />
           </div>
         </div>
 
         {/* Bottom Row - Graph full width */}
-        {selectedMonster && selectedMonster.id !== 'pvp' && loadouts.some((l) => l.results) &&
+        {selectedMonster && selectedMonster.id !== 'pvp' && Object.values(results).some(Boolean) &&
         <div className="mt-6">
-            <KillSimulatorGraph loadouts={loadouts} selectedMonster={selectedMonster} npcCount={npcCount} />
+            <KillSimulatorGraph loadouts={loadouts.map(l => ({ ...l, results: results[l.id] || null }))} selectedMonster={selectedMonster} npcCount={npcCount} />
           </div>
         }
       </div>
